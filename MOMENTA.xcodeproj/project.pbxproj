@@ -1,0 +1,567 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 90;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		33F3882E2F20F6F0009CC102 /* MemoriesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33F388202F20F6EF009CC102 /* MemoriesView.swift */; };
+		33F3882F2F20F6F0009CC102 /* LyricsGenerationRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33F3880E2F20F6EF009CC102 /* LyricsGenerationRequest.swift */; };
+		33F388302F20F6F0009CC102 /* Photo2MusicManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33F3880B2F20F6EF009CC102 /* Photo2MusicManager.swift */; };
+		33F388312F20F6F0009CC102 /* MusicGenerationRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33F3880F2F20F6EF009CC102 /* MusicGenerationRequest.swift */; };
+		33F388322F20F6F0009CC102 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33F388002F20F6EF009CC102 /* ContentView.swift */; };
+		33F388332F20F6F0009CC102 /* Backgrounds.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33F388052F20F6EF009CC102 /* Backgrounds.swift */; };
+		33F388342F20F6F0009CC102 /* AppTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33F388042F20F6EF009CC102 /* AppTheme.swift */; };
+		33F388352F20F6F0009CC102 /* ShareView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33F388242F20F6EF009CC102 /* ShareView.swift */; };
+		33F388362F20F6F0009CC102 /* MusicGenerationResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33F388102F20F6EF009CC102 /* MusicGenerationResponse.swift */; };
+		33F388372F20F6F0009CC102 /* LightView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33F3881D2F20F6EF009CC102 /* LightView.swift */; };
+		33F388382F20F6F0009CC102 /* ButterflyApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33F387FF2F20F6EF009CC102 /* ButterflyApp.swift */; };
+		33F388392F20F6F0009CC102 /* CommonUI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33F388072F20F6EF009CC102 /* CommonUI.swift */; };
+		33F3883A2F20F6F0009CC102 /* LightViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33F3881E2F20F6EF009CC102 /* LightViewModel.swift */; };
+		33F3883B2F20F6F0009CC102 /* ProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33F388222F20F6EF009CC102 /* ProfileView.swift */; };
+		33F3883C2F20F6F0009CC102 /* SunoDirectService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33F388182F20F6EF009CC102 /* SunoDirectService.swift */; };
+		33F3883D2F20F6F0009CC102 /* MusicParameters.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33F388112F20F6EF009CC102 /* MusicParameters.swift */; };
+		33F3883E2F20F6F0009CC102 /* MusicServiceProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33F388162F20F6EF009CC102 /* MusicServiceProtocol.swift */; };
+		33F388402F20F6F0009CC102 /* MusicTaskStatusResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33F388122F20F6EF009CC102 /* MusicTaskStatusResponse.swift */; };
+		33F388412F20F6F0009CC102 /* ImageUtility.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33F3881A2F20F6EF009CC102 /* ImageUtility.swift */; };
+		33F388422F20F6F0009CC102 /* LLMServiceProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33F388152F20F6EF009CC102 /* LLMServiceProtocol.swift */; };
+		33F388432F20F6F0009CC102 /* MusicBaseManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33F3880A2F20F6EF009CC102 /* MusicBaseManager.swift */; };
+		33F388442F20F6F0009CC102 /* GeneratedMusic.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33F3880D2F20F6EF009CC102 /* GeneratedMusic.swift */; };
+		33F388452F20F6F0009CC102 /* OpenAILyricsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33F388172F20F6EF009CC102 /* OpenAILyricsService.swift */; };
+		33F388472F20F6F0009CC102 /* APIConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33F388142F20F6EF009CC102 /* APIConfiguration.swift */; };
+		33F388492F20F6F0009CC102 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 33F388272F20F6EF009CC102 /* Preview Assets.xcassets */; };
+		33F3884A2F20F6F0009CC102 /* Background.mp4 in Resources */ = {isa = PBXBuildFile; fileRef = 33F3882A2F20F6EF009CC102 /* Background.mp4 */; };
+		33F3884B2F20F6F0009CC102 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 33F388292F20F6EF009CC102 /* Assets.xcassets */; };
+		33F3889C2F211DDD009CC102 /* AILoadingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33F3889B2F211DDC009CC102 /* AILoadingView.swift */; };
+		33F388A02F211E49009CC102 /* WhiteGlassInputBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33F3889E2F211E49009CC102 /* WhiteGlassInputBar.swift */; };
+		33F388A12F211E49009CC102 /* PresetCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33F3889D2F211E49009CC102 /* PresetCard.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		33F387FF2F20F6EF009CC102 /* ButterflyApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ButterflyApp.swift; sourceTree = "<group>"; };
+		33F388002F20F6EF009CC102 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		33F388012F20F6EF009CC102 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		33F388032F20F6EF009CC102 /* MOMENTA.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = MOMENTA.xcodeproj; sourceTree = "<group>"; };
+		33F388042F20F6EF009CC102 /* AppTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppTheme.swift; sourceTree = "<group>"; };
+		33F388052F20F6EF009CC102 /* Backgrounds.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Backgrounds.swift; sourceTree = "<group>"; };
+		33F388072F20F6EF009CC102 /* CommonUI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommonUI.swift; sourceTree = "<group>"; };
+		33F3880A2F20F6EF009CC102 /* MusicBaseManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusicBaseManager.swift; sourceTree = "<group>"; };
+		33F3880B2F20F6EF009CC102 /* Photo2MusicManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Photo2MusicManager.swift; sourceTree = "<group>"; };
+		33F3880D2F20F6EF009CC102 /* GeneratedMusic.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeneratedMusic.swift; sourceTree = "<group>"; };
+		33F3880E2F20F6EF009CC102 /* LyricsGenerationRequest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LyricsGenerationRequest.swift; sourceTree = "<group>"; };
+		33F3880F2F20F6EF009CC102 /* MusicGenerationRequest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusicGenerationRequest.swift; sourceTree = "<group>"; };
+		33F388102F20F6EF009CC102 /* MusicGenerationResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusicGenerationResponse.swift; sourceTree = "<group>"; };
+		33F388112F20F6EF009CC102 /* MusicParameters.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusicParameters.swift; sourceTree = "<group>"; };
+		33F388122F20F6EF009CC102 /* MusicTaskStatusResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusicTaskStatusResponse.swift; sourceTree = "<group>"; };
+		33F388142F20F6EF009CC102 /* APIConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIConfiguration.swift; sourceTree = "<group>"; };
+		33F388152F20F6EF009CC102 /* LLMServiceProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LLMServiceProtocol.swift; sourceTree = "<group>"; };
+		33F388162F20F6EF009CC102 /* MusicServiceProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusicServiceProtocol.swift; sourceTree = "<group>"; };
+		33F388172F20F6EF009CC102 /* OpenAILyricsService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenAILyricsService.swift; sourceTree = "<group>"; };
+		33F388182F20F6EF009CC102 /* SunoDirectService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SunoDirectService.swift; sourceTree = "<group>"; };
+		33F3881A2F20F6EF009CC102 /* ImageUtility.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageUtility.swift; sourceTree = "<group>"; };
+		33F3881D2F20F6EF009CC102 /* LightView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LightView.swift; sourceTree = "<group>"; };
+		33F3881E2F20F6EF009CC102 /* LightViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LightViewModel.swift; sourceTree = "<group>"; };
+		33F388202F20F6EF009CC102 /* MemoriesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoriesView.swift; sourceTree = "<group>"; };
+		33F388222F20F6EF009CC102 /* ProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileView.swift; sourceTree = "<group>"; };
+		33F388242F20F6EF009CC102 /* ShareView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareView.swift; sourceTree = "<group>"; };
+		33F388272F20F6EF009CC102 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
+		33F388292F20F6EF009CC102 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		33F3882A2F20F6EF009CC102 /* Background.mp4 */ = {isa = PBXFileReference; lastKnownFileType = file; path = Background.mp4; sourceTree = "<group>"; };
+		33F3889B2F211DDC009CC102 /* AILoadingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AILoadingView.swift; sourceTree = "<group>"; };
+		33F3889D2F211E49009CC102 /* PresetCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PresetCard.swift; sourceTree = "<group>"; };
+		33F3889E2F211E49009CC102 /* WhiteGlassInputBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WhiteGlassInputBar.swift; sourceTree = "<group>"; };
+		A0000021 /* Butterfly V3.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Butterfly V3.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		A0000023 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			files = (
+			);
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		33F388022F20F6EF009CC102 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				33F387FF2F20F6EF009CC102 /* ButterflyApp.swift */,
+				33F388002F20F6EF009CC102 /* ContentView.swift */,
+				33F388012F20F6EF009CC102 /* Info.plist */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		33F388092F20F6EF009CC102 /* Components */ = {
+			isa = PBXGroup;
+			children = (
+				33F3889B2F211DDC009CC102 /* AILoadingView.swift */,
+				33F388042F20F6EF009CC102 /* AppTheme.swift */,
+				33F388052F20F6EF009CC102 /* Backgrounds.swift */,
+				33F388072F20F6EF009CC102 /* CommonUI.swift */,
+			);
+			path = Components;
+			sourceTree = "<group>";
+		};
+		33F3880C2F20F6EF009CC102 /* Managers */ = {
+			isa = PBXGroup;
+			children = (
+				33F3880A2F20F6EF009CC102 /* MusicBaseManager.swift */,
+				33F3880B2F20F6EF009CC102 /* Photo2MusicManager.swift */,
+			);
+			path = Managers;
+			sourceTree = "<group>";
+		};
+		33F388132F20F6EF009CC102 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				33F3880D2F20F6EF009CC102 /* GeneratedMusic.swift */,
+				33F3880E2F20F6EF009CC102 /* LyricsGenerationRequest.swift */,
+				33F3880F2F20F6EF009CC102 /* MusicGenerationRequest.swift */,
+				33F388102F20F6EF009CC102 /* MusicGenerationResponse.swift */,
+				33F388112F20F6EF009CC102 /* MusicParameters.swift */,
+				33F388122F20F6EF009CC102 /* MusicTaskStatusResponse.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		33F388192F20F6EF009CC102 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				33F388142F20F6EF009CC102 /* APIConfiguration.swift */,
+				33F388152F20F6EF009CC102 /* LLMServiceProtocol.swift */,
+				33F388162F20F6EF009CC102 /* MusicServiceProtocol.swift */,
+				33F388172F20F6EF009CC102 /* OpenAILyricsService.swift */,
+				33F388182F20F6EF009CC102 /* SunoDirectService.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		33F3881B2F20F6EF009CC102 /* Utilities */ = {
+			isa = PBXGroup;
+			children = (
+				33F3881A2F20F6EF009CC102 /* ImageUtility.swift */,
+			);
+			path = Utilities;
+			sourceTree = "<group>";
+		};
+		33F3881C2F20F6EF009CC102 /* Core */ = {
+			isa = PBXGroup;
+			children = (
+				33F388092F20F6EF009CC102 /* Components */,
+				33F3880C2F20F6EF009CC102 /* Managers */,
+				33F388132F20F6EF009CC102 /* Models */,
+				33F388192F20F6EF009CC102 /* Services */,
+				33F3881B2F20F6EF009CC102 /* Utilities */,
+			);
+			path = Core;
+			sourceTree = "<group>";
+		};
+		33F3881F2F20F6EF009CC102 /* Light */ = {
+			isa = PBXGroup;
+			children = (
+				33F3889F2F211E49009CC102 /* Components */,
+				33F3881D2F20F6EF009CC102 /* LightView.swift */,
+				33F3881E2F20F6EF009CC102 /* LightViewModel.swift */,
+			);
+			path = Light;
+			sourceTree = "<group>";
+		};
+		33F388212F20F6EF009CC102 /* Memories */ = {
+			isa = PBXGroup;
+			children = (
+				33F388202F20F6EF009CC102 /* MemoriesView.swift */,
+			);
+			path = Memories;
+			sourceTree = "<group>";
+		};
+		33F388232F20F6EF009CC102 /* Profile */ = {
+			isa = PBXGroup;
+			children = (
+				33F388222F20F6EF009CC102 /* ProfileView.swift */,
+			);
+			path = Profile;
+			sourceTree = "<group>";
+		};
+		33F388252F20F6EF009CC102 /* Share */ = {
+			isa = PBXGroup;
+			children = (
+				33F388242F20F6EF009CC102 /* ShareView.swift */,
+			);
+			path = Share;
+			sourceTree = "<group>";
+		};
+		33F388262F20F6EF009CC102 /* Features */ = {
+			isa = PBXGroup;
+			children = (
+				33F3881F2F20F6EF009CC102 /* Light */,
+				33F388212F20F6EF009CC102 /* Memories */,
+				33F388232F20F6EF009CC102 /* Profile */,
+				33F388252F20F6EF009CC102 /* Share */,
+			);
+			path = Features;
+			sourceTree = "<group>";
+		};
+		33F388282F20F6EF009CC102 /* Preview Content */ = {
+			isa = PBXGroup;
+			children = (
+				33F388272F20F6EF009CC102 /* Preview Assets.xcassets */,
+			);
+			path = "Preview Content";
+			sourceTree = "<group>";
+		};
+		33F3882B2F20F6EF009CC102 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				33F388282F20F6EF009CC102 /* Preview Content */,
+				33F388292F20F6EF009CC102 /* Assets.xcassets */,
+				33F3882A2F20F6EF009CC102 /* Background.mp4 */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		33F3889F2F211E49009CC102 /* Components */ = {
+			isa = PBXGroup;
+			children = (
+				33F3889D2F211E49009CC102 /* PresetCard.swift */,
+				33F3889E2F211E49009CC102 /* WhiteGlassInputBar.swift */,
+			);
+			path = Components;
+			sourceTree = "<group>";
+		};
+		A0000024 = {
+			isa = PBXGroup;
+			children = (
+				33F388022F20F6EF009CC102 /* App */,
+				33F388032F20F6EF009CC102 /* MOMENTA.xcodeproj */,
+				33F3881C2F20F6EF009CC102 /* Core */,
+				33F388262F20F6EF009CC102 /* Features */,
+				33F3882B2F20F6EF009CC102 /* Resources */,
+				A0000026 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		A0000026 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				A0000021 /* Butterfly V3.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		A000002D /* Butterfly V3 */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A000002E /* Build configuration list for PBXNativeTarget "Butterfly V3" */;
+			buildPhases = (
+				A000002F /* Sources */,
+				A0000023 /* Frameworks */,
+				A0000030 /* Resources */,
+			);
+			buildRules = (
+			);
+			name = "Butterfly V3";
+			productName = "Butterfly V3";
+			productReference = A0000021 /* Butterfly V3.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		A0000031 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1500;
+				LastUpgradeCheck = 2600;
+				TargetAttributes = {
+					A000002D = {
+						CreatedOnToolsVersion = 15.0;
+					};
+				};
+			};
+			buildConfigurationList = A0000032 /* Build configuration list for PBXProject "MOMENTA" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = A0000024;
+			preferredProjectObjectVersion = 90;
+			productRefGroup = A0000026 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				A000002D /* Butterfly V3 */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		A0000030 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			files = (
+				33F388492F20F6F0009CC102 /* Preview Assets.xcassets in Resources */,
+				33F3884A2F20F6F0009CC102 /* Background.mp4 in Resources */,
+				33F3884B2F20F6F0009CC102 /* Assets.xcassets in Resources */,
+			);
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		A000002F /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			files = (
+				33F3882E2F20F6F0009CC102 /* MemoriesView.swift in Sources */,
+				33F3882F2F20F6F0009CC102 /* LyricsGenerationRequest.swift in Sources */,
+				33F388302F20F6F0009CC102 /* Photo2MusicManager.swift in Sources */,
+				33F388312F20F6F0009CC102 /* MusicGenerationRequest.swift in Sources */,
+				33F388322F20F6F0009CC102 /* ContentView.swift in Sources */,
+				33F388332F20F6F0009CC102 /* Backgrounds.swift in Sources */,
+				33F388342F20F6F0009CC102 /* AppTheme.swift in Sources */,
+				33F388352F20F6F0009CC102 /* ShareView.swift in Sources */,
+				33F388362F20F6F0009CC102 /* MusicGenerationResponse.swift in Sources */,
+				33F388372F20F6F0009CC102 /* LightView.swift in Sources */,
+				33F388382F20F6F0009CC102 /* ButterflyApp.swift in Sources */,
+				33F388392F20F6F0009CC102 /* CommonUI.swift in Sources */,
+				33F3883A2F20F6F0009CC102 /* LightViewModel.swift in Sources */,
+				33F3883B2F20F6F0009CC102 /* ProfileView.swift in Sources */,
+				33F3883C2F20F6F0009CC102 /* SunoDirectService.swift in Sources */,
+				33F388A02F211E49009CC102 /* WhiteGlassInputBar.swift in Sources */,
+				33F388A12F211E49009CC102 /* PresetCard.swift in Sources */,
+				33F3883D2F20F6F0009CC102 /* MusicParameters.swift in Sources */,
+				33F3883E2F20F6F0009CC102 /* MusicServiceProtocol.swift in Sources */,
+				33F3889C2F211DDD009CC102 /* AILoadingView.swift in Sources */,
+				33F388402F20F6F0009CC102 /* MusicTaskStatusResponse.swift in Sources */,
+				33F388412F20F6F0009CC102 /* ImageUtility.swift in Sources */,
+				33F388422F20F6F0009CC102 /* LLMServiceProtocol.swift in Sources */,
+				33F388432F20F6F0009CC102 /* MusicBaseManager.swift in Sources */,
+				33F388442F20F6F0009CC102 /* GeneratedMusic.swift in Sources */,
+				33F388452F20F6F0009CC102 /* OpenAILyricsService.swift in Sources */,
+				33F388472F20F6F0009CC102 /* APIConfiguration.swift in Sources */,
+			);
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		A0000033 /* Debug configuration for PBXProject "MOMENTA" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		A0000034 /* Release configuration for PBXProject "MOMENTA" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		A0000035 /* Debug configuration for PBXNativeTarget "Butterfly V3" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "\"Resources/Preview Content\"";
+				DEVELOPMENT_TEAM = "";
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = App/Info.plist;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.music";
+				INFOPLIST_KEY_NSCameraUsageDescription = "We need access to your camera to capture photos for music generation";
+				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "We need access to save generated music artwork to your photo library";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "We need access to your photo library to select images for music generation";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 3.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.butterfly.v3;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		A0000036 /* Release configuration for PBXNativeTarget "Butterfly V3" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "\"Resources/Preview Content\"";
+				DEVELOPMENT_TEAM = "";
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = App/Info.plist;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.music";
+				INFOPLIST_KEY_NSCameraUsageDescription = "We need access to your camera to capture photos for music generation";
+				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "We need access to save generated music artwork to your photo library";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "We need access to your photo library to select images for music generation";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 3.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.butterfly.v3;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		A000002E /* Build configuration list for PBXNativeTarget "Butterfly V3" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A0000035 /* Debug configuration for PBXNativeTarget "Butterfly V3" */,
+				A0000036 /* Release configuration for PBXNativeTarget "Butterfly V3" */,
+			);
+			defaultConfigurationName = Release;
+		};
+		A0000032 /* Build configuration list for PBXProject "MOMENTA" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A0000033 /* Debug configuration for PBXProject "MOMENTA" */,
+				A0000034 /* Release configuration for PBXProject "MOMENTA" */,
+			);
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = A0000031 /* Project object */;
+}

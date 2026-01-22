@@ -1,0 +1,75 @@
+//
+//  ContentView.swift
+//  Butterfly
+//
+//  App 的主入口，负责管理 Tab 导航框架
+//
+
+import SwiftUI
+import AVKit
+
+// MARK: - Main ContentView
+
+struct ContentView: View {
+    @StateObject private var viewModel = LightViewModel()
+    @State private var selectedTab = 0
+    @State private var showControls = true
+    
+    var body: some View {
+        ZStack {
+            TabView(selection: $selectedTab) {
+                // 主页面 (Light 功能模块)
+                LightView(viewModel: viewModel)
+                    .tabItem {
+                        Image(systemName: "lightbulb.fill")
+                        Text("Light")
+                    }
+                    .tag(0)
+                
+                // 分享页面
+                ShareView()
+                    .tabItem {
+                        Image(systemName: "person.2.fill")
+                        Text("Share")
+                    }
+                    .tag(1)
+                
+                // 回忆页面
+                MemoriesView()
+                    .tabItem {
+                        Image(systemName: "photo.on.rectangle.angled")
+                        Text("Memories")
+                    }
+                    .tag(2)
+                
+                // 个人资料页面
+                ProfileView(viewModel: viewModel)
+                    .tabItem {
+                        Image(systemName: "person.circle.fill")
+                        Text("Profile")
+                    }
+                    .tag(3)
+            }
+            .tabViewStyle(.automatic)
+            .onAppear {
+                withAnimation(.spring(response: 0.8, dampingFraction: 0.7).delay(0.2)) {
+                    showControls = true
+                }
+            }
+        }
+        .sheet(isPresented: $viewModel.showImagePicker) {
+            ImagePicker(
+                sourceType: viewModel.imagePickerSourceType,
+                selectedImage: $viewModel.selectedImage
+            )
+        }
+        .alert("Error", isPresented: Binding(
+            get: { viewModel.errorMessage != nil },
+            set: { newValue in if !newValue { viewModel.dismissError() } }
+        )) {
+            Button("OK", role: .cancel) { viewModel.dismissError() }
+        } message: {
+            Text(viewModel.errorMessage ?? "")
+        }
+    }
+}
