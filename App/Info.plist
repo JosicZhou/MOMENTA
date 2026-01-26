@@ -24,6 +24,10 @@
 	<true/>
 	<key>NSCameraUsageDescription</key>
 	<string>We need access to your camera to capture photos for music generation</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>We need your location to provide accurate local weather information.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>We need your location to provide accurate local weather information.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>We need access to save generated music artwork to your photo library</string>
 	<key>NSPhotoLibraryUsageDescription</key>

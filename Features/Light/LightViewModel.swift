@@ -10,9 +10,11 @@ import Combine
 import AVFoundation
 import SwiftUI
 import PhotosUI
+import CoreLocation
+import WeatherKit
 
 @MainActor
-class LightViewModel: ObservableObject {
+class LightViewModel: NSObject, ObservableObject, CLLocationManagerDelegate {
     
     // UI binding variables
     @Published var selectedImage: UIImage?
@@ -29,11 +31,15 @@ class LightViewModel: ObservableObject {
     
     // Internal state
     @Published var isGenerating: Bool = false
+    @Published var isRefreshingWeather: Bool = false
     @Published var generationProgress: String = "Preparing..."
     @Published var generatedMusic: GeneratedMusic?
     @Published var generatedSongs: [GeneratedMusic] = []
     @Published var errorMessage: String?
     @Published var isPlaying: Bool = false
+    
+    // Weather & Location state
+    @Published var weatherSymbolName: String?
     
     // Camera control
     @Published var showImagePicker = false
@@ -49,11 +55,76 @@ class LightViewModel: ObservableObject {
     private let aiGenerator: Photo2MusicManager
     private var audioPlayer: AVPlayer?
     
+    private let locationManager = CLLocationManager()
+    private let weatherService = WeatherService.shared
+    
     init(aiGenerator: Photo2MusicManager? = nil) {
         if let aiGenerator = aiGenerator {
             self.aiGenerator = aiGenerator
         } else {
             self.aiGenerator = Photo2MusicManager.createDefault()
+        }
+        super.init()
+        setupLocationManager()
+    }
+    
+    // MARK: - Location & Weather
+    
+    private func setupLocationManager() {
+        locationManager.delegate = self
+        locationManager.desiredAccuracy = kCLLocationAccuracyKilometer
+        locationManager.requestWhenInUseAuthorization()
+        locationManager.startUpdatingLocation()
+    }
+    
+    func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
+        guard let location = locations.first else { return }
+        locationManager.stopUpdatingLocation() // Get location once
+        
+        Task {
+            await fetchWeather(for: location)
+            self.isRefreshingWeather = false
+        }
+    }
+    
+    func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
+        switch manager.authorizationStatus {
+        case .authorizedWhenInUse, .authorizedAlways:
+            locationManager.startUpdatingLocation()
+        case .denied, .restricted:
+            print("❌ Location access denied")
+            self.isRefreshingWeather = false
+        case .notDetermined:
+            locationManager.requestWhenInUseAuthorization()
+        @unknown default:
+            break
+        }
+    }
+    
+    func refreshWeather() {
+        print("🔄 Manually refreshing weather...")
+        isRefreshingWeather = true
+        locationManager.startUpdatingLocation()
+        
+        // Safety timeout to stop animation if something goes wrong
+        Task {
+            try? await Task.sleep(nanoseconds: 5 * 1_000_000_000)
+            if isRefreshingWeather {
+                isRefreshingWeather = false
+            }
+        }
+    }
+    
+    private func fetchWeather(for location: CLLocation) async {
+        print("🌍 Fetching weather for location: \(location.coordinate.latitude), \(location.coordinate.longitude)")
+        do {
+            let weather = try await weatherService.weather(for: location)
+            let symbol = weather.currentWeather.symbolName
+            print("✅ Weather fetched successfully: \(weather.currentWeather.condition.description), symbol: \(symbol)")
+            self.weatherSymbolName = symbol
+        } catch {
+            print("❌ Failed to fetch weather: \(error.localizedDescription)")
+            print("💡 Hint: Check if WeatherKit capability is enabled and location permissions are granted.")
         }
     }
     
