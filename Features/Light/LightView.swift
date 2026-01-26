@@ -1,7 +1,5 @@
 //
 //  LightView.swift
-//  Butterfly
-//
 //  Light 功能模块的主视图 - 已进行组件化重构
 //
 
@@ -36,38 +34,21 @@ struct LightView: View {
                 // 内容区域
                 VStack(spacing: 0) {
                     // 顶部文字区域
-                    VStack(alignment: .leading, spacing: 0) {
-                        Text("WELCOME,JOSIC")
-                            .font(.systemExpanded(size: 36, weight: .bold))
-                            .foregroundStyle(.white)
-                            .tracking(0.5)
-                            .lineLimit(1)
-                            .minimumScaleFactor(0.8)
-                            .fixedSize(horizontal: false, vertical: true)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .frame(height: 49)
-                        
-                        VStack(alignment: .leading, spacing: 1) {
-                            Text("Wednesday")
-                                .font(.systemExpanded(size: 18, weight: .ultraLight))
-                                .foregroundStyle(.white)
-                                .lineLimit(1)
-                            
-                            Text("Thunderbolt")
-                                .font(.systemExpanded(size: 18, weight: .ultraLight))
-                                .foregroundStyle(.white)
-                                .lineLimit(1)
+                    WelcomeCard(
+                        userName: "JOSIC",
+                        isGenerating: viewModel.isGenerating,
+                        isRefreshingWeather: viewModel.isRefreshingWeather,
+                        weatherSymbolName: viewModel.weatherSymbolName,
+                        onWeatherTap: {
+                            viewModel.refreshWeather()
+                        },
+                        onDateTap: {
+                            // 跳转系统日历
+                            if let url = URL(string: "calshow://") {
+                                UIApplication.shared.open(url)
+                            }
                         }
-                        .padding(.top, 3)
-                        
-                        Image(systemName: viewModel.isGenerating ? "cloud.bolt.rain.fill" : "cloud.bolt.rain")
-                            .font(.system(size: 20))
-                            .foregroundStyle(.white)
-                            .frame(width: 52, height: 46)
-                            .padding(.top, 3)
-                            .symbolEffect(.pulse, isActive: viewModel.isGenerating)
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading)
+                    )
                     
                     Spacer()
                         .frame(maxHeight: viewModel.selectedImage != nil ? 60 : 120)

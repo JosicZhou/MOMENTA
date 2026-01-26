@@ -2,7 +2,7 @@
 //  Photo2MusicManager.swift
 //  Butterfly
 //
-//  输入：图片+描述+参数；输出：音乐
+//  输入：图片+描述；输出：音乐
 //
 
 import Foundation

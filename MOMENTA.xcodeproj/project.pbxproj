@@ -37,9 +37,11 @@
 		33F3889C2F211DDD009CC102 /* AILoadingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33F3889B2F211DDC009CC102 /* AILoadingView.swift */; };
 		33F388A02F211E49009CC102 /* WhiteGlassInputBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33F3889E2F211E49009CC102 /* WhiteGlassInputBar.swift */; };
 		33F388A12F211E49009CC102 /* PresetCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33F3889D2F211E49009CC102 /* PresetCard.swift */; };
+		33F388A62F2202E0009CC102 /* WelcomeCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33F388A52F2202E0009CC102 /* WelcomeCard.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		33454E2D2F277BC100B15848 /* Butterfly V3.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "Butterfly V3.entitlements"; sourceTree = "<group>"; };
 		33F387FF2F20F6EF009CC102 /* ButterflyApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ButterflyApp.swift; sourceTree = "<group>"; };
 		33F388002F20F6EF009CC102 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		33F388012F20F6EF009CC102 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -72,6 +74,7 @@
 		33F3889B2F211DDC009CC102 /* AILoadingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AILoadingView.swift; sourceTree = "<group>"; };
 		33F3889D2F211E49009CC102 /* PresetCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PresetCard.swift; sourceTree = "<group>"; };
 		33F3889E2F211E49009CC102 /* WhiteGlassInputBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WhiteGlassInputBar.swift; sourceTree = "<group>"; };
+		33F388A52F2202E0009CC102 /* WelcomeCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeCard.swift; sourceTree = "<group>"; };
 		A0000021 /* Butterfly V3.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Butterfly V3.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -225,15 +228,22 @@
 		33F3889F2F211E49009CC102 /* Components */ = {
 			isa = PBXGroup;
 			children = (
+				33F388A52F2202E0009CC102 /* WelcomeCard.swift */,
 				33F3889D2F211E49009CC102 /* PresetCard.swift */,
 				33F3889E2F211E49009CC102 /* WhiteGlassInputBar.swift */,
 			);
 			path = Components;
 			sourceTree = "<group>";
 		};
+		33F388A32F220159009CC102 /* Products */ = {
+			isa = PBXGroup;
+			name = Products;
+			sourceTree = "<group>";
+		};
 		A0000024 = {
 			isa = PBXGroup;
 			children = (
+				33454E2D2F277BC100B15848 /* Butterfly V3.entitlements */,
 				33F388022F20F6EF009CC102 /* App */,
 				33F388032F20F6EF009CC102 /* MOMENTA.xcodeproj */,
 				33F3881C2F20F6EF009CC102 /* Core */,
@@ -295,6 +305,12 @@
 			preferredProjectObjectVersion = 90;
 			productRefGroup = A0000026 /* Products */;
 			projectDirPath = "";
+			projectReferences = (
+				{
+					ProductGroup = 33F388A32F220159009CC102 /* Products */;
+					ProjectRef = 33F388032F20F6EF009CC102 /* MOMENTA.xcodeproj */;
+				},
+			);
 			projectRoot = "";
 			targets = (
 				A000002D /* Butterfly V3 */,
@@ -339,6 +355,7 @@
 				33F3889C2F211DDD009CC102 /* AILoadingView.swift in Sources */,
 				33F388402F20F6F0009CC102 /* MusicTaskStatusResponse.swift in Sources */,
 				33F388412F20F6F0009CC102 /* ImageUtility.swift in Sources */,
+				33F388A62F2202E0009CC102 /* WelcomeCard.swift in Sources */,
 				33F388422F20F6F0009CC102 /* LLMServiceProtocol.swift in Sources */,
 				33F388432F20F6F0009CC102 /* MusicBaseManager.swift in Sources */,
 				33F388442F20F6F0009CC102 /* GeneratedMusic.swift in Sources */,
@@ -475,11 +492,13 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = "Butterfly V3.entitlements";
 				CODE_SIGN_IDENTITY = "-";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"Resources/Preview Content\"";
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = DGALTMW6Q8;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = App/Info.plist;
@@ -498,7 +517,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 3.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.butterfly.v3;
+				PRODUCT_BUNDLE_IDENTIFIER = com.momenta.ai.music;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
@@ -511,11 +530,13 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = "Butterfly V3.entitlements";
 				CODE_SIGN_IDENTITY = "-";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"Resources/Preview Content\"";
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = DGALTMW6Q8;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = App/Info.plist;
@@ -534,7 +555,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 3.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.butterfly.v3;
+				PRODUCT_BUNDLE_IDENTIFIER = com.momenta.ai.music;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;

@@ -1,4 +1,4 @@
-// 通用 AIyin 加载视图
+// 通用 AI音乐加载视图
 //
 
 import SwiftUI
