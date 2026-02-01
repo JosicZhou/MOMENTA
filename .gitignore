@@ -42,3 +42,6 @@ fastlane/test_output
 # API Keys (DO NOT COMMIT)
 **/APIConfiguration.swift
 
+# Configs - 本地配置文件，不推送到 GitHub
+Configs/
+

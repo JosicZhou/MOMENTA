@@ -7,6 +7,26 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		33E4309A2F2CA13B00643877 /* Secrets.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = 33E430982F2CA13B00643877 /* Secrets.xcconfig */; };
+		33E4309D2F2CA50A00643877 /* Auth in Frameworks */ = {isa = PBXBuildFile; productRef = 33E4309C2F2CA50A00643877 /* Auth */; };
+		33E4309F2F2CA50A00643877 /* Functions in Frameworks */ = {isa = PBXBuildFile; productRef = 33E4309E2F2CA50A00643877 /* Functions */; };
+		33E430A12F2CA50A00643877 /* PostgREST in Frameworks */ = {isa = PBXBuildFile; productRef = 33E430A02F2CA50A00643877 /* PostgREST */; };
+		33E430A32F2CA50A00643877 /* Realtime in Frameworks */ = {isa = PBXBuildFile; productRef = 33E430A22F2CA50A00643877 /* Realtime */; };
+		33E430A52F2CA50A00643877 /* Storage in Frameworks */ = {isa = PBXBuildFile; productRef = 33E430A42F2CA50A00643877 /* Storage */; };
+		33E430A72F2CA50A00643877 /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = 33E430A62F2CA50A00643877 /* Supabase */; };
+		33E430AB2F2CAFD000643877 /* SupabaseConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33E430A82F2CAFD000643877 /* SupabaseConfig.swift */; };
+		33E430AC2F2CAFD000643877 /* SupabaseService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33E430A92F2CAFD000643877 /* SupabaseService.swift */; };
+		33E430B52F2CBD7E00643877 /* OpenAILyricsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33E430B12F2CBD7E00643877 /* OpenAILyricsService.swift */; };
+		33E430B62F2CBD7E00643877 /* APIConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33E430AD2F2CBD7E00643877 /* APIConfiguration.swift */; };
+		33E430B72F2CBD7E00643877 /* MusicDatabaseService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33E430AF2F2CBD7E00643877 /* MusicDatabaseService.swift */; };
+		33E430B82F2CBD7E00643877 /* SunoDirectService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33E430B22F2CBD7E00643877 /* SunoDirectService.swift */; };
+		33E430B92F2CBD7E00643877 /* LLMServiceProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33E430AE2F2CBD7E00643877 /* LLMServiceProtocol.swift */; };
+		33E430BA2F2CBD7E00643877 /* MusicServiceProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33E430B02F2CBD7E00643877 /* MusicServiceProtocol.swift */; };
+		33E430C02F2CDD9F00643877 /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = 33E430BF2F2CDD9F00643877 /* GoogleSignIn */; };
+		33E430C22F2CDD9F00643877 /* GoogleSignInSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 33E430C12F2CDD9F00643877 /* GoogleSignInSwift */; };
+		33E430C42F2CE94400643877 /* LoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33E430C32F2CE94400643877 /* LoginView.swift */; };
+		33E430C62F2CE94C00643877 /* AuthViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33E430C52F2CE94C00643877 /* AuthViewModel.swift */; };
+		33E430C82F2CE98C00643877 /* AuthService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33E430C72F2CE98C00643877 /* AuthService.swift */; };
 		33F3882E2F20F6F0009CC102 /* MemoriesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33F388202F20F6EF009CC102 /* MemoriesView.swift */; };
 		33F3882F2F20F6F0009CC102 /* LyricsGenerationRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33F3880E2F20F6EF009CC102 /* LyricsGenerationRequest.swift */; };
 		33F388302F20F6F0009CC102 /* Photo2MusicManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33F3880B2F20F6EF009CC102 /* Photo2MusicManager.swift */; };
@@ -21,16 +41,11 @@
 		33F388392F20F6F0009CC102 /* CommonUI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33F388072F20F6EF009CC102 /* CommonUI.swift */; };
 		33F3883A2F20F6F0009CC102 /* LightViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33F3881E2F20F6EF009CC102 /* LightViewModel.swift */; };
 		33F3883B2F20F6F0009CC102 /* ProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33F388222F20F6EF009CC102 /* ProfileView.swift */; };
-		33F3883C2F20F6F0009CC102 /* SunoDirectService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33F388182F20F6EF009CC102 /* SunoDirectService.swift */; };
 		33F3883D2F20F6F0009CC102 /* MusicParameters.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33F388112F20F6EF009CC102 /* MusicParameters.swift */; };
-		33F3883E2F20F6F0009CC102 /* MusicServiceProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33F388162F20F6EF009CC102 /* MusicServiceProtocol.swift */; };
 		33F388402F20F6F0009CC102 /* MusicTaskStatusResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33F388122F20F6EF009CC102 /* MusicTaskStatusResponse.swift */; };
 		33F388412F20F6F0009CC102 /* ImageUtility.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33F3881A2F20F6EF009CC102 /* ImageUtility.swift */; };
-		33F388422F20F6F0009CC102 /* LLMServiceProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33F388152F20F6EF009CC102 /* LLMServiceProtocol.swift */; };
 		33F388432F20F6F0009CC102 /* MusicBaseManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33F3880A2F20F6EF009CC102 /* MusicBaseManager.swift */; };
 		33F388442F20F6F0009CC102 /* GeneratedMusic.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33F3880D2F20F6EF009CC102 /* GeneratedMusic.swift */; };
-		33F388452F20F6F0009CC102 /* OpenAILyricsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33F388172F20F6EF009CC102 /* OpenAILyricsService.swift */; };
-		33F388472F20F6F0009CC102 /* APIConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33F388142F20F6EF009CC102 /* APIConfiguration.swift */; };
 		33F388492F20F6F0009CC102 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 33F388272F20F6EF009CC102 /* Preview Assets.xcassets */; };
 		33F3884A2F20F6F0009CC102 /* Background.mp4 in Resources */ = {isa = PBXBuildFile; fileRef = 33F3882A2F20F6EF009CC102 /* Background.mp4 */; };
 		33F3884B2F20F6F0009CC102 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 33F388292F20F6EF009CC102 /* Assets.xcassets */; };
@@ -42,6 +57,20 @@
 
 /* Begin PBXFileReference section */
 		33454E2D2F277BC100B15848 /* Butterfly V3.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "Butterfly V3.entitlements"; sourceTree = "<group>"; };
+		33E430982F2CA13B00643877 /* Secrets.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Secrets.xcconfig; sourceTree = "<group>"; };
+		33E430A82F2CAFD000643877 /* SupabaseConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseConfig.swift; sourceTree = "<group>"; };
+		33E430A92F2CAFD000643877 /* SupabaseService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseService.swift; sourceTree = "<group>"; };
+		33E430AD2F2CBD7E00643877 /* APIConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIConfiguration.swift; sourceTree = "<group>"; };
+		33E430AE2F2CBD7E00643877 /* LLMServiceProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LLMServiceProtocol.swift; sourceTree = "<group>"; };
+		33E430AF2F2CBD7E00643877 /* MusicDatabaseService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusicDatabaseService.swift; sourceTree = "<group>"; };
+		33E430B02F2CBD7E00643877 /* MusicServiceProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusicServiceProtocol.swift; sourceTree = "<group>"; };
+		33E430B12F2CBD7E00643877 /* OpenAILyricsService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenAILyricsService.swift; sourceTree = "<group>"; };
+		33E430B22F2CBD7E00643877 /* SunoDirectService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SunoDirectService.swift; sourceTree = "<group>"; };
+		33E430BC2F2CC87E00643877 /* suno-webhook.ts */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.typescript; path = "suno-webhook.ts"; sourceTree = "<group>"; };
+		33E430BD2F2CCE4F00643877 /* Butterfly V3Release.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "Butterfly V3Release.entitlements"; sourceTree = "<group>"; };
+		33E430C32F2CE94400643877 /* LoginView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginView.swift; sourceTree = "<group>"; };
+		33E430C52F2CE94C00643877 /* AuthViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthViewModel.swift; sourceTree = "<group>"; };
+		33E430C72F2CE98C00643877 /* AuthService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthService.swift; sourceTree = "<group>"; };
 		33F387FF2F20F6EF009CC102 /* ButterflyApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ButterflyApp.swift; sourceTree = "<group>"; };
 		33F388002F20F6EF009CC102 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		33F388012F20F6EF009CC102 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -57,11 +86,6 @@
 		33F388102F20F6EF009CC102 /* MusicGenerationResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusicGenerationResponse.swift; sourceTree = "<group>"; };
 		33F388112F20F6EF009CC102 /* MusicParameters.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusicParameters.swift; sourceTree = "<group>"; };
 		33F388122F20F6EF009CC102 /* MusicTaskStatusResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusicTaskStatusResponse.swift; sourceTree = "<group>"; };
-		33F388142F20F6EF009CC102 /* APIConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIConfiguration.swift; sourceTree = "<group>"; };
-		33F388152F20F6EF009CC102 /* LLMServiceProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LLMServiceProtocol.swift; sourceTree = "<group>"; };
-		33F388162F20F6EF009CC102 /* MusicServiceProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusicServiceProtocol.swift; sourceTree = "<group>"; };
-		33F388172F20F6EF009CC102 /* OpenAILyricsService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenAILyricsService.swift; sourceTree = "<group>"; };
-		33F388182F20F6EF009CC102 /* SunoDirectService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SunoDirectService.swift; sourceTree = "<group>"; };
 		33F3881A2F20F6EF009CC102 /* ImageUtility.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageUtility.swift; sourceTree = "<group>"; };
 		33F3881D2F20F6EF009CC102 /* LightView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LightView.swift; sourceTree = "<group>"; };
 		33F3881E2F20F6EF009CC102 /* LightViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LightViewModel.swift; sourceTree = "<group>"; };
@@ -82,11 +106,67 @@
 		A0000023 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			files = (
+				33E430A12F2CA50A00643877 /* PostgREST in Frameworks */,
+				33E4309F2F2CA50A00643877 /* Functions in Frameworks */,
+				33E430A72F2CA50A00643877 /* Supabase in Frameworks */,
+				33E430C22F2CDD9F00643877 /* GoogleSignInSwift in Frameworks */,
+				33E4309D2F2CA50A00643877 /* Auth in Frameworks */,
+				33E430A52F2CA50A00643877 /* Storage in Frameworks */,
+				33E430A32F2CA50A00643877 /* Realtime in Frameworks */,
+				33E430C02F2CDD9F00643877 /* GoogleSignIn in Frameworks */,
 			);
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		33E430992F2CA13B00643877 /* Configs */ = {
+			isa = PBXGroup;
+			children = (
+				33E430982F2CA13B00643877 /* Secrets.xcconfig */,
+			);
+			path = Configs;
+			sourceTree = "<group>";
+		};
+		33E430AA2F2CAFD000643877 /* Supabase */ = {
+			isa = PBXGroup;
+			children = (
+				33E430A82F2CAFD000643877 /* SupabaseConfig.swift */,
+				33E430A92F2CAFD000643877 /* SupabaseService.swift */,
+			);
+			path = Supabase;
+			sourceTree = "<group>";
+		};
+		33E430B32F2CBD7E00643877 /* music_related */ = {
+			isa = PBXGroup;
+			children = (
+				33E430BC2F2CC87E00643877 /* suno-webhook.ts */,
+				33E430AD2F2CBD7E00643877 /* APIConfiguration.swift */,
+				33E430AE2F2CBD7E00643877 /* LLMServiceProtocol.swift */,
+				33E430AF2F2CBD7E00643877 /* MusicDatabaseService.swift */,
+				33E430B02F2CBD7E00643877 /* MusicServiceProtocol.swift */,
+				33E430B12F2CBD7E00643877 /* OpenAILyricsService.swift */,
+				33E430B22F2CBD7E00643877 /* SunoDirectService.swift */,
+			);
+			path = music_related;
+			sourceTree = "<group>";
+		};
+		33E430B42F2CBD7E00643877 /* User_related */ = {
+			isa = PBXGroup;
+			children = (
+				33E430C72F2CE98C00643877 /* AuthService.swift */,
+			);
+			path = User_related;
+			sourceTree = "<group>";
+		};
+		33E430BB2F2CBDA300643877 /* Auth */ = {
+			isa = PBXGroup;
+			children = (
+				33E430C52F2CE94C00643877 /* AuthViewModel.swift */,
+				33E430C32F2CE94400643877 /* LoginView.swift */,
+			);
+			path = Auth;
+			sourceTree = "<group>";
+		};
 		33F388022F20F6EF009CC102 /* App */ = {
 			isa = PBXGroup;
 			children = (
@@ -133,11 +213,8 @@
 		33F388192F20F6EF009CC102 /* Services */ = {
 			isa = PBXGroup;
 			children = (
-				33F388142F20F6EF009CC102 /* APIConfiguration.swift */,
-				33F388152F20F6EF009CC102 /* LLMServiceProtocol.swift */,
-				33F388162F20F6EF009CC102 /* MusicServiceProtocol.swift */,
-				33F388172F20F6EF009CC102 /* OpenAILyricsService.swift */,
-				33F388182F20F6EF009CC102 /* SunoDirectService.swift */,
+				33E430B32F2CBD7E00643877 /* music_related */,
+				33E430B42F2CBD7E00643877 /* User_related */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -153,6 +230,7 @@
 		33F3881C2F20F6EF009CC102 /* Core */ = {
 			isa = PBXGroup;
 			children = (
+				33E430AA2F2CAFD000643877 /* Supabase */,
 				33F388092F20F6EF009CC102 /* Components */,
 				33F3880C2F20F6EF009CC102 /* Managers */,
 				33F388132F20F6EF009CC102 /* Models */,
@@ -199,6 +277,7 @@
 		33F388262F20F6EF009CC102 /* Features */ = {
 			isa = PBXGroup;
 			children = (
+				33E430BB2F2CBDA300643877 /* Auth */,
 				33F3881F2F20F6EF009CC102 /* Light */,
 				33F388212F20F6EF009CC102 /* Memories */,
 				33F388232F20F6EF009CC102 /* Profile */,
@@ -243,6 +322,8 @@
 		A0000024 = {
 			isa = PBXGroup;
 			children = (
+				33E430BD2F2CCE4F00643877 /* Butterfly V3Release.entitlements */,
+				33E430992F2CA13B00643877 /* Configs */,
 				33454E2D2F277BC100B15848 /* Butterfly V3.entitlements */,
 				33F388022F20F6EF009CC102 /* App */,
 				33F388032F20F6EF009CC102 /* MOMENTA.xcodeproj */,
@@ -275,6 +356,16 @@
 			buildRules = (
 			);
 			name = "Butterfly V3";
+			packageProductDependencies = (
+				33E4309C2F2CA50A00643877 /* Auth */,
+				33E4309E2F2CA50A00643877 /* Functions */,
+				33E430A02F2CA50A00643877 /* PostgREST */,
+				33E430A22F2CA50A00643877 /* Realtime */,
+				33E430A42F2CA50A00643877 /* Storage */,
+				33E430A62F2CA50A00643877 /* Supabase */,
+				33E430BF2F2CDD9F00643877 /* GoogleSignIn */,
+				33E430C12F2CDD9F00643877 /* GoogleSignInSwift */,
+			);
 			productName = "Butterfly V3";
 			productReference = A0000021 /* Butterfly V3.app */;
 			productType = "com.apple.product-type.application";
@@ -302,6 +393,10 @@
 				Base,
 			);
 			mainGroup = A0000024;
+			packageReferences = (
+				33E4309B2F2CA50A00643877 /* XCRemoteSwiftPackageReference "supabase-swift" */,
+				33E430BE2F2CDD9F00643877 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */,
+			);
 			preferredProjectObjectVersion = 90;
 			productRefGroup = A0000026 /* Products */;
 			projectDirPath = "";
@@ -322,6 +417,7 @@
 		A0000030 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			files = (
+				33E4309A2F2CA13B00643877 /* Secrets.xcconfig in Resources */,
 				33F388492F20F6F0009CC102 /* Preview Assets.xcassets in Resources */,
 				33F3884A2F20F6F0009CC102 /* Background.mp4 in Resources */,
 				33F3884B2F20F6F0009CC102 /* Assets.xcassets in Resources */,
@@ -334,6 +430,8 @@
 			isa = PBXSourcesBuildPhase;
 			files = (
 				33F3882E2F20F6F0009CC102 /* MemoriesView.swift in Sources */,
+				33E430AB2F2CAFD000643877 /* SupabaseConfig.swift in Sources */,
+				33E430AC2F2CAFD000643877 /* SupabaseService.swift in Sources */,
 				33F3882F2F20F6F0009CC102 /* LyricsGenerationRequest.swift in Sources */,
 				33F388302F20F6F0009CC102 /* Photo2MusicManager.swift in Sources */,
 				33F388312F20F6F0009CC102 /* MusicGenerationRequest.swift in Sources */,
@@ -347,20 +445,24 @@
 				33F388392F20F6F0009CC102 /* CommonUI.swift in Sources */,
 				33F3883A2F20F6F0009CC102 /* LightViewModel.swift in Sources */,
 				33F3883B2F20F6F0009CC102 /* ProfileView.swift in Sources */,
-				33F3883C2F20F6F0009CC102 /* SunoDirectService.swift in Sources */,
 				33F388A02F211E49009CC102 /* WhiteGlassInputBar.swift in Sources */,
+				33E430B52F2CBD7E00643877 /* OpenAILyricsService.swift in Sources */,
+				33E430B62F2CBD7E00643877 /* APIConfiguration.swift in Sources */,
+				33E430B72F2CBD7E00643877 /* MusicDatabaseService.swift in Sources */,
+				33E430B82F2CBD7E00643877 /* SunoDirectService.swift in Sources */,
+				33E430B92F2CBD7E00643877 /* LLMServiceProtocol.swift in Sources */,
+				33E430BA2F2CBD7E00643877 /* MusicServiceProtocol.swift in Sources */,
 				33F388A12F211E49009CC102 /* PresetCard.swift in Sources */,
 				33F3883D2F20F6F0009CC102 /* MusicParameters.swift in Sources */,
-				33F3883E2F20F6F0009CC102 /* MusicServiceProtocol.swift in Sources */,
 				33F3889C2F211DDD009CC102 /* AILoadingView.swift in Sources */,
 				33F388402F20F6F0009CC102 /* MusicTaskStatusResponse.swift in Sources */,
 				33F388412F20F6F0009CC102 /* ImageUtility.swift in Sources */,
 				33F388A62F2202E0009CC102 /* WelcomeCard.swift in Sources */,
-				33F388422F20F6F0009CC102 /* LLMServiceProtocol.swift in Sources */,
+				33E430C62F2CE94C00643877 /* AuthViewModel.swift in Sources */,
 				33F388432F20F6F0009CC102 /* MusicBaseManager.swift in Sources */,
+				33E430C82F2CE98C00643877 /* AuthService.swift in Sources */,
+				33E430C42F2CE94400643877 /* LoginView.swift in Sources */,
 				33F388442F20F6F0009CC102 /* GeneratedMusic.swift in Sources */,
-				33F388452F20F6F0009CC102 /* OpenAILyricsService.swift in Sources */,
-				33F388472F20F6F0009CC102 /* APIConfiguration.swift in Sources */,
 			);
 		};
 /* End PBXSourcesBuildPhase section */
@@ -368,6 +470,7 @@
 /* Begin XCBuildConfiguration section */
 		A0000033 /* Debug configuration for PBXProject "MOMENTA" */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 33E430982F2CA13B00643877 /* Secrets.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
@@ -432,6 +535,7 @@
 		};
 		A0000034 /* Release configuration for PBXProject "MOMENTA" */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 33E430982F2CA13B00643877 /* Secrets.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
@@ -489,6 +593,7 @@
 		};
 		A0000035 /* Debug configuration for PBXNativeTarget "Butterfly V3" */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 33E430982F2CA13B00643877 /* Secrets.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
@@ -527,10 +632,11 @@
 		};
 		A0000036 /* Release configuration for PBXNativeTarget "Butterfly V3" */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 33E430982F2CA13B00643877 /* Secrets.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = "Butterfly V3.entitlements";
+				CODE_SIGN_ENTITLEMENTS = "Butterfly V3Release.entitlements";
 				CODE_SIGN_IDENTITY = "-";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
@@ -583,6 +689,68 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		33E4309B2F2CA50A00643877 /* XCRemoteSwiftPackageReference "supabase-swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/supabase-community/supabase-swift";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.5.1;
+			};
+		};
+		33E430BE2F2CDD9F00643877 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/google/GoogleSignIn-iOS";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 9.1.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		33E4309C2F2CA50A00643877 /* Auth */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 33E4309B2F2CA50A00643877 /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = Auth;
+		};
+		33E4309E2F2CA50A00643877 /* Functions */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 33E4309B2F2CA50A00643877 /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = Functions;
+		};
+		33E430A02F2CA50A00643877 /* PostgREST */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 33E4309B2F2CA50A00643877 /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = PostgREST;
+		};
+		33E430A22F2CA50A00643877 /* Realtime */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 33E4309B2F2CA50A00643877 /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = Realtime;
+		};
+		33E430A42F2CA50A00643877 /* Storage */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 33E4309B2F2CA50A00643877 /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = Storage;
+		};
+		33E430A62F2CA50A00643877 /* Supabase */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 33E4309B2F2CA50A00643877 /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = Supabase;
+		};
+		33E430BF2F2CDD9F00643877 /* GoogleSignIn */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 33E430BE2F2CDD9F00643877 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
+			productName = GoogleSignIn;
+		};
+		33E430C12F2CDD9F00643877 /* GoogleSignInSwift */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 33E430BE2F2CDD9F00643877 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
+			productName = GoogleSignInSwift;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = A0000031 /* Project object */;
 }

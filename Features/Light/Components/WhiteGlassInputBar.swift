@@ -64,7 +64,6 @@ struct WhiteGlassInputBar: View {
             RoundedRectangle(cornerRadius: 32, style: .circular)
                 .fill(.white.opacity(0.96))
         )
-        .shadow(color: Color.black.opacity(0.12), radius: 0, x: 0, y: 2)
     }
 }
 

@@ -77,27 +77,30 @@ class LightViewModel: NSObject, ObservableObject, CLLocationManagerDelegate {
         locationManager.startUpdatingLocation()
     }
     
-    func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
+    nonisolated func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         guard let location = locations.first else { return }
-        locationManager.stopUpdatingLocation() // Get location once
         
-        Task {
+        Task { @MainActor in
+            manager.stopUpdatingLocation() // Get location once
             await fetchWeather(for: location)
             self.isRefreshingWeather = false
         }
     }
     
-    func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
-        switch manager.authorizationStatus {
-        case .authorizedWhenInUse, .authorizedAlways:
-            locationManager.startUpdatingLocation()
-        case .denied, .restricted:
-            print("❌ Location access denied")
-            self.isRefreshingWeather = false
-        case .notDetermined:
-            locationManager.requestWhenInUseAuthorization()
-        @unknown default:
-            break
+    nonisolated func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
+        let status = manager.authorizationStatus
+        Task { @MainActor in
+            switch status {
+            case .authorizedWhenInUse, .authorizedAlways:
+                manager.startUpdatingLocation()
+            case .denied, .restricted:
+                print("❌ Location access denied")
+                self.isRefreshingWeather = false
+            case .notDetermined:
+                manager.requestWhenInUseAuthorization()
+            @unknown default:
+                break
+            }
         }
     }
     
@@ -236,8 +239,24 @@ class LightViewModel: NSObject, ObservableObject, CLLocationManagerDelegate {
             return
         }
         
+        print("🎵 [LightViewModel] 开始播放音乐: \(audioURL.absoluteString)")
+        
+        // 配置音频会话，确保在静音模式下也能发声
+        do {
+            try AVAudioSession.sharedInstance().setCategory(.playback, mode: .default)
+            try AVAudioSession.sharedInstance().setActive(true)
+        } catch {
+            print("❌ [LightViewModel] 设置音频会话失败: \(error.localizedDescription)")
+        }
+        
         if audioPlayer == nil {
             audioPlayer = AVPlayer(url: audioURL)
+        } else {
+            // 如果 URL 变了，需要重新加载
+            let currentURL = (audioPlayer?.currentItem?.asset as? AVURLAsset)?.url
+            if currentURL != audioURL {
+                audioPlayer = AVPlayer(url: audioURL)
+            }
         }
         
         audioPlayer?.play()

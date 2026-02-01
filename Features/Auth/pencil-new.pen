@@ -1,0 +1,308 @@
+{
+  "version": "2.6",
+  "children": [
+    {
+      "type": "frame",
+      "id": "bi8Au",
+      "x": 0,
+      "y": 0,
+      "name": "Frame",
+      "clip": true,
+      "width": 800,
+      "height": 600,
+      "fill": "#FFFFFF",
+      "layout": "none"
+    },
+    {
+      "type": "frame",
+      "id": "hCjlG",
+      "x": 54,
+      "y": 28,
+      "name": "iOS Login Sheet",
+      "width": 360,
+      "fill": "#FFFFFF40",
+      "cornerRadius": [
+        32,
+        32,
+        0,
+        0
+      ],
+      "effect": [
+        {
+          "type": "background_blur",
+          "radius": 60
+        },
+        {
+          "type": "shadow",
+          "shadowType": "outer",
+          "color": "#00000010",
+          "offset": {
+            "x": 0,
+            "y": 10
+          },
+          "blur": 40
+        }
+      ],
+      "layout": "vertical",
+      "gap": 24,
+      "padding": [
+        24,
+        24,
+        40,
+        24
+      ],
+      "alignItems": "center",
+      "children": [
+        {
+          "type": "rectangle",
+          "cornerRadius": 2.5,
+          "id": "xVVlj",
+          "name": "Handle",
+          "fill": "#00000026",
+          "width": 174,
+          "height": 7
+        },
+        {
+          "type": "frame",
+          "id": "rEBbp",
+          "name": "headerSection",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 8,
+          "children": [
+            {
+              "type": "text",
+              "id": "8j2TT",
+              "name": "brandTitle",
+              "fill": "#000000",
+              "content": "MOMENTA",
+              "textAlign": "center",
+              "fontFamily": "Inter",
+              "fontSize": 36,
+              "fontWeight": "700",
+              "letterSpacing": 2
+            },
+            {
+              "type": "text",
+              "id": "kvcGZ",
+              "name": "welcomeText",
+              "fill": "#00000070",
+              "content": "Welcome to your moments",
+              "textAlign": "center",
+              "fontFamily": "Inter",
+              "fontSize": 15,
+              "fontWeight": "normal"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "HRD71",
+          "name": "inputSection",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 12,
+          "children": [
+            {
+              "type": "frame",
+              "id": "MFS63",
+              "name": "Email Field",
+              "width": "fill_container",
+              "height": 52,
+              "fill": "#FFFFFFF5",
+              "cornerRadius": 26,
+              "padding": [
+                0,
+                18
+              ],
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "RpdX1",
+                  "name": "emailPlaceholder",
+                  "fill": "#000000",
+                  "content": "Email address",
+                  "fontFamily": "Inter",
+                  "fontSize": 16,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "IjVVP",
+              "name": "Password Field",
+              "width": "fill_container",
+              "height": 52,
+              "fill": "#FFFFFFF5",
+              "cornerRadius": 26,
+              "padding": [
+                0,
+                18
+              ],
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "i4twh",
+                  "name": "passwordPlaceholder",
+                  "fill": "#000000",
+                  "content": "Password",
+                  "fontFamily": "Inter",
+                  "fontSize": 16,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "gfp17",
+          "name": "Login Button",
+          "width": "fill_container",
+          "height": 52,
+          "fill": "#000000",
+          "cornerRadius": 26,
+          "effect": {
+            "type": "shadow",
+            "shadowType": "outer",
+            "color": "#00000030",
+            "offset": {
+              "x": 0,
+              "y": 2
+            },
+            "blur": 8
+          },
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "text",
+              "id": "Sq2Zf",
+              "name": "loginBtnText",
+              "fill": "#FFFFFF",
+              "content": "Continue",
+              "fontFamily": "Inter",
+              "fontSize": 17,
+              "fontWeight": "600"
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "id": "eDBhQ",
+          "name": "signupText",
+          "fill": "#007AFF",
+          "content": "Don't have an account? Sign up",
+          "textAlign": "center",
+          "fontFamily": "Inter",
+          "fontSize": 14,
+          "fontWeight": "normal"
+        },
+        {
+          "type": "frame",
+          "id": "xOwD6",
+          "name": "dividerSection",
+          "width": "fill_container",
+          "gap": 12,
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "rectangle",
+              "id": "JjoC4",
+              "name": "line1a",
+              "fill": "#00000015",
+              "width": "fill_container",
+              "height": 1
+            },
+            {
+              "type": "text",
+              "id": "lZNbd",
+              "name": "orLabel",
+              "fill": "#00000050",
+              "content": "or",
+              "fontFamily": "Inter",
+              "fontSize": 13,
+              "fontWeight": "normal"
+            },
+            {
+              "type": "rectangle",
+              "id": "pJVmh",
+              "name": "line2a",
+              "fill": "#00000015",
+              "width": "fill_container",
+              "height": 1
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "y95r8",
+          "name": "socialRow",
+          "width": "fill_container",
+          "gap": 16,
+          "justifyContent": "center",
+          "children": [
+            {
+              "type": "frame",
+              "id": "LHJfh",
+              "name": "appleIcon2",
+              "context": "Apple Sign In button - Uses native SignInWithAppleButton in code",
+              "width": 56,
+              "height": 56,
+              "fill": "#000000",
+              "cornerRadius": 28,
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon_font",
+                  "id": "4bJ43",
+                  "name": "appleLogo",
+                  "width": 28,
+                  "height": 28,
+                  "iconFontName": "apple",
+                  "iconFontFamily": "lucide",
+                  "fill": "#FFFFFF"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "l6fl3",
+              "name": "googleIcon2",
+              "context": "Google Sign In button - Uses google_icon.svg from Assets",
+              "width": 56,
+              "height": 56,
+              "fill": "#FFFFFF",
+              "cornerRadius": 28,
+              "stroke": {
+                "thickness": 1,
+                "fill": "#00000015"
+              },
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "37Jkf",
+                  "name": "googleLogoFrame",
+                  "width": 24,
+                  "height": 24,
+                  "fill": {
+                    "type": "image",
+                    "enabled": true,
+                    "url": "./images/generated-1769940468803.png",
+                    "mode": "fill"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
