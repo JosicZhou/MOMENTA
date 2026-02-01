@@ -7,6 +7,7 @@ import SwiftUI
 
 struct ProfileView: View {
     @ObservedObject var viewModel: LightViewModel
+    @ObservedObject var authViewModel: AuthViewModel
     
     var body: some View {
         ZStack {
@@ -21,11 +22,26 @@ struct ProfileView: View {
                     .font(.system(size: 32, weight: .bold))
                     .foregroundStyle(.white)
                 
-                Text("Your personal profile")
-                    .font(.system(size: 18, weight: .regular))
-                    .foregroundStyle(.white.opacity(0.85))
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal, 40)
+                if let email = AuthService.shared.currentUser?.email {
+                    Text(email)
+                        .font(.system(size: 16, weight: .medium))
+                        .foregroundStyle(.white.opacity(0.7))
+                }
+                
+                Button(action: {
+                    Task {
+                        await authViewModel.signOut()
+                    }
+                }) {
+                    Text("退出登录")
+                        .font(.headline)
+                        .foregroundColor(.red)
+                        .padding()
+                        .frame(width: 200)
+                        .background(Color.white.opacity(0.1))
+                        .cornerRadius(10)
+                }
+                .padding(.top, 20)
             }
         }
         .ignoresSafeArea()

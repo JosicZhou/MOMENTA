@@ -12,24 +12,13 @@ struct LightView: View {
     var body: some View {
         GeometryReader { geometry in
             ZStack {
-                // 背景图片
-                AsyncImage(url: URL(string: "https://images.unsplash.com/photo-1513569771920-c9e1d31714af?ixid=M3w4OTk0OHwwfDF8c2VhcmNofDh8fGRhcmt8ZW58MHx8fHwxNzYyOTY0Mjg4fDA&ixlib=rb-4.1.0")) { phase in
-                    switch phase {
-                    case .success(let image):
-                        image
-                            .resizable()
-                            .aspectRatio(contentMode: .fill)
-                            .frame(width: geometry.size.width, height: geometry.size.height)
-                            .clipped()
-                    case .failure(_):
-                        Color.black
-                    case .empty:
-                        Color.black
-                    @unknown default:
-                        Color.black
-                    }
-                }
-                .ignoresSafeArea()
+                // 背景图片 - 沙漠背景
+                Image("desert_background")
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+                    .frame(width: geometry.size.width, height: geometry.size.height)
+                    .clipped()
+                    .ignoresSafeArea()
                 
                 // 内容区域
                 VStack(spacing: 0) {

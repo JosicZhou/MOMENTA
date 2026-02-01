@@ -12,10 +12,30 @@ import AVKit
 
 struct ContentView: View {
     @StateObject private var viewModel = LightViewModel()
+    @StateObject private var authViewModel = AuthViewModel()
     @State private var selectedTab = 0
     @State private var showControls = true
     
     var body: some View {
+        Group {
+            if authViewModel.isAuthenticated {
+                mainAppView
+            } else {
+                LoginView(viewModel: authViewModel)
+            }
+        }
+        .onAppear {
+            // 监听全局认证状态
+            Task {
+                for await (event, session) in AuthService.shared.authStateChanges() {
+                    authViewModel.isAuthenticated = (session != nil)
+                }
+            }
+        }
+    }
+    
+    // 将原有的 TabView 逻辑提取出来
+    private var mainAppView: some View {
         ZStack {
             TabView(selection: $selectedTab) {
                 // 主页面 (Light 功能模块)
@@ -43,7 +63,7 @@ struct ContentView: View {
                     .tag(2)
                 
                 // 个人资料页面
-                ProfileView(viewModel: viewModel)
+                ProfileView(viewModel: viewModel, authViewModel: authViewModel)
                     .tabItem {
                         Image(systemName: "person.circle.fill")
                         Text("Profile")
