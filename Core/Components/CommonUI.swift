@@ -100,42 +100,6 @@ struct VideoPreview: View {
     }
 }
 
-// MARK: - 音乐播放条
-
-struct MusicPlayerBar: View {
-    let music: GeneratedMusic
-    let isPlaying: Bool
-    let onPlayPause: () -> Void
-    
-    var body: some View {
-        HStack(spacing: 16) {
-            Image(systemName: "music.note")
-                .frame(width: 24, height: 24)
-                .font(.system(size: 16, weight: .medium))
-                .foregroundStyle(.white)
-            
-            Text(music.title)
-                .font(.system(size: 16, weight: .regular))
-                .foregroundStyle(.white)
-                .lineLimit(1)
-            
-            Spacer()
-            
-            Image(systemName: isPlaying ? "pause.fill" : "play.fill")
-                .frame(width: 24, height: 24)
-                .font(.system(size: 16, weight: .medium))
-                .foregroundStyle(.white)
-        }
-        .padding(.horizontal, 20)
-        .padding(.vertical, 16)
-        .background(.ultraThinMaterial)
-        .clipShape(RoundedRectangle(cornerRadius: 20))
-        .onTapGesture {
-            onPlayPause()
-        }
-    }
-}
-
 // MARK: - 图片选择器
 
 struct ImagePicker: UIViewControllerRepresentable {
