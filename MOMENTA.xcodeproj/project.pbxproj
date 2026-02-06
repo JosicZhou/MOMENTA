@@ -7,6 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		33B3A11E2F35E15300AA82F7 /* MusicPlayerDetails.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33B3A11D2F35E15300AA82F7 /* MusicPlayerDetails.swift */; };
+		33B3A11F2F35E15300AA82F7 /* MusicPlayerBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33B3A11C2F35E15300AA82F7 /* MusicPlayerBar.swift */; };
+		33B3A1202F35E15300AA82F7 /* ContentWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33B3A11B2F35E15300AA82F7 /* ContentWindow.swift */; };
 		33E4309A2F2CA13B00643877 /* Secrets.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = 33E430982F2CA13B00643877 /* Secrets.xcconfig */; };
 		33E4309D2F2CA50A00643877 /* Auth in Frameworks */ = {isa = PBXBuildFile; productRef = 33E4309C2F2CA50A00643877 /* Auth */; };
 		33E4309F2F2CA50A00643877 /* Functions in Frameworks */ = {isa = PBXBuildFile; productRef = 33E4309E2F2CA50A00643877 /* Functions */; };
@@ -57,6 +60,9 @@
 
 /* Begin PBXFileReference section */
 		33454E2D2F277BC100B15848 /* Butterfly V3.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "Butterfly V3.entitlements"; sourceTree = "<group>"; };
+		33B3A11B2F35E15300AA82F7 /* ContentWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentWindow.swift; sourceTree = "<group>"; };
+		33B3A11C2F35E15300AA82F7 /* MusicPlayerBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusicPlayerBar.swift; sourceTree = "<group>"; };
+		33B3A11D2F35E15300AA82F7 /* MusicPlayerDetails.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusicPlayerDetails.swift; sourceTree = "<group>"; };
 		33E430982F2CA13B00643877 /* Secrets.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Secrets.xcconfig; sourceTree = "<group>"; };
 		33E430A82F2CAFD000643877 /* SupabaseConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseConfig.swift; sourceTree = "<group>"; };
 		33E430A92F2CAFD000643877 /* SupabaseService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseService.swift; sourceTree = "<group>"; };
@@ -180,6 +186,9 @@
 		33F388092F20F6EF009CC102 /* Components */ = {
 			isa = PBXGroup;
 			children = (
+				33B3A11B2F35E15300AA82F7 /* ContentWindow.swift */,
+				33B3A11C2F35E15300AA82F7 /* MusicPlayerBar.swift */,
+				33B3A11D2F35E15300AA82F7 /* MusicPlayerDetails.swift */,
 				33F3889B2F211DDC009CC102 /* AILoadingView.swift */,
 				33F388042F20F6EF009CC102 /* AppTheme.swift */,
 				33F388052F20F6EF009CC102 /* Backgrounds.swift */,
@@ -455,6 +464,9 @@
 				33F388A12F211E49009CC102 /* PresetCard.swift in Sources */,
 				33F3883D2F20F6F0009CC102 /* MusicParameters.swift in Sources */,
 				33F3889C2F211DDD009CC102 /* AILoadingView.swift in Sources */,
+				33B3A11E2F35E15300AA82F7 /* MusicPlayerDetails.swift in Sources */,
+				33B3A11F2F35E15300AA82F7 /* MusicPlayerBar.swift in Sources */,
+				33B3A1202F35E15300AA82F7 /* ContentWindow.swift in Sources */,
 				33F388402F20F6F0009CC102 /* MusicTaskStatusResponse.swift in Sources */,
 				33F388412F20F6F0009CC102 /* ImageUtility.swift in Sources */,
 				33F388A62F2202E0009CC102 /* WelcomeCard.swift in Sources */,
