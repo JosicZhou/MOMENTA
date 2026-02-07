@@ -3,6 +3,7 @@
 //  MOMENTA
 //
 //  iOS 26 Liquid Glass Style Login Interface - Bottom Sheet
+//  与 ProfileView 保持一致的 glassEffect 设计语言
 //
 
 import SwiftUI
@@ -12,7 +13,12 @@ import GoogleSignInSwift
 struct LoginView: View {
     @ObservedObject var viewModel: AuthViewModel
     @State private var dragOffset: CGFloat = 0
-    @State private var isDismissing = false
+    @State private var showSheet = false
+    
+    // Alert 状态
+    @State private var showErrorAlert = false
+    @State private var showSuccessAlert = false
+    @State private var alertMessage = ""
     
     var body: some View {
         ZStack {
@@ -31,136 +37,141 @@ struct LoginView: View {
                     // Login Sheet with Liquid Glass Effect
                     VStack(spacing: 24) {
                         // Handle - Draggable
-                        RoundedRectangle(cornerRadius: 2.5)
-                            .fill(Color.black.opacity(0.15))
-                            .frame(width: 40, height: 5)
-                            .padding(.top, 8)
+                        Capsule()
+                            .fill(.white.opacity(0.4))
+                            .frame(width: 36, height: 5)
+                            .padding(.top, 12)
                         
                         // Header Section
                         VStack(spacing: 8) {
                             Text("MOMENTA")
-                                .font(.system(size: 36, weight: .bold, design: .default))
+                                .font(.system(size: 34, weight: .bold, design: .default))
                                 .tracking(2)
-                                .foregroundColor(.black)
+                                .foregroundStyle(.white)
                             
                             Text("Welcome to your moments")
                                 .font(.system(size: 15))
-                                .foregroundColor(.black.opacity(0.45))
+                                .foregroundStyle(.white.opacity(0.6))
                         }
                         
-                        // Input Section - Liquid Glass Style
-                        VStack(spacing: 12) {
+                        // Input Section - Glass Effect Style
+                        VStack(spacing: 14) {
                             // Email Field
-                            TextField("", text: $viewModel.email, prompt: Text("Email address").foregroundColor(.black.opacity(0.5)))
-                                .font(.system(size: 16))
-                                .foregroundColor(.black)
-                                .accentColor(.black)
-                                .padding(.horizontal, 18)
-                                .frame(height: 52)
-                                .background(
-                                    RoundedRectangle(cornerRadius: 26, style: .circular)
-                                        .fill(.white.opacity(0.96))
-                                )
-                                .autocapitalization(.none)
-                                .keyboardType(.emailAddress)
+                            HStack(spacing: 12) {
+                                Image(systemName: "envelope")
+                                    .font(.system(size: 15, weight: .medium))
+                                    .foregroundStyle(.white.opacity(0.6))
+                                    .frame(width: 20)
+                                
+                                TextField("", text: $viewModel.email, prompt: Text("Email address").foregroundStyle(.white.opacity(0.4)))
+                                    .font(.system(size: 16))
+                                    .foregroundStyle(.white)
+                                    .tint(.white)
+                                    .autocapitalization(.none)
+                                    .keyboardType(.emailAddress)
+                                    .textContentType(.emailAddress)
+                            }
+                            .padding(.horizontal, 18)
+                            .frame(height: 52)
+                            .glassEffect(.regular.interactive(), in: .capsule)
                             
                             // Password Field
-                            SecureField("", text: $viewModel.password, prompt: Text("Password").foregroundColor(.black.opacity(0.5)))
-                                .font(.system(size: 16))
-                                .foregroundColor(.black)
-                                .accentColor(.black)
-                                .padding(.horizontal, 18)
-                                .frame(height: 52)
-                                .background(
-                                    RoundedRectangle(cornerRadius: 26, style: .circular)
-                                        .fill(.white.opacity(0.96))
-                                )
+                            HStack(spacing: 12) {
+                                Image(systemName: "lock")
+                                    .font(.system(size: 15, weight: .medium))
+                                    .foregroundStyle(.white.opacity(0.6))
+                                    .frame(width: 20)
+                                
+                                SecureField("", text: $viewModel.password, prompt: Text("Password").foregroundStyle(.white.opacity(0.4)))
+                                    .font(.system(size: 16))
+                                    .foregroundStyle(.white)
+                                    .tint(.white)
+                                    .textContentType(.password)
+                            }
+                            .padding(.horizontal, 18)
+                            .frame(height: 52)
+                            .glassEffect(.regular.interactive(), in: .capsule)
                         }
                         
                         // Continue Button
                         Button(action: {
                             Task { await viewModel.signInWithEmail() }
                         }) {
-                            Text("Continue")
-                                .font(.system(size: 17, weight: .semibold))
-                                .foregroundColor(.white)
-                                .frame(maxWidth: .infinity)
-                                .frame(height: 52)
-                                .background(Color.black)
-                                .cornerRadius(26)
-                                .shadow(color: Color.black.opacity(0.2), radius: 8, y: 2)
+                            HStack(spacing: 8) {
+                                Text("Continue")
+                                    .font(.system(size: 17, weight: .semibold))
+                                
+                                if viewModel.isLoading {
+                                    ProgressView()
+                                        .tint(.white)
+                                        .scaleEffect(0.8)
+                                }
+                            }
+                            .foregroundStyle(.white)
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 52)
+                            .background(.white.opacity(0.2), in: Capsule())
+                            .glassEffect(.regular.interactive(), in: .capsule)
                         }
+                        .disabled(viewModel.isLoading)
+                        .opacity(viewModel.isLoading ? 0.7 : 1.0)
                         
                         // Sign Up Link
                         Button(action: {
                             Task { await viewModel.signUpWithEmail() }
                         }) {
-                            Text("Don't have an account? Sign up")
+                            Text("Don't have an account? **Sign up**")
                                 .font(.system(size: 14))
-                                .foregroundColor(.blue)
+                                .foregroundStyle(.white.opacity(0.7))
                         }
+                        .disabled(viewModel.isLoading)
                         
                         // Divider
                         HStack(spacing: 12) {
                             Rectangle()
-                                .fill(Color.black.opacity(0.15))
-                                .frame(height: 1)
+                                .fill(.white.opacity(0.15))
+                                .frame(height: 0.5)
                             
                             Text("or")
                                 .font(.system(size: 13))
-                                .foregroundColor(.black.opacity(0.4))
+                                .foregroundStyle(.white.opacity(0.4))
                             
                             Rectangle()
-                                .fill(Color.black.opacity(0.15))
-                                .frame(height: 1)
+                                .fill(.white.opacity(0.15))
+                                .frame(height: 0.5)
                         }
                         
-                        // Social Login Icons
+                        // Social Login Icons - Glass Effect Style
                         HStack(spacing: 16) {
                             // Apple Sign In
                             Button(action: {
                                 viewModel.signInWithApple()
                             }) {
-                                ZStack {
-                                    Circle()
-                                        .fill(Color.black)
-                                        .frame(width: 56, height: 56)
-                                    
-                                    // Apple logo
-                                    Image("apple_icon")
-                                        .resizable()
-                                        .renderingMode(.template)
-                                        .foregroundColor(.white)
-                                        .aspectRatio(contentMode: .fit)
-                                        .frame(width: 24, height: 24)
-                                }
+                                Image(systemName: "apple.logo")
+                                    .font(.system(size: 22, weight: .medium))
+                                    .foregroundStyle(.white)
+                                    .frame(width: 56, height: 56)
+                                    .glassEffect(.regular.interactive(), in: .circle)
                             }
+                            .buttonStyle(.plain)
                             
                             // Google Sign In
                             Button(action: {
                                 Task { await viewModel.signInWithGoogle() }
                             }) {
-                                ZStack {
-                                    Circle()
-                                        .fill(Color.white)
-                                        .frame(width: 56, height: 56)
-                                        .overlay(
-                                            Circle()
-                                                .stroke(Color.black.opacity(0.08), lineWidth: 1)
-                                        )
-                                    
-                                    // Google logo
-                                    Image("google_icon")
-                                        .resizable()
-                                        .aspectRatio(contentMode: .fit)
-                                        .frame(width: 24, height: 24)
-                                }
+                                Image("google_icon")
+                                    .resizable()
+                                    .aspectRatio(contentMode: .fit)
+                                    .frame(width: 22, height: 22)
+                                    .frame(width: 56, height: 56)
+                                    .glassEffect(.regular.interactive(), in: .circle)
                             }
+                            .buttonStyle(.plain)
                         }
                         .padding(.bottom, 8)
                     }
                     .padding(.horizontal, 24)
-                    .padding(.top, 16)
+                    .padding(.top, 8)
                     .padding(.bottom, 40)
                     .frame(maxWidth: .infinity)
                     .background(
@@ -170,27 +181,17 @@ struct LoginView: View {
                             bottomTrailingRadius: 0,
                             topTrailingRadius: 32
                         )
-                        .fill(.white.opacity(0.25))
-                        .background(
-                            UnevenRoundedRectangle(
-                                topLeadingRadius: 32,
-                                bottomLeadingRadius: 0,
-                                bottomTrailingRadius: 0,
-                                topTrailingRadius: 32
-                            )
-                            .fill(.ultraThinMaterial)
-                        )
-                        .overlay(
-                            UnevenRoundedRectangle(
-                                topLeadingRadius: 32,
-                                bottomLeadingRadius: 0,
-                                bottomTrailingRadius: 0,
-                                topTrailingRadius: 32
-                            )
-                            .stroke(.white.opacity(0.2), lineWidth: 1)
-                        )
+                        .fill(.ultraThinMaterial.opacity(0.6))
                     )
-                    .shadow(color: Color.black.opacity(0.06), radius: 40, y: -10)
+                    .overlay(
+                        UnevenRoundedRectangle(
+                            topLeadingRadius: 32,
+                            bottomLeadingRadius: 0,
+                            bottomTrailingRadius: 0,
+                            topTrailingRadius: 32
+                        )
+                        .stroke(.white.opacity(0.15), lineWidth: 0.5)
+                    )
                     .offset(y: dragOffset)
                     .gesture(
                         DragGesture()
@@ -204,7 +205,7 @@ struct LoginView: View {
                                 // If dragged more than 150 points, dismiss
                                 if value.translation.height > 150 {
                                     withAnimation(.easeOut(duration: 0.3)) {
-                                        dragOffset = geometry.size.height
+                                        dragOffset = UIScreen.main.bounds.height
                                     }
                                 } else {
                                     // Snap back
@@ -217,29 +218,35 @@ struct LoginView: View {
                 }
                 .ignoresSafeArea(edges: .bottom)
             }
-            
-            // Loading & Error States
-            if viewModel.isLoading {
-                ProgressView()
-                    .scaleEffect(1.5)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .background(Color.black.opacity(0.3))
-            }
-            
-            if let errorMessage = viewModel.errorMessage {
-                VStack {
-                    Spacer()
-                    Text(errorMessage)
-                        .font(.caption)
-                        .foregroundColor(.white)
-                        .padding()
-                        .background(Color.red)
-                        .cornerRadius(10)
-                        .padding()
-                }
-            }
         }
         .ignoresSafeArea()
+        // Error Alert - 参考 SettingsView 的 alert 风格
+        .alert("Oops", isPresented: $showErrorAlert) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(alertMessage)
+        }
+        // Success Alert
+        .alert("Success", isPresented: $showSuccessAlert) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(alertMessage)
+        }
+        // 监听 ViewModel 的 errorMessage 变化，转化为 alert
+        .onChange(of: viewModel.errorMessage) { _, newValue in
+            if let message = newValue {
+                // 判断是成功提示还是错误提示
+                if message.contains("成功") || message.contains("Success") {
+                    alertMessage = message
+                    showSuccessAlert = true
+                } else {
+                    alertMessage = message
+                    showErrorAlert = true
+                }
+                // 清除 viewModel 中的消息，避免重复弹出
+                viewModel.errorMessage = nil
+            }
+        }
     }
 }
 

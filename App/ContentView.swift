@@ -13,8 +13,13 @@ import AVKit
 struct ContentView: View {
     @StateObject private var viewModel = LightViewModel()
     @StateObject private var authViewModel = AuthViewModel()
+    @StateObject private var profileViewModel = ProfileViewModel()
     @State private var selectedTab = 0
     @State private var showControls = true
+
+    // 全局设置：外观模式 & 字体大小
+    @AppStorage("appearanceMode") private var appearanceModeRaw: String = "system"
+    @AppStorage("fontSizeLevel") private var fontSizeLevelRaw: String = "standard"
     
     var body: some View {
         Group {
@@ -24,6 +29,8 @@ struct ContentView: View {
                 LoginView(viewModel: authViewModel)
             }
         }
+        .preferredColorScheme(AppearanceMode(rawValue: appearanceModeRaw)?.colorScheme)
+        .dynamicTypeSize(FontSizeLevel(rawValue: fontSizeLevelRaw)?.dynamicTypeSize ?? .medium)
         .onAppear {
             // 监听全局认证状态
             Task {
@@ -63,7 +70,7 @@ struct ContentView: View {
                     .tag(2)
                 
                 // 个人资料页面
-                ProfileView(viewModel: viewModel, authViewModel: authViewModel)
+                ProfileView(viewModel: viewModel, authViewModel: authViewModel, profileViewModel: profileViewModel)
                     .tabItem {
                         Image(systemName: "person.circle.fill")
                         Text("Profile")
