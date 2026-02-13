@@ -193,19 +193,22 @@ class SunoDirectService: MusicServiceProtocol {
                     }
                 }
                 
+                let imageURLString = sunoData.imageUrl ?? sunoData.imageUrl2
+                let imageURL = imageURLString.flatMap { URL(string: $0) }
+                
                 print("✅ [Suno] 音乐生成完成！")
                 print("   - 标题: \(sunoData.title ?? "未命名")")
                 print("   - 音频URL: \(sunoData.audioUrl ?? "无")")
-                print("   - 流媒体URL: \(sunoData.streamAudioUrl ?? "无")")
-                print("   - 最终使用URL: \(urlString)")
-                print("   - URL对象: \(audioURL.absoluteString)")
+                print("   - 封面URL: \(imageURLString ?? "无")")
                 
                 return GeneratedMusic(
-                    id: sunoData.id,
+                    id: taskData.taskId,
                     title: sunoData.title ?? "未命名",
                     style: sunoData.tags ?? "Unknown",
                     prompt: sunoData.prompt ?? "",
                     audioURL: audioURL,
+                    imageURL: imageURL,
+                    sunoAudioId: sunoData.id,
                     status: .completed,
                     createdAt: Date()
                 )
@@ -227,5 +230,52 @@ class SunoDirectService: MusicServiceProtocol {
         }
         
         throw MusicServiceError.timeout
+    }
+    
+    // MARK: - Get Timestamped Lyrics
+    
+    /// 获取带时间戳的歌词（逐词对齐），用于歌词同步滚动
+    /// - Parameters:
+    ///   - taskId: 生成任务 ID（GeneratedMusic.id）
+    ///   - audioId: Suno 音频 track ID（GeneratedMusic.sunoAudioId）
+    /// - Returns: 按行解析后的歌词数组
+    func getTimestampedLyrics(taskId: String, audioId: String) async throws -> [LyricLine] {
+        guard let url = URL(string: "\(baseURL)/api/v1/generate/get-timestamped-lyrics") else {
+            throw MusicServiceError.invalidURL
+        }
+        
+        var urlRequest = URLRequest(url: url)
+        urlRequest.httpMethod = "POST"
+        urlRequest.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+        urlRequest.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        
+        let body: [String: String] = ["taskId": taskId, "audioId": audioId]
+        urlRequest.httpBody = try JSONSerialization.data(withJSONObject: body)
+        
+        print("🎤 [Suno] 请求时间戳歌词: taskId=\(taskId), audioId=\(audioId)")
+        
+        let (data, response) = try await URLSession.shared.data(for: urlRequest)
+        
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw MusicServiceError.invalidResponse
+        }
+        
+        print("🎤 [Suno] 时间戳歌词响应码: \(httpResponse.statusCode)")
+        
+        guard httpResponse.statusCode == 200 else {
+            throw MusicServiceError.apiError(code: httpResponse.statusCode, message: "获取时间戳歌词失败")
+        }
+        
+        let decoder = JSONDecoder()
+        let result = try decoder.decode(TimestampedLyricsResponse.self, from: data)
+        
+        guard result.code == 200, let alignedWords = result.data?.alignedWords, !alignedWords.isEmpty else {
+            print("⚠️ [Suno] 时间戳歌词为空或请求失败: \(result.msg)")
+            return []
+        }
+        
+        let lines = LyricLine.parse(from: alignedWords)
+        print("✅ [Suno] 解析得到 \(lines.count) 行歌词")
+        return lines
     }
 }

@@ -34,7 +34,7 @@ struct LiquidWindow2<Content: View>: View {
             .padding(.horizontal, horizontalPadding)
             .padding(.vertical, verticalPadding)
             .frame(maxWidth: width ?? .infinity)
-            .glassEffect(.clear, in: .capsule)
+            .glassEffect(.clear, in: .rect(cornerRadius: cornerRadius))
     }
 }
 

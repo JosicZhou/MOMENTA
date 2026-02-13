@@ -16,6 +16,7 @@ struct ContentView: View {
     @StateObject private var profileViewModel = ProfileViewModel()
     @State private var selectedTab = 0
     @State private var showControls = true
+    @State private var playerManager = PlayerManager()
 
     // 全局设置：外观模式 & 字体大小
     @AppStorage("appearanceMode") private var appearanceModeRaw: String = "system"
@@ -43,7 +44,7 @@ struct ContentView: View {
     
     // 将原有的 TabView 逻辑提取出来
     private var mainAppView: some View {
-        ZStack {
+        ZStack(alignment: .bottom) {
             TabView(selection: $selectedTab) {
                 // 主页面 (Light 功能模块)
                 LightView(viewModel: viewModel)
@@ -83,6 +84,17 @@ struct ContentView: View {
                     showControls = true
                 }
             }
+            
+            if viewModel.isGenerating || viewModel.generatedMusic != nil {
+                ExpandablePlayerContainer(
+                    music: viewModel.generatedMusic,
+                    isGenerating: viewModel.isGenerating,
+                    generationProgress: viewModel.generationProgress
+                )
+                .environment(playerManager)
+                .transition(.move(edge: .bottom).combined(with: .opacity))
+                .animation(.spring(response: 0.5, dampingFraction: 0.8), value: viewModel.isGenerating)
+            }
         }
         .sheet(isPresented: $viewModel.showImagePicker) {
             ImagePicker(
@@ -97,6 +109,14 @@ struct ContentView: View {
             Button("OK", role: .cancel) { viewModel.dismissError() }
         } message: {
             Text(viewModel.errorMessage ?? "")
+        }
+        .onChange(of: viewModel.generatedMusic) { _, newMusic in
+            playerManager.currentMusic = newMusic
+            // 切换歌曲时清除旧歌词状态
+            playerManager.lyrics = []
+            playerManager.currentLineIndex = 0
+            playerManager.showLyrics = false
+            playerManager.lyricsControlsVisible = true
         }
     }
 }

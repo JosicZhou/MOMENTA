@@ -71,6 +71,7 @@ Deno.serve(async (req) => {
             status: 'completed',
             audio_url: musicData.audio_url,
             image_url: musicData.image_url,
+            suno_audio_id: musicData.id, // Suno 音频 track ID，用于歌词 API
             title: musicData.title || 'Untitled',
             payload: payload // 保存完整的原始回调数据以便查阅
           })
