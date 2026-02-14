@@ -36,7 +36,6 @@ class LightViewModel: NSObject, ObservableObject, CLLocationManagerDelegate {
     @Published var generatedMusic: GeneratedMusic?
     @Published var generatedSongs: [GeneratedMusic] = []
     @Published var errorMessage: String?
-    @Published var isPlaying: Bool = false
     
     // Weather & Location state
     @Published var weatherSymbolName: String?
@@ -53,7 +52,6 @@ class LightViewModel: NSObject, ObservableObject, CLLocationManagerDelegate {
     @Published var isVideoPlaying: Bool = false
     
     private let aiGenerator: Photo2MusicManager
-    private var audioPlayer: AVPlayer?
     
     private let locationManager = CLLocationManager()
     private let weatherService = WeatherService.shared
@@ -226,56 +224,6 @@ class LightViewModel: NSObject, ObservableObject, CLLocationManagerDelegate {
         isGenerating = false
     }
     
-    // MARK: - Playback
-    
-    func playMusic() {
-        guard let music = generatedMusic else {
-            showError("No music to play")
-            return
-        }
-        
-        guard let audioURL = music.audioURL else {
-            showError("Invalid audio URL")
-            return
-        }
-        
-        print("🎵 [LightViewModel] 开始播放音乐: \(audioURL.absoluteString)")
-        
-        // 配置音频会话，确保在静音模式下也能发声
-        do {
-            try AVAudioSession.sharedInstance().setCategory(.playback, mode: .default)
-            try AVAudioSession.sharedInstance().setActive(true)
-        } catch {
-            print("❌ [LightViewModel] 设置音频会话失败: \(error.localizedDescription)")
-        }
-        
-        if audioPlayer == nil {
-            audioPlayer = AVPlayer(url: audioURL)
-        } else {
-            // 如果 URL 变了，需要重新加载
-            let currentURL = (audioPlayer?.currentItem?.asset as? AVURLAsset)?.url
-            if currentURL != audioURL {
-                audioPlayer = AVPlayer(url: audioURL)
-            }
-        }
-        
-        audioPlayer?.play()
-        isPlaying = true
-    }
-    
-    func pauseMusic() {
-        audioPlayer?.pause()
-        isPlaying = false
-    }
-    
-    func togglePlayback() {
-        if isPlaying {
-            pauseMusic()
-        } else {
-            playMusic()
-        }
-    }
-    
     // MARK: - Validation
     
     func validateInput() -> Bool {
@@ -311,8 +259,6 @@ class LightViewModel: NSObject, ObservableObject, CLLocationManagerDelegate {
         generatedMusic = nil
         errorMessage = nil
         showErrorSheet = false
-        isPlaying = false
-        audioPlayer = nil
     }
 
     // MARK: - Library Management

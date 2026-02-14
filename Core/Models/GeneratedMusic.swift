@@ -14,6 +14,10 @@ struct GeneratedMusic: Identifiable, Codable, Equatable {
     let style: String
     let prompt: String
     let audioURL: URL?
+    /// Suno 返回的专辑封面图片 URL（imageUrl / imageUrl2）
+    var imageURL: URL? = nil
+    /// Suno 音频 track ID，用于歌词 API（与 id/taskId 不同）
+    var sunoAudioId: String?
     let status: GenerationStatus
     let createdAt: Date
     /// 来源：mine = 自己生成（Light/Memory），cocreate = 共创。缺省视为 mine。

@@ -10,6 +10,11 @@
 		33B3A11E2F35E15300AA82F7 /* MusicPlayerDetails.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33B3A11D2F35E15300AA82F7 /* MusicPlayerDetails.swift */; };
 		33B3A11F2F35E15300AA82F7 /* MusicPlayerBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33B3A11C2F35E15300AA82F7 /* MusicPlayerBar.swift */; };
 		33B3A1202F35E15300AA82F7 /* ContentWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33B3A11B2F35E15300AA82F7 /* ContentWindow.swift */; };
+		33B3A1412F39000000AA82F7 /* PlayerManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33B3A1402F39000000AA82F7 /* PlayerManager.swift */; };
+		33B3A1432F39000000AA82F7 /* CustomProgressBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33B3A1422F39000000AA82F7 /* CustomProgressBar.swift */; };
+		33B3A1452F39000000AA82F7 /* ExpandablePlayerContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33B3A1442F39000000AA82F7 /* ExpandablePlayerContainer.swift */; };
+		33B3A1472F3A000000AA82F7 /* LyricLine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33B3A1462F3A000000AA82F7 /* LyricLine.swift */; };
+		33B3A1492F3A000000AA82F7 /* LyricsScrollView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33B3A1482F3A000000AA82F7 /* LyricsScrollView.swift */; };
 		33B3A1282F3629F000AA82F7 /* PlaylistCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33B3A1232F3629F000AA82F7 /* PlaylistCard.swift */; };
 		33B3A1292F3629F000AA82F7 /* ProfileViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33B3A1272F3629F000AA82F7 /* ProfileViewModel.swift */; };
 		33B3A12A2F3629F000AA82F7 /* PlaylistDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33B3A1242F3629F000AA82F7 /* PlaylistDetailView.swift */; };
@@ -60,6 +65,7 @@
 		33F3884A2F20F6F0009CC102 /* Background.mp4 in Resources */ = {isa = PBXBuildFile; fileRef = 33F3882A2F20F6EF009CC102 /* Background.mp4 */; };
 		33F3884B2F20F6F0009CC102 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 33F388292F20F6EF009CC102 /* Assets.xcassets */; };
 		33F3889C2F211DDD009CC102 /* AILoadingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33F3889B2F211DDC009CC102 /* AILoadingView.swift */; };
+		33F388B12F2D0001009CC102 /* IntelligenceGlowEffect.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33F388B02F2D0001009CC102 /* IntelligenceGlowEffect.swift */; };
 		33F388A02F211E49009CC102 /* WhiteGlassInputBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33F3889E2F211E49009CC102 /* WhiteGlassInputBar.swift */; };
 		33F388A12F211E49009CC102 /* PresetCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33F3889D2F211E49009CC102 /* PresetCard.swift */; };
 		33F388A62F2202E0009CC102 /* WelcomeCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33F388A52F2202E0009CC102 /* WelcomeCard.swift */; };
@@ -70,6 +76,11 @@
 		33B3A11B2F35E15300AA82F7 /* ContentWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentWindow.swift; sourceTree = "<group>"; };
 		33B3A11C2F35E15300AA82F7 /* MusicPlayerBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusicPlayerBar.swift; sourceTree = "<group>"; };
 		33B3A11D2F35E15300AA82F7 /* MusicPlayerDetails.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusicPlayerDetails.swift; sourceTree = "<group>"; };
+		33B3A1402F39000000AA82F7 /* PlayerManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayerManager.swift; sourceTree = "<group>"; };
+		33B3A1422F39000000AA82F7 /* CustomProgressBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomProgressBar.swift; sourceTree = "<group>"; };
+		33B3A1442F39000000AA82F7 /* ExpandablePlayerContainer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExpandablePlayerContainer.swift; sourceTree = "<group>"; };
+		33B3A1462F3A000000AA82F7 /* LyricLine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LyricLine.swift; sourceTree = "<group>"; };
+		33B3A1482F3A000000AA82F7 /* LyricsScrollView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LyricsScrollView.swift; sourceTree = "<group>"; };
 		33B3A1232F3629F000AA82F7 /* PlaylistCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaylistCard.swift; sourceTree = "<group>"; };
 		33B3A1242F3629F000AA82F7 /* PlaylistDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaylistDetailView.swift; sourceTree = "<group>"; };
 		33B3A1252F3629F000AA82F7 /* SongRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SongRow.swift; sourceTree = "<group>"; };
@@ -116,6 +127,7 @@
 		33F388292F20F6EF009CC102 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		33F3882A2F20F6EF009CC102 /* Background.mp4 */ = {isa = PBXFileReference; lastKnownFileType = file; path = Background.mp4; sourceTree = "<group>"; };
 		33F3889B2F211DDC009CC102 /* AILoadingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AILoadingView.swift; sourceTree = "<group>"; };
+		33F388B02F2D0001009CC102 /* IntelligenceGlowEffect.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntelligenceGlowEffect.swift; sourceTree = "<group>"; };
 		33F3889D2F211E49009CC102 /* PresetCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PresetCard.swift; sourceTree = "<group>"; };
 		33F3889E2F211E49009CC102 /* WhiteGlassInputBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WhiteGlassInputBar.swift; sourceTree = "<group>"; };
 		33F388A52F2202E0009CC102 /* WelcomeCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeCard.swift; sourceTree = "<group>"; };
@@ -222,7 +234,11 @@
 				33B3A11B2F35E15300AA82F7 /* ContentWindow.swift */,
 				33B3A11C2F35E15300AA82F7 /* MusicPlayerBar.swift */,
 				33B3A11D2F35E15300AA82F7 /* MusicPlayerDetails.swift */,
+				33B3A1422F39000000AA82F7 /* CustomProgressBar.swift */,
+				33B3A1442F39000000AA82F7 /* ExpandablePlayerContainer.swift */,
+				33B3A1482F3A000000AA82F7 /* LyricsScrollView.swift */,
 				33F3889B2F211DDC009CC102 /* AILoadingView.swift */,
+				33F388B02F2D0001009CC102 /* IntelligenceGlowEffect.swift */,
 				33F388042F20F6EF009CC102 /* AppTheme.swift */,
 				33F388052F20F6EF009CC102 /* Backgrounds.swift */,
 				33F388072F20F6EF009CC102 /* CommonUI.swift */,
@@ -235,6 +251,7 @@
 			children = (
 				33F3880A2F20F6EF009CC102 /* MusicBaseManager.swift */,
 				33F3880B2F20F6EF009CC102 /* Photo2MusicManager.swift */,
+				33B3A1402F39000000AA82F7 /* PlayerManager.swift */,
 			);
 			path = Managers;
 			sourceTree = "<group>";
@@ -243,6 +260,7 @@
 			isa = PBXGroup;
 			children = (
 				33F3880D2F20F6EF009CC102 /* GeneratedMusic.swift */,
+				33B3A1462F3A000000AA82F7 /* LyricLine.swift */,
 				33F3880E2F20F6EF009CC102 /* LyricsGenerationRequest.swift */,
 				33F3880F2F20F6EF009CC102 /* MusicGenerationRequest.swift */,
 				33F388102F20F6EF009CC102 /* MusicGenerationResponse.swift */,
@@ -507,9 +525,15 @@
 				33F388A12F211E49009CC102 /* PresetCard.swift in Sources */,
 				33F3883D2F20F6F0009CC102 /* MusicParameters.swift in Sources */,
 				33F3889C2F211DDD009CC102 /* AILoadingView.swift in Sources */,
+				33F388B12F2D0001009CC102 /* IntelligenceGlowEffect.swift in Sources */,
 				33B3A11E2F35E15300AA82F7 /* MusicPlayerDetails.swift in Sources */,
 				33B3A11F2F35E15300AA82F7 /* MusicPlayerBar.swift in Sources */,
 				33B3A1202F35E15300AA82F7 /* ContentWindow.swift in Sources */,
+				33B3A1412F39000000AA82F7 /* PlayerManager.swift in Sources */,
+				33B3A1432F39000000AA82F7 /* CustomProgressBar.swift in Sources */,
+				33B3A1452F39000000AA82F7 /* ExpandablePlayerContainer.swift in Sources */,
+				33B3A1472F3A000000AA82F7 /* LyricLine.swift in Sources */,
+				33B3A1492F3A000000AA82F7 /* LyricsScrollView.swift in Sources */,
 				33F388402F20F6F0009CC102 /* MusicTaskStatusResponse.swift in Sources */,
 				33F388412F20F6F0009CC102 /* ImageUtility.swift in Sources */,
 				33F388A62F2202E0009CC102 /* WelcomeCard.swift in Sources */,

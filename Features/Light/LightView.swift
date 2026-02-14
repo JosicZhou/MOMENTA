@@ -105,31 +105,8 @@ struct LightView: View {
                     .padding(.horizontal, 20)
                 }
                 .scrollIndicators(.hidden)
-                
-                // 加载动画 (组件化)
-                if viewModel.isGenerating {
-                    AILoadingView(progress: viewModel.generationProgress)
-                }
             }
         }
         .ignoresSafeArea()
-        .safeAreaInset(edge: .bottom) {
-            if let music = viewModel.generatedMusic {
-                MusicPlayerBar(
-                    songTitle: music.title,
-                    artistName: music.style,
-                    onPlayPauseTap: {
-                        viewModel.togglePlayback()
-                    }
-                )
-                .frame(maxWidth: 390)
-                .frame(maxWidth: .infinity)
-                .padding(.horizontal, 20)
-                .padding(.bottom, 8)
-                .background(Color.clear)
-            } else {
-                Color.clear.frame(height: 0)
-            }
-        }
     }
 }

@@ -125,6 +125,11 @@ class MusicDatabaseService {
         
         let audioURL = audioUrlString != nil ? URL(string: audioUrlString!) : nil
         
+        var imageURL: URL? = nil
+        if let imgJSON = record["image_url"], case .string(let imgStr) = imgJSON, let url = URL(string: imgStr) {
+            imageURL = url
+        }
+        
         var title = "Untitled"
         if let titleJSON = record["title"], case .string(let t) = titleJSON {
             title = t
@@ -146,17 +151,39 @@ class MusicDatabaseService {
             ownerId = uid
         }
         
+        // 从 webhook payload 中提取 Suno 音频 track ID
+        // payload 结构: { code, data: { data: [ { id: "suno-audio-id", ... } ] } }
+        var sunoAudioId: String?
+        if let payloadJSON = record["payload"] {
+            sunoAudioId = extractSunoAudioId(from: payloadJSON)
+        }
+        
         return GeneratedMusic(
             id: taskId,
             title: title,
             style: record["style"]?.stringValue ?? "",
             prompt: record["prompt"]?.stringValue ?? "",
             audioURL: audioURL,
+            imageURL: imageURL,
+            sunoAudioId: sunoAudioId,
             status: status,
             createdAt: createdAt,
             source: source,
             ownerId: ownerId
         )
+    }
+    
+    /// 从 webhook 回调的 payload JSON 中提取 Suno 音频 track ID
+    /// 路径: payload.data.data[0].id
+    private func extractSunoAudioId(from payloadJSON: AnyJSON) -> String? {
+        guard case .object(let root) = payloadJSON,
+              let dataObj = root["data"], case .object(let dataDict) = dataObj,
+              let innerData = dataDict["data"], case .array(let items) = innerData,
+              let firstItem = items.first, case .object(let itemDict) = firstItem,
+              let idVal = itemDict["id"], case .string(let audioId) = idVal else {
+            return nil
+        }
+        return audioId
     }
 
     // MARK: - Profile 歌单：按用户拉取
