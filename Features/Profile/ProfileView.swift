@@ -2,9 +2,7 @@
 //  ProfileView.swift
 //  MOMENTA
 //
-//  个人主页视图：展示用户资料卡片与歌单网格。
-//  使用 Apple 原生 glassEffect (Liquid Glass) 风格窗口，
-//  与 ContentWindow (LiquidWindow2) 保持一致的设计语言。
+//  按截图重构的个人页：Liquid Glass 主视觉 + 可滚动歌曲记录。
 //
 
 import SwiftUI
@@ -15,46 +13,31 @@ struct ProfileView: View {
     @ObservedObject var profileViewModel: ProfileViewModel
 
     @State private var showSettings = false
-
-    // 2 列歌单网格
-    private let columns = [
-        GridItem(.flexible(), spacing: 16),
-        GridItem(.flexible(), spacing: 16)
-    ]
+    private let uiScale: CGFloat = 1.08
 
     var body: some View {
         NavigationStack {
-            ZStack {
-                IridescentBackground()
+            GeometryReader { geometry in
+                let bottomInset = geometry.safeAreaInsets.bottom
 
-                ScrollView {
-                    VStack(spacing: 20) {
-                        Spacer().frame(height: 60)
+                ZStack {
+                    profileBackground(geometry: geometry)
 
-                        profileCard
-
-                        Text("Playlists")
-                            .font(.system(size: 18, weight: .semibold))
-                            .foregroundStyle(.white)
-                            .tracking(-0.3)
-                            .frame(maxWidth: .infinity)
-
-                        playlistGrid
-
-                        signOutButton
-
-                        Spacer().frame(height: 120)
+                    ScrollView(.vertical, showsIndicators: false) {
+                        VStack(spacing: 16) {
+                            profileIdentityCard
+                            actionButtonsRow
+                            songsContainer
+                        }
+                        .padding(.horizontal, 24)
+                        .padding(.top, geometry.safeAreaInsets.top + 68)
+                        .padding(.bottom, bottomInset + 140)
+                        .frame(maxWidth: 430)
+                        .frame(maxWidth: .infinity)
                     }
-                    .padding(.horizontal, 4)
-                    .frame(maxWidth: 390)
-                    .frame(maxWidth: .infinity)
                 }
-                .scrollIndicators(.hidden)
             }
             .ignoresSafeArea()
-            .navigationDestination(for: PlaylistType.self) { type in
-                PlaylistDetailView(playlistType: type, viewModel: profileViewModel)
-            }
             .sheet(isPresented: $showSettings) {
                 SettingsView(authViewModel: authViewModel)
             }
@@ -62,110 +45,251 @@ struct ProfileView: View {
         .task { await profileViewModel.load() }
     }
 
-    // MARK: - Profile Card
-
-    private var profileCard: some View {
-        VStack(spacing: 4) {
-            // Top bar — 右上角设置按钮
-            HStack {
-                Spacer()
-                Button { showSettings = true } label: {
-                    Image(systemName: "gearshape")
-                        .font(.system(size: 16, weight: .medium))
-                        .foregroundStyle(.white.opacity(0.9))
-                        .frame(width: 34, height: 34)
-                        .background(.ultraThinMaterial.opacity(0.4), in: Circle())
+    private var profileIdentityCard: some View {
+        LiquidWindow2(cornerRadius: s(28), horizontalPadding: s(16), verticalPadding: s(16)) {
+            VStack(spacing: s(12)) {
+                HStack(alignment: .top) {
+                    avatarView
+                    Spacer()
+                    Button { showSettings = true } label: {
+                        Image(systemName: "gearshape")
+                            .font(.system(size: s(14), weight: .semibold))
+                            .foregroundStyle(.white.opacity(0.9))
+                            .frame(width: s(34), height: s(34))
+                            .background(Circle().fill(.black.opacity(0.25)))
+                    }
+                    .buttonStyle(PressableGlassStyle())
                 }
-                .buttonStyle(.plain)
-            }
 
-            // 头像
-            Circle()
-                .fill(.ultraThinMaterial.opacity(0.3))
-                .frame(width: 80, height: 80)
-                .overlay(
-                    Image(systemName: "person.fill")
-                        .font(.system(size: 32, weight: .light))
+                VStack(alignment: .trailing, spacing: 2) {
+                    Text("FOUNDER MEMBERS")
+                        .font(.systemExpanded(size: s(10), weight: .semibold))
+                        .tracking(s(1.6))
+                        .foregroundStyle(.white.opacity(0.72))
+                    Text(displayName)
+                        .font(.systemExpanded(size: s(18), weight: .semibold))
+                        .foregroundStyle(.white)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.85)
+                    Text("23 | Hong Kong")
+                        .font(.system(size: s(13), weight: .regular))
                         .foregroundStyle(.white.opacity(0.8))
-                )
-                .overlay(
-                    Circle()
-                        .stroke(.white.opacity(0.19), lineWidth: 2.5)
-                )
-
-            // 会员标签
-            Text("FOUNDER MEMBERS")
-                .font(.system(size: 10, weight: .medium))
-                .foregroundStyle(.secondary)
-                .tracking(2.5)
-                .padding(.top, 2)
-
-            // 用户名
-            Text(displayName)
-                .font(.system(size: 22, weight: .bold))
-                .foregroundStyle(.white)
-                .tracking(0.5)
-
-            // 用户信息
-            if let email = AuthService.shared.currentUser?.email {
-                Text(email)
-                    .font(.system(size: 12))
-                    .foregroundStyle(.secondary)
-            }
-        }
-        .padding(.horizontal, 4)
-        .padding(.top, 10)
-        .padding(.bottom, 14)
-        .frame(maxWidth: .infinity)
-        .glassEffect(.regular.interactive(), in: .rect(cornerRadius: 24))
-    }
-
-    // MARK: - Playlist Grid
-
-    private var playlistGrid: some View {
-        LazyVGrid(columns: columns, spacing: 16) {
-            ForEach(PlaylistType.allCases) { type in
-                let info = profileViewModel.displayInfo(for: type)
-                NavigationLink(value: type) {
-                    PlaylistCard(
-                        icon: info.type.iconName,
-                        title: info.type.displayName,
-                        songCount: info.songCountText
-                    )
                 }
-                .buttonStyle(GlassButtonStyle())
+                .frame(maxWidth: .infinity, alignment: .trailing)
             }
         }
     }
 
-    // MARK: - Sign Out Button
-
-    private var signOutButton: some View {
-        Button(action: {
-            Task { await authViewModel.signOut() }
-        }) {
-            HStack(spacing: 8) {
-                Image(systemName: "rectangle.portrait.and.arrow.right")
-                    .font(.system(size: 14))
-                Text("退出登录")
-                    .font(.system(size: 14, weight: .medium))
+    private var actionButtonsRow: some View {
+        HStack(spacing: s(16)) {
+            Button {
+                // Share profile action.
+            } label: {
+                Text("Share")
+                    .font(.systemExpanded(size: s(11), weight: .medium))
+                    .foregroundStyle(.white.opacity(0.92))
+                    .frame(maxWidth: .infinity)
+                    .frame(height: s(48))
+                    .glassEffect(.clear, in: .capsule)
             }
-            .foregroundColor(.red.opacity(0.8))
-            .padding(.vertical, 12)
-            .padding(.horizontal, 24)
-            .glassEffect(.regular.interactive(), in: .capsule)
+            .buttonStyle(PressableGlassStyle())
+
+            Button {
+                // Co-create action.
+            } label: {
+                Text("Co-Create")
+                    .font(.systemExpanded(size: s(11), weight: .medium))
+                    .foregroundStyle(.white.opacity(0.92))
+                    .frame(maxWidth: .infinity)
+                    .frame(height: s(48))
+                    .glassEffect(.clear, in: .capsule)
+            }
+            .buttonStyle(PressableGlassStyle())
         }
-        .buttonStyle(GlassButtonStyle())
-        .padding(.top, 10)
     }
 
-    // MARK: - Helpers
+    private var songsContainer: some View {
+        VStack(spacing: s(12)) {
+            if recentSongs.isEmpty {
+                emptySongRow
+            } else {
+                ForEach(Array(recentSongs.enumerated()), id: \.element.id) { index, song in
+                    VStack(spacing: s(10)) {
+                        Button {
+                            // Song row tap action.
+                        } label: {
+                            songRow(song)
+                        }
+                        .buttonStyle(PressableGlassStyle())
 
-    /// 从邮箱提取用户名作为展示名称
+                        if index < recentSongs.count - 1 {
+                            Rectangle()
+                                .fill(.white.opacity(0.22))
+                                .frame(height: 1)
+                                .padding(.leading, s(88))
+                        }
+                    }
+                }
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private func songRow(_ song: GeneratedMusic) -> some View {
+        HStack(spacing: s(12)) {
+            artwork(for: song)
+                .frame(width: s(74), height: s(74))
+                .clipShape(RoundedRectangle(cornerRadius: s(18), style: .continuous))
+
+            VStack(alignment: .leading, spacing: s(4)) {
+                Text(song.title.isEmpty ? "Songs Name" : song.title)
+                    .font(.system(size: s(14), weight: .medium))
+                    .foregroundStyle(.white)
+                    .lineLimit(1)
+                Text(authorNameText)
+                    .font(.system(size: s(14), weight: .regular))
+                    .foregroundStyle(.white.opacity(0.86))
+                    .lineLimit(1)
+                Text(songDateText(song.createdAt))
+                    .font(.system(size: s(13), weight: .regular))
+                    .foregroundStyle(.white.opacity(0.72))
+                    .lineLimit(1)
+            }
+
+            Spacer(minLength: 0)
+        }
+        .padding(.vertical, s(2))
+    }
+
+    private var emptySongRow: some View {
+        HStack(spacing: s(12)) {
+            RoundedRectangle(cornerRadius: s(18), style: .continuous)
+                .fill(.black.opacity(0.45))
+                .overlay(
+                    Image(systemName: "music.note")
+                        .font(.system(size: s(20), weight: .light))
+                        .foregroundStyle(.white.opacity(0.72))
+                )
+                .frame(width: s(74), height: s(74))
+
+            VStack(alignment: .leading, spacing: s(4)) {
+                Text("Songs Name")
+                    .font(.system(size: s(14), weight: .medium))
+                    .foregroundStyle(.white)
+                Text(authorNameText)
+                    .font(.system(size: s(14), weight: .regular))
+                    .foregroundStyle(.white.opacity(0.86))
+                Text("Time")
+                    .font(.system(size: s(13), weight: .regular))
+                    .foregroundStyle(.white.opacity(0.72))
+            }
+
+            Spacer()
+        }
+        .padding(.vertical, s(2))
+    }
+
+    @ViewBuilder
+    private func artwork(for song: GeneratedMusic) -> some View {
+        if let imageURL = song.imageURL {
+            AsyncImage(url: imageURL) { phase in
+                switch phase {
+                case .success(let image):
+                    image
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                default:
+                    RoundedRectangle(cornerRadius: 18, style: .continuous)
+                        .fill(.black.opacity(0.45))
+                        .overlay(
+                            Image(systemName: "music.note")
+                                .font(.system(size: s(20), weight: .light))
+                                .foregroundStyle(.white.opacity(0.72))
+                        )
+                }
+            }
+        } else {
+            RoundedRectangle(cornerRadius: s(18), style: .continuous)
+                .fill(.black.opacity(0.45))
+                .overlay(
+                    Image(systemName: "music.note")
+                        .font(.system(size: s(20), weight: .light))
+                        .foregroundStyle(.white.opacity(0.72))
+                )
+        }
+    }
+
+    private var avatarView: some View {
+        Group {
+            if let imageURL = recentSongs.first?.imageURL {
+                AsyncImage(url: imageURL) { phase in
+                    switch phase {
+                    case .success(let image):
+                        image
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                    default:
+                        Circle().fill(.white.opacity(0.16))
+                    }
+                }
+            } else {
+                Circle().fill(.white.opacity(0.16))
+            }
+        }
+        .frame(width: s(88), height: s(88))
+        .clipShape(Circle())
+        .overlay(Circle().stroke(.white.opacity(0.62), lineWidth: 2))
+    }
+
+    private var recentSongs: [GeneratedMusic] {
+        let merged = profileViewModel.mineSongs + profileViewModel.cocreateSongs + profileViewModel.sharedSongs
+        var seen = Set<String>()
+        let unique = merged.filter { seen.insert($0.id).inserted }
+            .filter { $0.imageURL != nil }
+        return unique.sorted { $0.createdAt > $1.createdAt }
+    }
+
     private var displayName: String {
         if let email = AuthService.shared.currentUser?.email {
-            return email.components(separatedBy: "@").first?.uppercased() ?? "USER"
+            return email.components(separatedBy: "@").first?.uppercased() ?? "EVE ANDERSON"
         }
-        return "USER"
+        return "EVE ANDERSON"
+    }
+
+    private var authorNameText: String {
+        if let email = AuthService.shared.currentUser?.email {
+            return email.components(separatedBy: "@").first ?? "Name"
+        }
+        return "Name"
+    }
+
+    private func songDateText(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "MMM d, yyyy"
+        return formatter.string(from: date)
+    }
+
+    private func s(_ value: CGFloat) -> CGFloat {
+        value * uiScale
+    }
+
+    @ViewBuilder
+    private func profileBackground(geometry: GeometryProxy) -> some View {
+        Image("desert_background")
+            .resizable()
+            .aspectRatio(contentMode: .fill)
+            .frame(width: geometry.size.width, height: geometry.size.height)
+            .clipped()
+            .overlay(Color.black.opacity(0.2))
+            .ignoresSafeArea()
+    }
+}
+
+private struct PressableGlassStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .scaleEffect(configuration.isPressed ? 0.97 : 1.0)
+            .opacity(configuration.isPressed ? 0.92 : 1.0)
+            .animation(.easeOut(duration: 0.16), value: configuration.isPressed)
     }
 }

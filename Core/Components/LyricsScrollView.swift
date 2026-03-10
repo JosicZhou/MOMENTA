@@ -24,12 +24,14 @@ struct LyricsScrollView: View {
     /// 上一次检测到的滚动偏移，用于计算滚动方向
     @State private var lastScrollOffset: CGFloat = 0
     
+    private let lyricAnimation = Animation.spring(response: 0.42, dampingFraction: 0.9)
+    
     var body: some View {
         ScrollViewReader { proxy in
             ScrollView(showsIndicators: false) {
-                LazyVStack(alignment: .leading, spacing: 24) {
+                LazyVStack(alignment: .leading, spacing: 20) {
                     // 顶部留白，让第一句歌词不贴顶
-                    Spacer().frame(height: 24)
+                    Spacer().frame(height: 34)
                     
                     ForEach(Array(playerManager.lyrics.enumerated()), id: \.element.id) { index, line in
                         lyricLineView(line: line, index: index)
@@ -37,7 +39,7 @@ struct LyricsScrollView: View {
                     }
                     
                     // 底部留白：需要足够空间让歌词滚到浮动控件上方
-                    Spacer().frame(height: 320)
+                    Spacer().frame(height: 300)
                 }
                 .padding(.top, 8)
                 .background(scrollDetector)
@@ -75,11 +77,13 @@ struct LyricsScrollView: View {
                 .padding(.top, 8)
         } else {
             Text(line.text)
-                .font(.system(size: isCurrent ? 28 : 22, weight: .bold))
-                .foregroundColor(.white.opacity(isCurrent ? 1.0 : 0.35))
+                .font(.system(size: isCurrent ? 31 : 24, weight: isCurrent ? .semibold : .medium))
+                .foregroundColor(.white.opacity(isCurrent ? 0.98 : 0.32))
+                .scaleEffect(isCurrent ? 1.0 : 0.96, anchor: .leading)
+                .offset(y: isCurrent ? 0 : -1)
                 .fixedSize(horizontal: false, vertical: true)
                 .padding(.horizontal, 24)
-                .animation(.easeInOut(duration: 0.35), value: playerManager.currentLineIndex)
+                .animation(lyricAnimation, value: playerManager.currentLineIndex)
         }
     }
     

@@ -41,7 +41,7 @@ struct PlaylistCard: View {
     var body: some View {
         if let action = action {
             Button(action: action) { cardContent }
-                .buttonStyle(GlassButtonStyle())
+                .buttonStyle(.glass)
         } else {
             cardContent
         }
@@ -50,7 +50,7 @@ struct PlaylistCard: View {
 
 #Preview {
     ZStack {
-        IridescentBackground()
+        DarkSilkBackground()
 
         LazyVGrid(
             columns: [

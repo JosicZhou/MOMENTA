@@ -20,6 +20,8 @@ struct MusicPlayerDetails: View {
     
     /// 统一水平边距
     private let hPadding: CGFloat = 24
+    /// 统一交互动效
+    private let uiSpring = Animation.spring(response: 0.42, dampingFraction: 0.9)
     
     var body: some View {
         GeometryReader { geo in
@@ -54,7 +56,8 @@ struct MusicPlayerDetails: View {
                                 }
                             }
                             .blur(radius: 80)
-                            .overlay(Color.black.opacity(0.45))
+                            .saturation(0.78)
+                            .overlay(Color.black.opacity(0.56))
                         }
                         .frame(width: screenW, height: screenH)
                         .clipped()
@@ -88,18 +91,24 @@ struct MusicPlayerDetails: View {
                         ZStack(alignment: .bottom) {
                             // 层 1：歌词内容（填满剩余空间）
                             if playerManager.isLoadingLyrics {
-                                VStack {
+                                VStack(spacing: 12) {
                                     Spacer()
                                     ProgressView()
-                                        .tint(.white.opacity(0.6))
+                                        .tint(.white.opacity(0.65))
+                                    Text("Loading Lyrics")
+                                        .font(.subheadline.weight(.medium))
+                                        .foregroundStyle(.white.opacity(0.56))
                                     Spacer()
                                 }
                             } else if playerManager.lyrics.isEmpty {
-                                VStack {
+                                VStack(spacing: 10) {
                                     Spacer()
+                                    Image(systemName: "quote.bubble")
+                                        .font(.system(size: 20, weight: .medium))
+                                        .foregroundStyle(.white.opacity(0.38))
                                     Text("No lyrics available")
-                                        .font(.body)
-                                        .foregroundStyle(.white.opacity(0.5))
+                                        .font(.subheadline.weight(.medium))
+                                        .foregroundStyle(.white.opacity(0.56))
                                     Spacer()
                                 }
                             } else {
@@ -257,12 +266,12 @@ struct MusicPlayerDetails: View {
             // 歌名 + 艺术家
             VStack(alignment: .leading, spacing: 2) {
                 Text(playerManager.currentMusic?.title ?? "Unknown")
-                    .font(.headline)
-                    .foregroundStyle(.primary)
+                    .font(.system(size: 17, weight: .semibold))
+                    .foregroundStyle(.white.opacity(0.94))
                     .lineLimit(1)
                 Text(playerManager.currentMusic?.style ?? "")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                    .font(.system(size: 14, weight: .regular))
+                    .foregroundStyle(.white.opacity(0.66))
                     .lineLimit(1)
             }
             
@@ -276,6 +285,8 @@ struct MusicPlayerDetails: View {
             }
             .tint(.white)
         }
+        .padding(.horizontal, 6)
+        .padding(.vertical, 4)
     }
     
     // MARK: - 歌词模式浮动底部控件
@@ -317,7 +328,7 @@ struct MusicPlayerDetails: View {
         )
         .environment(\.colorScheme, .dark)
         .opacity(playerManager.lyricsControlsVisible ? 1 : 0)
-        .animation(.easeInOut(duration: 0.3), value: playerManager.lyricsControlsVisible)
+        .animation(uiSpring, value: playerManager.lyricsControlsVisible)
         .allowsHitTesting(playerManager.lyricsControlsVisible)
     }
     
@@ -364,41 +375,30 @@ struct MusicPlayerDetails: View {
                 Text("-\(formatTime(max(0, playerManager.totalDuration - playerManager.currentTime)))")
                     .monospacedDigit()
             }
-            .font(.caption2)
-            .foregroundStyle(.secondary)
+            .font(.caption2.weight(.medium))
+            .foregroundStyle(playerManager.showLyrics ? .white.opacity(0.65) : .secondary)
         }
     }
     
     // MARK: - 播放控制
     
     private var playbackControls: some View {
-        HStack(spacing: 60) {
-            Button {} label: {
-                Image(systemName: "backward.fill")
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
-                    .frame(width: 30, height: 30)
-            }
-            
-            Button {
-                playerManager.togglePlayback()
-            } label: {
-                Image(systemName: playerManager.isPlaying ? "pause.fill" : "play.fill")
-                    .aspectRatio(contentMode: .fit)
-                    .scaleEffect(2.5)
-                    .contentTransition(.symbolEffect(.replace))
-            }
-            .frame(width: 40, height: 40)
-            .animation(.smooth(duration: 0.4), value: playerManager.isPlaying)
-            
-            Button {} label: {
-                Image(systemName: "forward.fill")
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
-                    .frame(width: 30, height: 30)
+        GlassEffectContainer(spacing: 18) {
+            HStack(spacing: 26) {
+                controlButton(symbol: "backward.fill", iconSize: 19, frame: 44, action: {})
+
+                controlButton(
+                    symbol: playerManager.isPlaying ? "pause.fill" : "play.fill",
+                    iconSize: 24,
+                    frame: 62,
+                    action: { playerManager.togglePlayback() }
+                )
+                .contentTransition(.symbolEffect(.replace))
+                .animation(.smooth(duration: 0.35), value: playerManager.isPlaying)
+
+                controlButton(symbol: "forward.fill", iconSize: 19, frame: 44, action: {})
             }
         }
-        .tint(.primary)
     }
     
     // MARK: - 音量滑块
@@ -406,24 +406,24 @@ struct MusicPlayerDetails: View {
     private var volumeSlider: some View {
         HStack(spacing: 8) {
             Image(systemName: "speaker.fill")
-                .font(.system(size: 10))
-                .foregroundStyle(.secondary)
+                .font(.system(size: 11, weight: .medium))
+                .foregroundStyle(playerManager.showLyrics ? .white.opacity(0.62) : .secondary)
             
             GeometryReader { geo in
                 ZStack(alignment: .leading) {
                     Capsule()
-                        .fill(Color.primary.opacity(0.15))
+                        .fill(playerManager.showLyrics ? .white.opacity(0.2) : Color.primary.opacity(0.15))
                         .frame(height: 4)
                     Capsule()
-                        .fill(Color.primary.opacity(0.55))
+                        .fill(playerManager.showLyrics ? .white.opacity(0.72) : Color.primary.opacity(0.55))
                         .frame(width: geo.size.width * 0.35, height: 4)
                 }
                 .frame(maxHeight: .infinity, alignment: .center)
             }
             
             Image(systemName: "speaker.wave.3.fill")
-                .font(.system(size: 10))
-                .foregroundStyle(.secondary)
+                .font(.system(size: 11, weight: .medium))
+                .foregroundStyle(playerManager.showLyrics ? .white.opacity(0.62) : .secondary)
         }
     }
     
@@ -432,8 +432,8 @@ struct MusicPlayerDetails: View {
     private var bottomToolbar: some View {
         HStack {
             Spacer()
-            Button {
-                withAnimation(.easeInOut(duration: 0.3)) {
+            controlButton(symbol: "quote.bubble", iconSize: 17, frame: 40) {
+                withAnimation(uiSpring) {
                     if !playerManager.showLyrics {
                         playerManager.showLyrics = true
                         playerManager.lyricsControlsVisible = true
@@ -442,24 +442,31 @@ struct MusicPlayerDetails: View {
                         playerManager.showLyrics = false
                     }
                 }
-            } label: {
-                Image(systemName: "quote.bubble")
-                    .font(.system(size: 18))
-                    .symbolVariant(playerManager.showLyrics ? .fill : .none)
             }
+            .symbolVariant(playerManager.showLyrics ? .fill : .none)
             Spacer()
-            Button {} label: {
-                Image(systemName: "airplayaudio")
-                    .font(.system(size: 18))
-            }
+            controlButton(symbol: "airplayaudio", iconSize: 17, frame: 40, action: {})
             Spacer()
-            Button {} label: {
-                Image(systemName: "list.bullet")
-                    .font(.system(size: 18))
-            }
+            controlButton(symbol: "list.bullet", iconSize: 17, frame: 40, action: {})
             Spacer()
         }
-        .tint(.secondary)
+        .foregroundStyle(playerManager.showLyrics ? .white.opacity(0.84) : .secondary)
+    }
+
+    @ViewBuilder
+    private func controlButton(
+        symbol: String,
+        iconSize: CGFloat,
+        frame: CGFloat,
+        action: @escaping () -> Void
+    ) -> some View {
+        Button(action: action) {
+            Image(systemName: symbol)
+                .font(.system(size: iconSize, weight: .semibold))
+                .frame(width: frame, height: frame)
+                .glassEffect(.clear.interactive(), in: .circle)
+        }
+        .buttonStyle(.plain)
     }
     
     // MARK: - 工具方法

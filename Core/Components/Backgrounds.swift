@@ -75,6 +75,90 @@ struct CityStreetBackground: View {
 
 // MARK: - 流光异彩背景
 
+// MARK: - 暗色丝绸背景（Profile 专用）
+
+struct DarkSilkBackground: View {
+    @State private var animateWaves = false
+    @State private var animateGlow = false
+
+    var body: some View {
+        GeometryReader { geometry in
+            ZStack {
+                // 底色：深炭黑到纯黑径向渐变
+                RadialGradient(
+                    colors: [
+                        Color(red: 0.08, green: 0.08, blue: 0.12),
+                        Color(red: 0.05, green: 0.05, blue: 0.08),
+                        Color(red: 0.02, green: 0.02, blue: 0.05),
+                        Color.black
+                    ],
+                    center: .center,
+                    startRadius: 0,
+                    endRadius: animateGlow ? 800 : 500
+                )
+                .ignoresSafeArea()
+
+                // 微弱紫色光晕（丝绸光泽）
+                Circle()
+                    .fill(
+                        RadialGradient(
+                            colors: [
+                                Color(red: 0.15, green: 0.12, blue: 0.20).opacity(0.4),
+                                Color(red: 0.10, green: 0.08, blue: 0.15).opacity(0.2),
+                                Color.clear
+                            ],
+                            center: .center,
+                            startRadius: 0,
+                            endRadius: animateGlow ? 600 : 300
+                        )
+                    )
+                    .blur(radius: animateGlow ? 120 : 80)
+                    .scaleEffect(animateGlow ? 1.3 : 0.9)
+                    .offset(y: -geometry.size.height * 0.15)
+
+                // 暗色丝绸波纹（椭圆流动）
+                ForEach(0..<8, id: \.self) { index in
+                    Ellipse()
+                        .fill(
+                            RadialGradient(
+                                colors: [
+                                    Color(red: 0.15, green: 0.13, blue: 0.22).opacity(0.3),
+                                    Color(red: 0.10, green: 0.08, blue: 0.18).opacity(0.15),
+                                    Color.clear
+                                ],
+                                center: .center,
+                                startRadius: 0,
+                                endRadius: animateWaves ? 150 : 80
+                            )
+                        )
+                        .frame(
+                            width: animateWaves ? 250 : 150,
+                            height: animateWaves ? 100 : 50
+                        )
+                        .position(
+                            x: CGFloat.random(in: 0...geometry.size.width),
+                            y: CGFloat.random(in: 0...geometry.size.height)
+                        )
+                        .blur(radius: animateWaves ? 40 : 20)
+                        .opacity(animateWaves ? 0.6 : 0.2)
+                        .animation(
+                            .easeInOut(duration: Double.random(in: 5.0...9.0))
+                                .repeatForever(autoreverses: true)
+                                .delay(Double(index) * 0.5),
+                            value: animateWaves
+                        )
+                }
+            }
+            .onAppear {
+                withAnimation(.easeInOut(duration: 5.0).repeatForever(autoreverses: true)) { animateGlow = true }
+                withAnimation(.easeInOut(duration: 7.0).repeatForever(autoreverses: true)) { animateWaves = true }
+            }
+        }
+    }
+}
+
+// MARK: - 流光异彩背景
+
 struct IridescentBackground: View {
     @State private var animateSunset = false
     @State private var animateWaves = false
