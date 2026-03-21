@@ -85,17 +85,17 @@ struct ContentView: View {
                 }
             }
             
-            if viewModel.isGenerating || viewModel.generatedMusic != nil {
+            if viewModel.isGenerating || viewModel.generatedMusic != nil || playerManager.currentMusic != nil {
                 ExpandablePlayerContainer(
-                    music: viewModel.generatedMusic,
+                    music: playerManager.currentMusic ?? viewModel.generatedMusic,
                     isGenerating: viewModel.isGenerating,
                     generationProgress: viewModel.generationProgress
                 )
-                .environment(playerManager)
                 .transition(.move(edge: .bottom).combined(with: .opacity))
                 .animation(.spring(response: 0.5, dampingFraction: 0.8), value: viewModel.isGenerating)
             }
         }
+        .environment(playerManager)
         .sheet(isPresented: $viewModel.showImagePicker) {
             ImagePicker(
                 sourceType: viewModel.imagePickerSourceType,

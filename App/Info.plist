@@ -18,8 +18,6 @@
 	<string>$(PRODUCT_BUNDLE_PACKAGE_TYPE)</string>
 	<key>CFBundleShortVersionString</key>
 	<string>3.0</string>
-	<key>GIDClientID</key>
-	<string>589222292155-6r5o0ddipmvvde9ukk5tdd9lebkvthd1.apps.googleusercontent.com</string>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>
@@ -35,20 +33,26 @@
 	</array>
 	<key>CFBundleVersion</key>
 	<string>1</string>
+	<key>GIDClientID</key>
+	<string>589222292155-6r5o0ddipmvvde9ukk5tdd9lebkvthd1.apps.googleusercontent.com</string>
 	<key>LSApplicationCategoryType</key>
 	<string></string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSCameraUsageDescription</key>
-	<string>We need access to your camera to capture photos for music generation</string>
+	<string>Enable camera access to capture photos that inspire your music.</string>
+	<key>NSHealthShareUsageDescription</key>
+	<string>Use heart data to shape music that fits your mood.</string>
+	<key>NSHealthUpdateUsageDescription</key>
+	<string>Keep your music experience in sync with your health data.</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-	<string>We need your location to provide accurate local weather information.</string>
+	<string>Provide weather-based music even when the app is closed.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>We need your location to provide accurate local weather information.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>We need access to save generated music artwork to your photo library</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>We need access to your photo library to select images for music generation</string>
+	<string>Choose photos to inspire personalized music.</string>
 	<key>OPENAI_API_KEY</key>
 	<string>$(OPENAI_API_KEY)</string>
 	<key>OPENAI_BASE_URL</key>

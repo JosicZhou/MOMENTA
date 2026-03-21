@@ -4,13 +4,12 @@ import SwiftUI
 
 struct WhiteGlassInputBar: View {
     @Binding var prompt: String
+    var isTextFieldFocused: FocusState<Bool>.Binding
     let hasSelectedImage: Bool
     let isGenerating: Bool
     let onCameraPress: () -> Void
     let onPhotoPress: () -> Void
     let onGeneratePress: () -> Void
-    
-    @FocusState private var isTextFieldFocused: Bool
     
     var body: some View {
         HStack(spacing: 0) {
@@ -28,11 +27,11 @@ struct WhiteGlassInputBar: View {
             TextField("", text: $prompt)
                 .font(.system(size: 14, weight: .regular))
                 .foregroundStyle(.black)
-                .focused($isTextFieldFocused)
+                .focused(isTextFieldFocused)
                 .submitLabel(.done)
                 .onSubmit {
                     if !prompt.isEmpty {
-                        isTextFieldFocused = false
+                        isTextFieldFocused.wrappedValue = false
                         onGeneratePress()
                     }
                 }
@@ -41,7 +40,7 @@ struct WhiteGlassInputBar: View {
             Spacer(minLength: 0)
             
             Button(action: {
-                isTextFieldFocused = false
+                isTextFieldFocused.wrappedValue = false
                 onGeneratePress()
             }) {
                 ZStack {

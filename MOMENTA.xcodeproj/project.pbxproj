@@ -7,20 +7,31 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		3338A2352F6EA3A20018FC58 /* MemoryMusicContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3338A22F2F6EA3A20018FC58 /* MemoryMusicContext.swift */; };
+		3338A2362F6EA3A20018FC58 /* model_valence.mlmodel in Sources */ = {isa = PBXBuildFile; fileRef = 3338A2312F6EA3A20018FC58 /* model_valence.mlmodel */; };
+		3338A2372F6EA3A20018FC58 /* MemoryLyricsPromptBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3338A22E2F6EA3A20018FC58 /* MemoryLyricsPromptBuilder.swift */; };
+		3338A2382F6EA3A20018FC58 /* HealthMusicHints.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3338A22C2F6EA3A20018FC58 /* HealthMusicHints.swift */; };
+		3338A2392F6EA3A20018FC58 /* model_arousal.mlmodel in Sources */ = {isa = PBXBuildFile; fileRef = 3338A2302F6EA3A20018FC58 /* model_arousal.mlmodel */; };
+		3338A23A2F6EA3A20018FC58 /* MemoryInstrumentalPromptBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3338A22D2F6EA3A20018FC58 /* MemoryInstrumentalPromptBuilder.swift */; };
+		3338A23C2F6EA6DE0018FC58 /* MemoryViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3338A23B2F6EA6DE0018FC58 /* MemoryViewModel.swift */; };
+		3338A2402F6EA7EB0018FC58 /* EmotionMLService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3338A23D2F6EA7EB0018FC58 /* EmotionMLService.swift */; };
+		3338A2412F6EA7EB0018FC58 /* HealthKitService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3338A23E2F6EA7EB0018FC58 /* HealthKitService.swift */; };
+		3338A2422F6EA7EB0018FC58 /* LocationWeatherService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3338A23F2F6EA7EB0018FC58 /* LocationWeatherService.swift */; };
+		3338A2442F6EA93A0018FC58 /* Memory2MusicManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3338A2432F6EA93A0018FC58 /* Memory2MusicManager.swift */; };
 		33B3A11E2F35E15300AA82F7 /* MusicPlayerDetails.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33B3A11D2F35E15300AA82F7 /* MusicPlayerDetails.swift */; };
 		33B3A11F2F35E15300AA82F7 /* MusicPlayerBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33B3A11C2F35E15300AA82F7 /* MusicPlayerBar.swift */; };
 		33B3A1202F35E15300AA82F7 /* ContentWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33B3A11B2F35E15300AA82F7 /* ContentWindow.swift */; };
-		33B3A1412F39000000AA82F7 /* PlayerManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33B3A1402F39000000AA82F7 /* PlayerManager.swift */; };
-		33B3A1432F39000000AA82F7 /* CustomProgressBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33B3A1422F39000000AA82F7 /* CustomProgressBar.swift */; };
-		33B3A1452F39000000AA82F7 /* ExpandablePlayerContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33B3A1442F39000000AA82F7 /* ExpandablePlayerContainer.swift */; };
-		33B3A1472F3A000000AA82F7 /* LyricLine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33B3A1462F3A000000AA82F7 /* LyricLine.swift */; };
-		33B3A1492F3A000000AA82F7 /* LyricsScrollView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33B3A1482F3A000000AA82F7 /* LyricsScrollView.swift */; };
 		33B3A1282F3629F000AA82F7 /* PlaylistCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33B3A1232F3629F000AA82F7 /* PlaylistCard.swift */; };
 		33B3A1292F3629F000AA82F7 /* ProfileViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33B3A1272F3629F000AA82F7 /* ProfileViewModel.swift */; };
 		33B3A12A2F3629F000AA82F7 /* PlaylistDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33B3A1242F3629F000AA82F7 /* PlaylistDetailView.swift */; };
 		33B3A12B2F3629F000AA82F7 /* SongRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33B3A1252F3629F000AA82F7 /* SongRow.swift */; };
 		33B3A13B2F378CEA00AA82F7 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33B3A1382F378CEA00AA82F7 /* SettingsView.swift */; };
 		33B3A13C2F378CEA00AA82F7 /* SettingsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33B3A1392F378CEA00AA82F7 /* SettingsViewModel.swift */; };
+		33B3A1412F39000000AA82F7 /* PlayerManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33B3A1402F39000000AA82F7 /* PlayerManager.swift */; };
+		33B3A1432F39000000AA82F7 /* CustomProgressBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33B3A1422F39000000AA82F7 /* CustomProgressBar.swift */; };
+		33B3A1452F39000000AA82F7 /* ExpandablePlayerContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33B3A1442F39000000AA82F7 /* ExpandablePlayerContainer.swift */; };
+		33B3A1472F3A000000AA82F7 /* LyricLine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33B3A1462F3A000000AA82F7 /* LyricLine.swift */; };
+		33B3A1492F3A000000AA82F7 /* LyricsScrollView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33B3A1482F3A000000AA82F7 /* LyricsScrollView.swift */; };
 		33E4309A2F2CA13B00643877 /* Secrets.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = 33E430982F2CA13B00643877 /* Secrets.xcconfig */; };
 		33E4309D2F2CA50A00643877 /* Auth in Frameworks */ = {isa = PBXBuildFile; productRef = 33E4309C2F2CA50A00643877 /* Auth */; };
 		33E4309F2F2CA50A00643877 /* Functions in Frameworks */ = {isa = PBXBuildFile; productRef = 33E4309E2F2CA50A00643877 /* Functions */; };
@@ -65,28 +76,39 @@
 		33F3884A2F20F6F0009CC102 /* Background.mp4 in Resources */ = {isa = PBXBuildFile; fileRef = 33F3882A2F20F6EF009CC102 /* Background.mp4 */; };
 		33F3884B2F20F6F0009CC102 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 33F388292F20F6EF009CC102 /* Assets.xcassets */; };
 		33F3889C2F211DDD009CC102 /* AILoadingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33F3889B2F211DDC009CC102 /* AILoadingView.swift */; };
-		33F388B12F2D0001009CC102 /* IntelligenceGlowEffect.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33F388B02F2D0001009CC102 /* IntelligenceGlowEffect.swift */; };
 		33F388A02F211E49009CC102 /* WhiteGlassInputBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33F3889E2F211E49009CC102 /* WhiteGlassInputBar.swift */; };
 		33F388A12F211E49009CC102 /* PresetCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33F3889D2F211E49009CC102 /* PresetCard.swift */; };
 		33F388A62F2202E0009CC102 /* WelcomeCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33F388A52F2202E0009CC102 /* WelcomeCard.swift */; };
+		33F388B12F2D0001009CC102 /* IntelligenceGlowEffect.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33F388B02F2D0001009CC102 /* IntelligenceGlowEffect.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		3338A22C2F6EA3A20018FC58 /* HealthMusicHints.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthMusicHints.swift; sourceTree = "<group>"; };
+		3338A22D2F6EA3A20018FC58 /* MemoryInstrumentalPromptBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoryInstrumentalPromptBuilder.swift; sourceTree = "<group>"; };
+		3338A22E2F6EA3A20018FC58 /* MemoryLyricsPromptBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoryLyricsPromptBuilder.swift; sourceTree = "<group>"; };
+		3338A22F2F6EA3A20018FC58 /* MemoryMusicContext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoryMusicContext.swift; sourceTree = "<group>"; };
+		3338A2302F6EA3A20018FC58 /* model_arousal.mlmodel */ = {isa = PBXFileReference; lastKnownFileType = file.mlmodel; path = model_arousal.mlmodel; sourceTree = "<group>"; };
+		3338A2312F6EA3A20018FC58 /* model_valence.mlmodel */ = {isa = PBXFileReference; lastKnownFileType = file.mlmodel; path = model_valence.mlmodel; sourceTree = "<group>"; };
+		3338A23B2F6EA6DE0018FC58 /* MemoryViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoryViewModel.swift; sourceTree = "<group>"; };
+		3338A23D2F6EA7EB0018FC58 /* EmotionMLService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmotionMLService.swift; sourceTree = "<group>"; };
+		3338A23E2F6EA7EB0018FC58 /* HealthKitService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthKitService.swift; sourceTree = "<group>"; };
+		3338A23F2F6EA7EB0018FC58 /* LocationWeatherService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationWeatherService.swift; sourceTree = "<group>"; };
+		3338A2432F6EA93A0018FC58 /* Memory2MusicManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Memory2MusicManager.swift; sourceTree = "<group>"; };
 		33454E2D2F277BC100B15848 /* Butterfly V3.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "Butterfly V3.entitlements"; sourceTree = "<group>"; };
 		33B3A11B2F35E15300AA82F7 /* ContentWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentWindow.swift; sourceTree = "<group>"; };
 		33B3A11C2F35E15300AA82F7 /* MusicPlayerBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusicPlayerBar.swift; sourceTree = "<group>"; };
 		33B3A11D2F35E15300AA82F7 /* MusicPlayerDetails.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusicPlayerDetails.swift; sourceTree = "<group>"; };
-		33B3A1402F39000000AA82F7 /* PlayerManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayerManager.swift; sourceTree = "<group>"; };
-		33B3A1422F39000000AA82F7 /* CustomProgressBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomProgressBar.swift; sourceTree = "<group>"; };
-		33B3A1442F39000000AA82F7 /* ExpandablePlayerContainer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExpandablePlayerContainer.swift; sourceTree = "<group>"; };
-		33B3A1462F3A000000AA82F7 /* LyricLine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LyricLine.swift; sourceTree = "<group>"; };
-		33B3A1482F3A000000AA82F7 /* LyricsScrollView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LyricsScrollView.swift; sourceTree = "<group>"; };
 		33B3A1232F3629F000AA82F7 /* PlaylistCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaylistCard.swift; sourceTree = "<group>"; };
 		33B3A1242F3629F000AA82F7 /* PlaylistDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaylistDetailView.swift; sourceTree = "<group>"; };
 		33B3A1252F3629F000AA82F7 /* SongRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SongRow.swift; sourceTree = "<group>"; };
 		33B3A1272F3629F000AA82F7 /* ProfileViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileViewModel.swift; sourceTree = "<group>"; };
 		33B3A1382F378CEA00AA82F7 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		33B3A1392F378CEA00AA82F7 /* SettingsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsViewModel.swift; sourceTree = "<group>"; };
+		33B3A1402F39000000AA82F7 /* PlayerManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayerManager.swift; sourceTree = "<group>"; };
+		33B3A1422F39000000AA82F7 /* CustomProgressBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomProgressBar.swift; sourceTree = "<group>"; };
+		33B3A1442F39000000AA82F7 /* ExpandablePlayerContainer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExpandablePlayerContainer.swift; sourceTree = "<group>"; };
+		33B3A1462F3A000000AA82F7 /* LyricLine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LyricLine.swift; sourceTree = "<group>"; };
+		33B3A1482F3A000000AA82F7 /* LyricsScrollView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LyricsScrollView.swift; sourceTree = "<group>"; };
 		33E430982F2CA13B00643877 /* Secrets.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Secrets.xcconfig; sourceTree = "<group>"; };
 		33E430A82F2CAFD000643877 /* SupabaseConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseConfig.swift; sourceTree = "<group>"; };
 		33E430A92F2CAFD000643877 /* SupabaseService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseService.swift; sourceTree = "<group>"; };
@@ -127,10 +149,10 @@
 		33F388292F20F6EF009CC102 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		33F3882A2F20F6EF009CC102 /* Background.mp4 */ = {isa = PBXFileReference; lastKnownFileType = file; path = Background.mp4; sourceTree = "<group>"; };
 		33F3889B2F211DDC009CC102 /* AILoadingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AILoadingView.swift; sourceTree = "<group>"; };
-		33F388B02F2D0001009CC102 /* IntelligenceGlowEffect.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntelligenceGlowEffect.swift; sourceTree = "<group>"; };
 		33F3889D2F211E49009CC102 /* PresetCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PresetCard.swift; sourceTree = "<group>"; };
 		33F3889E2F211E49009CC102 /* WhiteGlassInputBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WhiteGlassInputBar.swift; sourceTree = "<group>"; };
 		33F388A52F2202E0009CC102 /* WelcomeCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeCard.swift; sourceTree = "<group>"; };
+		33F388B02F2D0001009CC102 /* IntelligenceGlowEffect.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntelligenceGlowEffect.swift; sourceTree = "<group>"; };
 		A0000021 /* Butterfly V3.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Butterfly V3.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -151,6 +173,19 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		3338A2332F6EA3A20018FC58 /* Memory_Mode */ = {
+			isa = PBXGroup;
+			children = (
+				3338A22C2F6EA3A20018FC58 /* HealthMusicHints.swift */,
+				3338A22D2F6EA3A20018FC58 /* MemoryInstrumentalPromptBuilder.swift */,
+				3338A22E2F6EA3A20018FC58 /* MemoryLyricsPromptBuilder.swift */,
+				3338A22F2F6EA3A20018FC58 /* MemoryMusicContext.swift */,
+				3338A2302F6EA3A20018FC58 /* model_arousal.mlmodel */,
+				3338A2312F6EA3A20018FC58 /* model_valence.mlmodel */,
+			);
+			path = Memory_Mode;
+			sourceTree = "<group>";
+		};
 		33B3A1262F3629F000AA82F7 /* Components */ = {
 			isa = PBXGroup;
 			children = (
@@ -249,6 +284,7 @@
 		33F3880C2F20F6EF009CC102 /* Managers */ = {
 			isa = PBXGroup;
 			children = (
+				3338A2432F6EA93A0018FC58 /* Memory2MusicManager.swift */,
 				33F3880A2F20F6EF009CC102 /* MusicBaseManager.swift */,
 				33F3880B2F20F6EF009CC102 /* Photo2MusicManager.swift */,
 				33B3A1402F39000000AA82F7 /* PlayerManager.swift */,
@@ -259,6 +295,7 @@
 		33F388132F20F6EF009CC102 /* Models */ = {
 			isa = PBXGroup;
 			children = (
+				3338A2332F6EA3A20018FC58 /* Memory_Mode */,
 				33F3880D2F20F6EF009CC102 /* GeneratedMusic.swift */,
 				33B3A1462F3A000000AA82F7 /* LyricLine.swift */,
 				33F3880E2F20F6EF009CC102 /* LyricsGenerationRequest.swift */,
@@ -273,6 +310,9 @@
 		33F388192F20F6EF009CC102 /* Services */ = {
 			isa = PBXGroup;
 			children = (
+				3338A23D2F6EA7EB0018FC58 /* EmotionMLService.swift */,
+				3338A23E2F6EA7EB0018FC58 /* HealthKitService.swift */,
+				3338A23F2F6EA7EB0018FC58 /* LocationWeatherService.swift */,
 				33E430B32F2CBD7E00643877 /* music_related */,
 				33E430B42F2CBD7E00643877 /* User_related */,
 			);
@@ -313,6 +353,7 @@
 		33F388212F20F6EF009CC102 /* Memories */ = {
 			isa = PBXGroup;
 			children = (
+				3338A23B2F6EA6DE0018FC58 /* MemoryViewModel.swift */,
 				33F388202F20F6EF009CC102 /* MemoriesView.swift */,
 			);
 			path = Memories;
@@ -503,6 +544,12 @@
 				33F3882F2F20F6F0009CC102 /* LyricsGenerationRequest.swift in Sources */,
 				33F388302F20F6F0009CC102 /* Photo2MusicManager.swift in Sources */,
 				33B3A13B2F378CEA00AA82F7 /* SettingsView.swift in Sources */,
+				3338A2352F6EA3A20018FC58 /* MemoryMusicContext.swift in Sources */,
+				3338A2362F6EA3A20018FC58 /* model_valence.mlmodel in Sources */,
+				3338A2372F6EA3A20018FC58 /* MemoryLyricsPromptBuilder.swift in Sources */,
+				3338A2382F6EA3A20018FC58 /* HealthMusicHints.swift in Sources */,
+				3338A2392F6EA3A20018FC58 /* model_arousal.mlmodel in Sources */,
+				3338A23A2F6EA3A20018FC58 /* MemoryInstrumentalPromptBuilder.swift in Sources */,
 				33B3A13C2F378CEA00AA82F7 /* SettingsViewModel.swift in Sources */,
 				33F388312F20F6F0009CC102 /* MusicGenerationRequest.swift in Sources */,
 				33F388322F20F6F0009CC102 /* ContentView.swift in Sources */,
@@ -519,8 +566,12 @@
 				33E430B52F2CBD7E00643877 /* OpenAILyricsService.swift in Sources */,
 				33E430B62F2CBD7E00643877 /* APIConfiguration.swift in Sources */,
 				33E430B72F2CBD7E00643877 /* MusicDatabaseService.swift in Sources */,
+				3338A23C2F6EA6DE0018FC58 /* MemoryViewModel.swift in Sources */,
 				33E430B82F2CBD7E00643877 /* SunoDirectService.swift in Sources */,
 				33E430B92F2CBD7E00643877 /* LLMServiceProtocol.swift in Sources */,
+				3338A2402F6EA7EB0018FC58 /* EmotionMLService.swift in Sources */,
+				3338A2412F6EA7EB0018FC58 /* HealthKitService.swift in Sources */,
+				3338A2422F6EA7EB0018FC58 /* LocationWeatherService.swift in Sources */,
 				33E430BA2F2CBD7E00643877 /* MusicServiceProtocol.swift in Sources */,
 				33F388A12F211E49009CC102 /* PresetCard.swift in Sources */,
 				33F3883D2F20F6F0009CC102 /* MusicParameters.swift in Sources */,
@@ -540,6 +591,7 @@
 				33E430C62F2CE94C00643877 /* AuthViewModel.swift in Sources */,
 				33F388432F20F6F0009CC102 /* MusicBaseManager.swift in Sources */,
 				33E430C82F2CE98C00643877 /* AuthService.swift in Sources */,
+				3338A2442F6EA93A0018FC58 /* Memory2MusicManager.swift in Sources */,
 				33E430C42F2CE94400643877 /* LoginView.swift in Sources */,
 				33F388442F20F6F0009CC102 /* GeneratedMusic.swift in Sources */,
 				33E430C92F2CE98D00643877 /* ProfileService.swift in Sources */,
