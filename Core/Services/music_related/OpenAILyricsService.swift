@@ -26,7 +26,7 @@ class OpenAILyricsService: LLMServiceProtocol {
         self.baseURL = "\(baseURL.trimmingCharacters(in: CharacterSet(charactersIn: "/")))/chat/completions"
     }
     
-    func generateLyrics(request: LyricsGenerationRequest) async throws -> LyricsGenerationResponse {
+    func generateLyrics(request: LyricsGenerationRequest) async throws -> LLMMusicResponse {
         guard !apiKey.isEmpty else {
             throw LLMServiceError.missingAPIKey
         }
@@ -130,7 +130,7 @@ class OpenAILyricsService: LLMServiceProtocol {
         ]
     }
     
-    private func parseResponse(data: Data) throws -> LyricsGenerationResponse {
+    private func parseResponse(data: Data) throws -> LLMMusicResponse {
         guard let json = try JSONSerialization.jsonObject(with: data) as? [String: Any] else {
             print("❌ [LLM] 无法解析为JSON对象")
             throw LLMServiceError.jsonParsingError
@@ -179,8 +179,8 @@ class OpenAILyricsService: LLMServiceProtocol {
         // 解析JSON
         let decoder = JSONDecoder()
         do {
-            let result = try decoder.decode(LyricsGenerationResponse.self, from: jsonData)
-            print("✅ [LLM] 成功解码LyricsGenerationResponse")
+            let result = try decoder.decode(LLMMusicResponse.self, from: jsonData)
+            print("✅ [LLM] 成功解码LLMMusicResponse")
             print("   - Title: \(result.title)")
             print("   - Style: \(result.style)")
             if let prompt = result.prompt {

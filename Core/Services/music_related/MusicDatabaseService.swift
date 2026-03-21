@@ -74,7 +74,8 @@ class MusicDatabaseService {
             // 5. 执行订阅
             Task {
                 await channel.subscribe()
-                print("📡 [Realtime] 已调用订阅方法")
+                let status = await channel.status
+                print("📡 [Realtime] 已调用订阅方法, channel status: \(status)")
             }
             
             continuation.onTermination = { @Sendable _ in
@@ -188,13 +189,13 @@ class MusicDatabaseService {
 
     // MARK: - Profile 歌单：按用户拉取
 
-    /// 当前用户「自己生成」的歌曲（Light/Memory，source = mine 或空）
+    /// 当前用户「自己生成」的歌曲（Light/Memory，source = mine / memory 或空）
     func fetchMineSongs(userId: UUID) async throws -> [GeneratedMusic] {
         let response = try await client
             .from("music_generations")
             .select()
             .eq("user_id", value: userId.uuidString.lowercased())
-            .or("source.is.null,source.eq.mine")
+            .or("source.is.null,source.eq.mine,source.eq.memory")
             .order("created_at", ascending: false)
             .execute()
         return decodeMusicList(from: response.data)

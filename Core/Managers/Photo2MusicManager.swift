@@ -159,7 +159,7 @@ class Photo2MusicManager: ObservableObject {
         userInput: String,
         selectedImage: UIImage?,
         parameters: MusicParameters
-    ) async throws -> LyricsGenerationResponse {
+    ) async throws -> LLMMusicResponse {
         var photoBase64: String?
         if let image = selectedImage {
             photoBase64 = ImageUtility.toBase64(image: image)
@@ -177,7 +177,7 @@ class Photo2MusicManager: ObservableObject {
     }
     
     private func buildSunoRequest(
-        lyricsResponse: LyricsGenerationResponse,
+        lyricsResponse: LLMMusicResponse,
         parameters: MusicParameters
     ) -> MusicGenerationRequest {
         let finalStyle: String

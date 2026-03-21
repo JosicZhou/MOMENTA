@@ -93,7 +93,7 @@ struct MemoriesView: View {
                     .frame(width: 44, height: 44)
             }
 
-            // 文本输入
+             // 文本输入
             TextField("", text: $prompt)
                 .font(.system(size: 14, weight: .regular))
                 .foregroundStyle(.black)

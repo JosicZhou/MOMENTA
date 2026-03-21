@@ -8,6 +8,7 @@ import AVFoundation
 
 struct LightView: View {
     @ObservedObject var viewModel: LightViewModel
+    @FocusState private var isInputFocused: Bool
     
     var body: some View {
         GeometryReader { geometry in
@@ -56,6 +57,7 @@ struct LightView: View {
                         // 输入框 (组件化)
                         WhiteGlassInputBar(
                             prompt: $viewModel.prompt,
+                            isTextFieldFocused: $isInputFocused,
                             hasSelectedImage: viewModel.selectedImage != nil,
                             isGenerating: viewModel.isGenerating,
                             onCameraPress: { viewModel.openCamera() },
@@ -103,8 +105,13 @@ struct LightView: View {
                     .frame(maxWidth: .infinity)
                     .frame(minHeight: geometry.size.height)
                     .padding(.horizontal, 20)
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        isInputFocused = false
+                    }
                 }
                 .scrollIndicators(.hidden)
+                .scrollDismissesKeyboard(.interactively)
             }
         }
         .ignoresSafeArea()

@@ -8,7 +8,7 @@ import Foundation
 
 protocol LLMServiceProtocol {
     /// 生成歌词
-    func generateLyrics(request: LyricsGenerationRequest) async throws -> LyricsGenerationResponse
+    func generateLyrics(request: LyricsGenerationRequest) async throws -> LLMMusicResponse
 }
 
 enum LLMServiceError: LocalizedError {

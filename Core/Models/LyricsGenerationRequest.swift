@@ -12,9 +12,23 @@ struct LyricsGenerationRequest {
     let storyShare: String // 用户的描述
     let instrumentalOnly: Bool // 是否纯音乐
     let language: String // 语言，默认"en"
-    
-    /// 构建发送给LLM的完整prompt（专业版，用于GPT-5）
+    /// 由外部 PromptBuilder 注入的完整 prompt（Memory 流程使用）。
+    /// 若非 nil，buildPrompt() 直接返回此值，跳过内置模板。
+    let rawPrompt: String?
+
+    init(photo: String?, photoPresent: Bool, storyShare: String, instrumentalOnly: Bool, language: String, rawPrompt: String? = nil) {
+        self.photo = photo
+        self.photoPresent = photoPresent
+        self.storyShare = storyShare
+        self.instrumentalOnly = instrumentalOnly
+        self.language = language
+        self.rawPrompt = rawPrompt
+    }
+
+    /// 构建发送给LLM的完整prompt
     func buildPrompt() -> String {
+        if let rawPrompt { return rawPrompt }
+
         let photoValue = photo ?? ""
         let photoPresentValue = photoPresent ? "true" : "false"
         let instrumentalValue = instrumentalOnly ? "yes" : "no"
@@ -74,8 +88,8 @@ struct LyricsGenerationRequest {
     }
 }
 
-/// LLM返回的歌词数据（对应generatePhotoSong函数的输出）
-struct LyricsGenerationResponse: Codable {
+/// LLM 返回的音乐元数据（title / style / prompt），歌词与纯音乐通用。
+struct LLMMusicResponse: Codable {
     let title: String
     let style: String
     let prompt: String? // 当instrumental_only="no"时才有
