@@ -2,17 +2,18 @@
 //  SettingsView.swift
 //  MOMENTA
 //
-//  设置页面：Apple 原生 insetGrouped List 风格，
-//  参考 Apple Podcasts / Music 的 Account 页面设计。
-//  以 sheet 形式从 ProfileView 呈现。
+//  设置页：恢复上一版原生 insetGrouped 结构，
+//  保留账户编辑入口并支持修改 Display Name。
 //
 
 import SwiftUI
+import UIKit
 
 struct SettingsView: View {
     @Environment(\.dismiss) private var dismiss
     @StateObject private var viewModel = SettingsViewModel()
     @ObservedObject var authViewModel: AuthViewModel
+    @ObservedObject var profileViewModel: ProfileViewModel
 
     var body: some View {
         NavigationStack {
@@ -37,7 +38,6 @@ struct SettingsView: View {
                     }
                 }
             }
-            // Sign Out 确认
             .alert("Sign Out", isPresented: $viewModel.showSignOutConfirmation) {
                 Button("Cancel", role: .cancel) {}
                 Button("Sign Out", role: .destructive) {
@@ -49,7 +49,6 @@ struct SettingsView: View {
             } message: {
                 Text("Are you sure you want to sign out?")
             }
-            // Delete Account 确认
             .alert("Delete Account", isPresented: $viewModel.showDeleteConfirmation) {
                 Button("Cancel", role: .cancel) {}
                 Button("Delete", role: .destructive) {
@@ -64,27 +63,32 @@ struct SettingsView: View {
         }
     }
 
-    // MARK: - Account Section
-
     private var accountSection: some View {
         Section {
             NavigationLink {
-                editProfilePlaceholder
+                EditAccountView(profileViewModel: profileViewModel, email: viewModel.userEmail)
             } label: {
                 HStack(spacing: 14) {
-                    // 头像
-                    Circle()
-                        .fill(Color(.systemGray5))
-                        .frame(width: 56, height: 56)
-                        .overlay(
-                            Image(systemName: "person.fill")
-                                .font(.system(size: 24))
-                                .foregroundStyle(.secondary)
-                        )
+                    Group {
+                        if let avatar = profileViewModel.profileAvatarImage {
+                            Image(uiImage: avatar)
+                                .resizable()
+                                .aspectRatio(contentMode: .fill)
+                        } else {
+                            Circle()
+                                .fill(Color(.systemGray5))
+                                .overlay(
+                                    Image(systemName: "person.fill")
+                                        .font(.system(size: 24))
+                                        .foregroundStyle(.secondary)
+                                )
+                        }
+                    }
+                    .frame(width: 56, height: 56)
+                    .clipShape(Circle())
 
-                    // 用户名 & 邮箱
                     VStack(alignment: .leading, spacing: 3) {
-                        Text(viewModel.displayName)
+                        Text(profileViewModel.displayName)
                             .font(.system(size: 17, weight: .semibold))
 
                         Text(viewModel.userEmail)
@@ -97,75 +101,8 @@ struct SettingsView: View {
         }
     }
 
-    /// 编辑个人资料页面（占位）
-    private var editProfilePlaceholder: some View {
-        List {
-            Section {
-                // 头像更换入口
-                HStack {
-                    Spacer()
-                    VStack(spacing: 8) {
-                        Circle()
-                            .fill(Color(.systemGray5))
-                            .frame(width: 80, height: 80)
-                            .overlay(
-                                Image(systemName: "person.fill")
-                                    .font(.system(size: 32))
-                                    .foregroundStyle(.secondary)
-                            )
-                            .overlay(alignment: .bottomTrailing) {
-                                Image(systemName: "camera.circle.fill")
-                                    .font(.system(size: 24))
-                                    .symbolRenderingMode(.hierarchical)
-                                    .foregroundStyle(.blue)
-                                    .offset(x: 4, y: 4)
-                            }
-
-                        Text("Change Avatar")
-                            .font(.footnote)
-                            .foregroundStyle(.blue)
-                    }
-                    Spacer()
-                }
-                .padding(.vertical, 8)
-                .listRowBackground(Color.clear)
-            }
-
-            Section("Profile") {
-                HStack {
-                    Text("Name")
-                        .foregroundStyle(.secondary)
-                    Spacer()
-                    Text(viewModel.displayName)
-                }
-
-                HStack {
-                    Text("Email")
-                        .foregroundStyle(.secondary)
-                    Spacer()
-                    Text(viewModel.userEmail)
-                        .foregroundStyle(.secondary)
-                }
-
-                HStack {
-                    Text("Membership")
-                        .foregroundStyle(.secondary)
-                    Spacer()
-                    Text("Founder Member")
-                        .foregroundStyle(.secondary)
-                }
-            }
-        }
-        .listStyle(.insetGrouped)
-        .navigationTitle("Account")
-        .navigationBarTitleDisplayMode(.inline)
-    }
-
-    // MARK: - Settings Section (Notifications & Privacy)
-
     private var settingsSection: some View {
         Section("Settings") {
-            // 消息通知开关
             Toggle(isOn: $viewModel.notificationsEnabled) {
                 Label {
                     Text("Notifications")
@@ -176,7 +113,6 @@ struct SettingsView: View {
             }
             .tint(.purple)
 
-            // 隐私设置
             NavigationLink {
                 privacyPlaceholder
             } label: {
@@ -190,7 +126,6 @@ struct SettingsView: View {
         }
     }
 
-    /// 隐私设置页面（占位）
     private var privacyPlaceholder: some View {
         List {
             Section("Visibility") {
@@ -232,11 +167,8 @@ struct SettingsView: View {
         .navigationBarTitleDisplayMode(.inline)
     }
 
-    // MARK: - General Section
-
     private var generalSection: some View {
         Section("General") {
-            // 外观模式
             Picker(selection: $viewModel.appearanceMode) {
                 ForEach(AppearanceMode.allCases) { mode in
                     Text(mode.displayName).tag(mode)
@@ -250,7 +182,6 @@ struct SettingsView: View {
                 }
             }
 
-            // 语言
             Picker(selection: $viewModel.appLanguage) {
                 ForEach(AppLanguage.allCases) { lang in
                     Text(lang.displayName).tag(lang)
@@ -264,7 +195,6 @@ struct SettingsView: View {
                 }
             }
 
-            // 字体大小
             Picker(selection: $viewModel.fontSizeLevel) {
                 ForEach(FontSizeLevel.allCases) { size in
                     Text(size.displayName).tag(size)
@@ -280,11 +210,8 @@ struct SettingsView: View {
         }
     }
 
-    // MARK: - Account Actions
-
     private var accountActionsSection: some View {
         Section {
-            // 退出登录
             Button {
                 viewModel.showSignOutConfirmation = true
             } label: {
@@ -296,7 +223,6 @@ struct SettingsView: View {
                 .foregroundStyle(.red)
             }
 
-            // 切换账号
             Button {
                 Task {
                     await viewModel.switchAccount()
@@ -311,32 +237,146 @@ struct SettingsView: View {
                 .foregroundStyle(.purple)
             }
 
-            // 删除账号
             Button {
                 viewModel.showDeleteConfirmation = true
             } label: {
                 Label {
                     Text("Delete Account")
                 } icon: {
-                    Image(systemName: "person.crop.circle.badge.minus")
+                    Image(systemName: "trash")
                 }
                 .foregroundStyle(.red)
             }
         }
     }
 
-    // MARK: - Version Footer
-
     private var versionFooter: some View {
         Section {
-            EmptyView()
-        } footer: {
-            Text("MOMENTA \(viewModel.appVersion)")
-                .font(.footnote)
-                .foregroundStyle(.tertiary)
-                .frame(maxWidth: .infinity)
-                .multilineTextAlignment(.center)
-                .padding(.top, 4)
+            HStack {
+                Spacer()
+                Text(viewModel.appVersion)
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+                Spacer()
+            }
+        }
+        .listRowBackground(Color.clear)
+    }
+}
+
+private struct EditAccountView: View {
+    @Environment(\.dismiss) private var dismiss
+    @ObservedObject var profileViewModel: ProfileViewModel
+
+    let email: String
+
+    @State private var displayName = ""
+    @State private var showAvatarOptions = false
+    @State private var showAvatarPicker = false
+    @State private var avatarPickerSource: UIImagePickerController.SourceType = .photoLibrary
+    @State private var pendingAvatarImage: UIImage?
+
+    var body: some View {
+        List {
+            Section {
+                HStack {
+                    Spacer()
+                    VStack(spacing: 8) {
+                        Button {
+                            showAvatarOptions = true
+                        } label: {
+                            Group {
+                                if let avatar = profileViewModel.profileAvatarImage {
+                                    Image(uiImage: avatar)
+                                        .resizable()
+                                        .aspectRatio(contentMode: .fill)
+                                } else {
+                                    Circle()
+                                        .fill(Color(.systemGray5))
+                                        .overlay(
+                                            Image(systemName: "person.fill")
+                                                .font(.system(size: 32))
+                                                .foregroundStyle(.secondary)
+                                        )
+                                }
+                            }
+                            .frame(width: 80, height: 80)
+                            .clipShape(Circle())
+                            .overlay(alignment: .bottomTrailing) {
+                                Image(systemName: "camera.circle.fill")
+                                    .font(.system(size: 24))
+                                    .symbolRenderingMode(.hierarchical)
+                                    .foregroundStyle(.blue)
+                                    .offset(x: 4, y: 4)
+                            }
+                        }
+                        .buttonStyle(.plain)
+
+                        Text("Change Avatar")
+                            .font(.footnote)
+                            .foregroundStyle(.blue)
+                    }
+                    Spacer()
+                }
+                .padding(.vertical, 8)
+                .listRowBackground(Color.clear)
+            }
+
+            Section("Profile") {
+                TextField("Name", text: $displayName)
+
+                HStack {
+                    Text("Email")
+                        .foregroundStyle(.secondary)
+                    Spacer()
+                    Text(email)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                }
+            }
+        }
+        .listStyle(.insetGrouped)
+        .navigationTitle("Account")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Button("Save") {
+                    profileViewModel.updateDisplayName(displayName)
+                    dismiss()
+                }
+                .disabled(displayName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+            }
+        }
+        .onAppear {
+            displayName = profileViewModel.displayName
+        }
+        .confirmationDialog(
+            "Profile Photo",
+            isPresented: $showAvatarOptions,
+            titleVisibility: .visible
+        ) {
+            Button("Take Photo") {
+                avatarPickerSource = UIImagePickerController.isSourceTypeAvailable(.camera) ? .camera : .photoLibrary
+                showAvatarPicker = true
+            }
+
+            Button("Choose from Library") {
+                avatarPickerSource = .photoLibrary
+                showAvatarPicker = true
+            }
+
+            if profileViewModel.profileAvatarImage != nil {
+                Button("Remove Photo", role: .destructive) {
+                    profileViewModel.removeProfilePhoto()
+                }
+            }
+        }
+        .sheet(isPresented: $showAvatarPicker) {
+            ImagePicker(sourceType: avatarPickerSource, selectedImage: $pendingAvatarImage)
+        }
+        .onChange(of: pendingAvatarImage) { _, image in
+            guard let image else { return }
+            profileViewModel.updateProfilePhoto(with: image)
         }
     }
 }

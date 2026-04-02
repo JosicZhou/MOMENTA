@@ -2,24 +2,30 @@
 //  MemoryViewModel.swift
 //  MOMENTA
 //
-//  Memory 功能的 ViewModel：串联 HealthKit / 环境 / 用户输入 → Memory2MusicManager。
+//  Memory 功能的数据与生成协调层。
 //
 
 import Foundation
 import SwiftUI
-import PhotosUI
+import UIKit
 
 @MainActor
-class MemoryViewModel: ObservableObject {
+final class MemoryViewModel: ObservableObject {
 
-    // MARK: - 用户输入
+    // MARK: - Composer Input
 
     @Published var prompt: String = ""
     @Published var selectedImage: UIImage?
     @Published var instrumentalOnly: Bool = false
     @Published var language: String = "en"
+    @Published var usePsychologicalProfile: Bool = false
 
-    // MARK: - 生成状态
+    // MARK: - Composer Presentation
+
+    @Published var showImagePicker = false
+    @Published var imagePickerSourceType: UIImagePickerController.SourceType = .photoLibrary
+
+    // MARK: - Generation State
 
     @Published var isGenerating: Bool = false
     @Published var generationProgress: String = "Preparing..."
@@ -27,25 +33,118 @@ class MemoryViewModel: ObservableObject {
     @Published var errorMessage: String?
     @Published var showErrorAlert: Bool = false
 
-    // MARK: - 健康数据状态
+    // MARK: - Library State
+
+    @Published private(set) var memorySongs: [GeneratedMusic] = []
+    @Published private(set) var favoriteSongs: [GeneratedMusic] = []
+    @Published private(set) var favoriteIds: Set<String> = []
+    @Published private(set) var isLoadingLibrary = false
+
+    // MARK: - Health State
 
     @Published var heartRate: Double?
     @Published var hrv: Double?
     @Published var healthAuthorized: Bool = false
     @Published var healthHints: HealthMusicHints?
 
-    // MARK: - 环境数据（来自共享 Service）
+    // MARK: - Dependencies
 
     let locationWeather = LocationWeatherService.shared
-
-    // MARK: - Dependencies
 
     private let manager: Memory2MusicManager
     private let healthKit = HealthKitService()
     private let emotionML = EmotionMLService()
+    private let musicDb = MusicDatabaseService.shared
+    private let profileService = ProfileService.shared
+    private let metadataStore = MemorySongMetadataStore.shared
+    private let memoryCalendarService = MemoryCalendarService.shared
 
     init(manager: Memory2MusicManager? = nil) {
         self.manager = manager ?? Memory2MusicManager.createDefault()
+    }
+
+    // MARK: - Derived Items
+
+    var libraryItems: [MemoryLibraryItem] {
+        memorySongs.map(makeLibraryItem)
+    }
+
+    var collectionItems: [MemoryLibraryItem] {
+        favoriteSongs.map(makeLibraryItem)
+    }
+
+    var availableLocations: [String] {
+        Array(Set(libraryItems.map(\.locationName)))
+            .filter { !$0.isEmpty && $0 != MemorySongMetadata.unknownLocationLabel }
+            .sorted()
+    }
+
+    var availableTypes: [String] {
+        Array(Set(libraryItems.map(\.typeLabel)))
+            .filter { !$0.isEmpty }
+            .sorted()
+    }
+
+    var availableJournals: [String] {
+        Array(Set(libraryItems.map(\.journal)))
+            .filter { !$0.isEmpty && $0 != "No journal note" }
+            .sorted()
+    }
+
+    // MARK: - Library Loading
+
+    func refreshLibrary() async {
+        guard let userId = await SupabaseService.shared.getCurrentUserId() else { return }
+
+        isLoadingLibrary = true
+        defer { isLoadingLibrary = false }
+
+        do {
+            async let memory = musicDb.fetchMemorySongs(userId: userId)
+            async let favorites = profileService.fetchFavoriteSongs(userId: userId)
+            async let ids = profileService.fetchFavoriteMusicIds(userId: userId)
+
+            let (memorySongs, favoriteSongs, favoriteIds) = try await (memory, favorites, ids)
+            self.memorySongs = memorySongs
+            self.favoriteSongs = favoriteSongs
+                .filter { $0.source == "memory" }
+                .sorted { $0.createdAt > $1.createdAt }
+            self.favoriteIds = favoriteIds
+        } catch {
+            showError(error.localizedDescription)
+        }
+    }
+
+    func toggleFavorite(musicId: String, ownerId: UUID?) async {
+        guard let userId = await SupabaseService.shared.getCurrentUserId() else { return }
+        let owner = ownerId ?? userId
+
+        do {
+            if favoriteIds.contains(musicId) {
+                try await profileService.removeFavorite(userId: userId, musicId: musicId)
+            } else {
+                try await profileService.addFavorite(userId: userId, musicId: musicId, ownerId: owner)
+            }
+            await refreshLibrary()
+        } catch {
+            showError(error.localizedDescription)
+        }
+    }
+
+    // MARK: - Camera
+
+    func openCamera() {
+        imagePickerSourceType = UIImagePickerController.isSourceTypeAvailable(.camera) ? .camera : .photoLibrary
+        showImagePicker = true
+    }
+
+    func openPhotoLibrary() {
+        imagePickerSourceType = .photoLibrary
+        showImagePicker = true
+    }
+
+    func removeImage() {
+        selectedImage = nil
     }
 
     // MARK: - HealthKit
@@ -54,60 +153,45 @@ class MemoryViewModel: ObservableObject {
         do {
             try await healthKit.requestAuthorization()
             healthAuthorized = true
-            print("✅ [MemoryVM] HealthKit 授权成功")
             await fetchHealthData()
         } catch {
-            print("❌ [MemoryVM] HealthKit 授权失败: \(error.localizedDescription)")
             healthAuthorized = false
         }
     }
 
     func fetchHealthData() async {
-        guard healthAuthorized else {
-            print("⚠️ [MemoryVM] HealthKit 未授权，跳过健康数据读取")
-            return
-        }
+        guard healthAuthorized else { return }
 
-        // HR 和 HRV 独立查询，互不阻塞
         async let hrTask = healthKit.fetchLatestHeartRate()
         async let hrvTask = healthKit.fetchLatestHRV()
 
         heartRate = await hrTask
         hrv = await hrvTask
 
-        print("📊 [MemoryVM] 健康数据: HR=\(heartRate.map { String(format: "%.1f", $0) } ?? "无"), HRV=\(hrv.map { String(format: "%.1f", $0) } ?? "无")")
-
-        // 只要有 HR 就尝试推理；HRV 没有时用默认值（中间值）
-        guard let hr = heartRate else {
-            print("⚠️ [MemoryVM] 无心率数据，跳过 CoreML 推理")
-            return
-        }
-
-        let hrvForModel = hrv ?? 50.0  // HRV 缺失时用中间值降级
-        if hrv == nil {
-            print("ℹ️ [MemoryVM] HRV 缺失，使用默认值 50.0ms 进行推理")
-        }
+        guard let hr = heartRate else { return }
+        let hrvForModel = hrv ?? 50.0
 
         do {
-            let hints = try emotionML.predict(heartRate: hr, hrv: hrvForModel)
-            healthHints = hints
-            print("🧠 [MemoryVM] CoreML 推理成功 → 象限: \(hints.quadrant.rawValue), V: \(String(format: "%.2f", hints.valence)), A: \(String(format: "%.2f", hints.arousal))")
-            print("🎵 [MemoryVM] Style fragment: \(hints.styleFragment)")
+            healthHints = try emotionML.predict(heartRate: hr, hrv: hrvForModel)
         } catch {
-            print("❌ [MemoryVM] CoreML 推理失败: \(error.localizedDescription)")
+            healthHints = nil
         }
     }
 
-    // MARK: - 环境
+    // MARK: - Environment
 
     func fetchEnvironment() async {
         await locationWeather.requestOnce()
     }
 
-    // MARK: - 生成
+    // MARK: - Generation
 
     func generate() async {
-        let hasAnyInput = !prompt.isEmpty
+        if locationWeather.locationName == nil {
+            await fetchEnvironment()
+        }
+
+        let hasAnyInput = !prompt.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
             || selectedImage != nil
             || healthHints != nil
             || locationWeather.locationName != nil
@@ -115,7 +199,7 @@ class MemoryViewModel: ObservableObject {
             || locationWeather.temperature != nil
 
         guard hasAnyInput else {
-            showError("至少需要一项输入（描述、图片、健康数据或环境数据）")
+            showError("At least one memory input is required.")
             return
         }
 
@@ -123,37 +207,23 @@ class MemoryViewModel: ObservableObject {
         errorMessage = nil
         generationProgress = "Preparing..."
 
-        var photoBase64: String?
-        if let image = selectedImage {
-            photoBase64 = ImageUtility.toBase64(image: image)
-        }
+        let photoBase64 = selectedImage.flatMap { ImageUtility.toBase64(image: $0) }
+        let bpm = heartRate.map { min(max(Int($0.rounded()), 60), 160) }
 
-        let bpm: Int? = heartRate.map { min(max(Int($0.rounded()), 60), 160) }
-
-        let timeFmt = DateFormatter()
-        timeFmt.dateFormat = "EEEE HH:mm"
-        timeFmt.locale = Locale(identifier: language == "zh" ? "zh_CN" : "en_US")
-        let localTime = timeFmt.string(from: Date())
-
-        print("📋 [MemoryVM] 生成上下文摘要:")
-        print("   - prompt: \(prompt.isEmpty ? "(空)" : "\(prompt.prefix(50))...")")
-        print("   - photo: \(selectedImage != nil ? "有" : "无")")
-        print("   - health: \(healthHints != nil ? healthHints!.quadrant.rawValue + " / " + healthHints!.styleFragment : "无")")
-        print("   - bpm: \(heartRate.map { "\(Int($0.rounded())) → clamped \(min(max(Int($0.rounded()), 60), 160))" } ?? "无")")
-        print("   - location: \(locationWeather.locationName ?? "无")")
-        print("   - weather: \(locationWeather.weather ?? "无"), temp: \(locationWeather.temperature.map { String(format: "%.0f°C", $0) } ?? "无")")
-        print("   - localTime: \(localTime)")
-        print("   - instrumental: \(instrumentalOnly), language: \(language)")
+        let timeFormatter = DateFormatter()
+        timeFormatter.dateFormat = "EEEE HH:mm"
+        timeFormatter.locale = Locale(identifier: language == "zh" ? "zh_CN" : "en_US")
+        let localTime = timeFormatter.string(from: Date())
 
         let context = MemoryMusicContext(
             photo: photoBase64,
-            story: prompt.isEmpty ? nil : prompt,
+            story: prompt.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? nil : prompt,
             language: language,
             instrumentalOnly: instrumentalOnly,
-            heartRate: heartRate,
-            hrv: hrv,
-            healthHints: healthHints,
-            suggestedBPM: bpm,
+            heartRate: usePsychologicalProfile ? heartRate : nil,
+            hrv: usePsychologicalProfile ? hrv : nil,
+            healthHints: usePsychologicalProfile ? healthHints : nil,
+            suggestedBPM: usePsychologicalProfile ? bpm : nil,
             localTime: localTime,
             locationName: locationWeather.locationName,
             weather: locationWeather.weather,
@@ -166,8 +236,12 @@ class MemoryViewModel: ObservableObject {
                     self?.generationProgress = progress
                 }
             }
+
             generatedMusic = music
+            rememberMetadata(for: music)
+            await saveCalendarEventIfPossible(for: music, context: context)
             generationProgress = "Complete!"
+            await refreshLibrary()
         } catch {
             showError(error.localizedDescription)
         }
@@ -182,12 +256,43 @@ class MemoryViewModel: ObservableObject {
         showErrorAlert = true
     }
 
-    func reset() {
+    func dismissError() {
+        errorMessage = nil
+        showErrorAlert = false
+    }
+
+    private func saveCalendarEventIfPossible(for music: GeneratedMusic, context: MemoryMusicContext) async {
+        do {
+            try await memoryCalendarService.saveGeneratedSong(music, context: context)
+        } catch {
+            print("⚠️ [MemoryViewModel] Failed to save generated song to Calendar: \(error.localizedDescription)")
+        }
+    }
+
+    func resetComposer() {
         prompt = ""
         selectedImage = nil
         instrumentalOnly = false
-        generatedMusic = nil
+        language = "en"
+        usePsychologicalProfile = false
         errorMessage = nil
-        generationProgress = "Preparing..."
+        showErrorAlert = false
+    }
+
+    private func rememberMetadata(for music: GeneratedMusic) {
+        metadataStore.save(
+            musicId: music.id,
+            journal: prompt.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? music.prompt : prompt,
+            locationName: locationWeather.locationName,
+            typeLabel: metadataStore.metadata(for: music).typeLabel,
+            createdAt: music.createdAt
+        )
+    }
+
+    private func makeLibraryItem(from music: GeneratedMusic) -> MemoryLibraryItem {
+        MemoryLibraryItem(
+            music: music,
+            metadata: metadataStore.metadata(for: music)
+        )
     }
 }

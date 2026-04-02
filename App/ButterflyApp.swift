@@ -8,13 +8,16 @@ import GoogleSignIn
 
 @main
 struct ButterflyApp: App {
+    @StateObject private var deepLinkRouter = DeepLinkRouter()
+
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            ContentView(deepLinkRouter: deepLinkRouter)
                 .onOpenURL { url in
-                    GIDSignIn.sharedInstance.handle(url)
+                    if !GIDSignIn.sharedInstance.handle(url) {
+                        _ = deepLinkRouter.handle(url)
+                    }
                 }
         }
     }
 }
-

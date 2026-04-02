@@ -7,6 +7,7 @@
 
 import Foundation
 import CoreLocation
+import MapKit
 import WeatherKit
 
 @MainActor
@@ -20,6 +21,7 @@ final class LocationWeatherService: NSObject, ObservableObject, CLLocationManage
     @Published var weather: String?
     @Published var temperature: Double?
     @Published var symbolName: String?
+    @Published var coordinate: CLLocationCoordinate2D?
 
     // MARK: - Internal
 
@@ -30,23 +32,35 @@ final class LocationWeatherService: NSObject, ObservableObject, CLLocationManage
     private override init() {
         super.init()
         locationManager.delegate = self
-        locationManager.desiredAccuracy = kCLLocationAccuracyKilometer
+        locationManager.desiredAccuracy = kCLLocationAccuracyHundredMeters
     }
 
     // MARK: - Public API
 
     /// 单次定位 → 天气 + 反地理编码。若权限未授予会先请求。
     func requestOnce() async {
-        let status = locationManager.authorizationStatus
-        if status == .notDetermined {
-            locationManager.requestWhenInUseAuthorization()
-        }
-        guard status == .authorizedWhenInUse || status == .authorizedAlways else { return }
+        if continuation != nil { return }
 
-        locationManager.requestLocation()
+        let status = locationManager.authorizationStatus
 
         await withCheckedContinuation { (c: CheckedContinuation<Void, Never>) in
             self.continuation = c
+
+            switch status {
+            case .authorizedWhenInUse, .authorizedAlways:
+                locationManager.requestLocation()
+
+            case .notDetermined:
+                locationManager.requestWhenInUseAuthorization()
+
+            case .denied, .restricted:
+                c.resume()
+                self.continuation = nil
+
+            @unknown default:
+                c.resume()
+                self.continuation = nil
+            }
         }
     }
 
@@ -70,15 +84,31 @@ final class LocationWeatherService: NSObject, ObservableObject, CLLocationManage
     }
 
     nonisolated func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
-        let status = manager.authorizationStatus
-        if status == .authorizedWhenInUse || status == .authorizedAlways {
-            manager.requestLocation()
+        Task { @MainActor in
+            let status = manager.authorizationStatus
+
+            switch status {
+            case .authorizedWhenInUse, .authorizedAlways:
+                manager.requestLocation()
+
+            case .denied, .restricted:
+                self.continuation?.resume()
+                self.continuation = nil
+
+            case .notDetermined:
+                break
+
+            @unknown default:
+                self.continuation?.resume()
+                self.continuation = nil
+            }
         }
     }
 
     // MARK: - Private
 
     private func processLocation(_ location: CLLocation) async {
+        coordinate = location.coordinate
         async let weatherTask: Void = fetchWeather(for: location)
         async let geoTask: Void = reverseGeocode(location)
         _ = await (weatherTask, geoTask)
@@ -99,8 +129,18 @@ final class LocationWeatherService: NSObject, ObservableObject, CLLocationManage
 
     private func reverseGeocode(_ location: CLLocation) async {
         do {
-            let placemarks = try await CLGeocoder().reverseGeocodeLocation(location)
-            self.locationName = placemarks.first?.locality ?? placemarks.first?.name
+            if #available(iOS 26.0, *) {
+                guard let request = MKReverseGeocodingRequest(location: location) else { return }
+                let mapItems = try await request.mapItems
+                let primaryItem = mapItems.first
+                self.locationName =
+                    primaryItem?.addressRepresentations?.cityWithContext
+                    ?? primaryItem?.address?.shortAddress
+                    ?? primaryItem?.name
+            } else {
+                let placemarks = try await CLGeocoder().reverseGeocodeLocation(location)
+                self.locationName = placemarks.first?.locality ?? placemarks.first?.name
+            }
         } catch {
             print("❌ [LocationWeather] 反地理编码失败: \(error.localizedDescription)")
         }
