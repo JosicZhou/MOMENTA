@@ -14,6 +14,42 @@
 
 import Foundation
 import Combine
+import UIKit
+
+enum ProfileIdentityStore {
+    static let displayNameKey = "momenta.profile.display-name"
+
+    static func resolvedDisplayName(email: String?) -> String {
+        if let saved = UserDefaults.standard.string(forKey: displayNameKey)?
+            .trimmingCharacters(in: .whitespacesAndNewlines),
+           !saved.isEmpty {
+            return saved
+        }
+
+        let rawName = email?
+            .components(separatedBy: "@")
+            .first?
+            .replacingOccurrences(of: ".", with: " ")
+            .replacingOccurrences(of: "_", with: " ")
+            .replacingOccurrences(of: "-", with: " ")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+
+        if let rawName, !rawName.isEmpty {
+            return rawName.localizedCapitalized
+        }
+
+        return "Eve Anderson"
+    }
+
+    static func saveDisplayName(_ name: String?) {
+        let trimmed = name?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        if trimmed.isEmpty {
+            UserDefaults.standard.removeObject(forKey: displayNameKey)
+        } else {
+            UserDefaults.standard.set(trimmed, forKey: displayNameKey)
+        }
+    }
+}
 
 // MARK: - 歌单类型与展示信息
 
@@ -74,6 +110,7 @@ enum PlaylistSortOption: String, CaseIterable {
 
 @MainActor
 class ProfileViewModel: ObservableObject {
+    @Published var profilePhotoData: Data?
     @Published private(set) var mineSongs: [GeneratedMusic] = []
     @Published private(set) var cocreateSongs: [GeneratedMusic] = []
     @Published private(set) var sharedSongs: [GeneratedMusic] = []
@@ -85,11 +122,27 @@ class ProfileViewModel: ObservableObject {
 
     private let musicDb = MusicDatabaseService.shared
     private let profileService = ProfileService.shared
+    private let defaults = UserDefaults.standard
+    private let profilePhotoStorageKey = "momenta.profile.photo.data"
 
     init() {
         for type in PlaylistType.allCases {
             sortOptions[type] = .date
         }
+        loadStoredProfilePhoto()
+    }
+
+    var profileAvatarImage: UIImage? {
+        guard let profilePhotoData else { return nil }
+        return UIImage(data: profilePhotoData)
+    }
+
+    var displayName: String {
+        ProfileIdentityStore.resolvedDisplayName(email: AuthService.shared.currentUser?.email)
+    }
+
+    var displayBadgeName: String {
+        displayName.uppercased()
     }
 
     // MARK: - 拉取
@@ -111,6 +164,22 @@ class ProfileViewModel: ObservableObject {
         } catch {
             errorMessage = error.localizedDescription
         }
+    }
+
+    func updateProfilePhoto(with image: UIImage) {
+        guard let data = image.jpegData(compressionQuality: 0.88) ?? image.pngData() else { return }
+        profilePhotoData = data
+        defaults.set(data, forKey: profilePhotoStorageKey)
+    }
+
+    func removeProfilePhoto() {
+        profilePhotoData = nil
+        defaults.removeObject(forKey: profilePhotoStorageKey)
+    }
+
+    func updateDisplayName(_ name: String) {
+        ProfileIdentityStore.saveDisplayName(name)
+        objectWillChange.send()
     }
 
     // MARK: - 歌单展示
@@ -231,5 +300,9 @@ class ProfileViewModel: ObservableObject {
             isLiked: favoriteIds.contains(music.id),
             ownerId: music.ownerId
         )
+    }
+
+    private func loadStoredProfilePhoto() {
+        profilePhotoData = defaults.data(forKey: profilePhotoStorageKey)
     }
 }

@@ -30,6 +30,16 @@
 				<string>com.googleusercontent.apps.589222292155-6r5o0ddipmvvde9ukk5tdd9lebkvthd1</string>
 			</array>
 		</dict>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLName</key>
+			<string>Momenta Deep Links</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>momenta</string>
+			</array>
+		</dict>
 	</array>
 	<key>CFBundleVersion</key>
 	<string>1</string>
@@ -41,6 +51,8 @@
 	<true/>
 	<key>NSCameraUsageDescription</key>
 	<string>Enable camera access to capture photos that inspire your music.</string>
+	<key>NSCalendarsWriteOnlyAccessUsageDescription</key>
+	<string>Save generated memory songs to your calendar so you can revisit them later.</string>
 	<key>NSHealthShareUsageDescription</key>
 	<string>Use heart data to shape music that fits your mood.</string>
 	<key>NSHealthUpdateUsageDescription</key>

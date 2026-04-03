@@ -18,6 +18,13 @@
 		3338A2412F6EA7EB0018FC58 /* HealthKitService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3338A23E2F6EA7EB0018FC58 /* HealthKitService.swift */; };
 		3338A2422F6EA7EB0018FC58 /* LocationWeatherService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3338A23F2F6EA7EB0018FC58 /* LocationWeatherService.swift */; };
 		3338A2442F6EA93A0018FC58 /* Memory2MusicManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3338A2432F6EA93A0018FC58 /* Memory2MusicManager.swift */; };
+		5A1B10012F80000100000001 /* DeepLinkRouter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A1B10002F80000100000001 /* DeepLinkRouter.swift */; };
+		5A1B10032F80000100000001 /* MemoryCalendarService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A1B10022F80000100000001 /* MemoryCalendarService.swift */; };
+		5A1B10042F80000100000001 /* compose.png in Resources */ = {isa = PBXBuildFile; fileRef = 5A1B10062F80000100000001 /* compose.png */; };
+		5A1B10052F80000100000001 /* share.png in Resources */ = {isa = PBXBuildFile; fileRef = 5A1B10072F80000100000001 /* share.png */; };
+		B1A000012F70000100000001 /* MemoryComposerSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1A000112F70000100000001 /* MemoryComposerSheet.swift */; };
+		B1A000022F70000100000001 /* MemoryFilterSheets.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1A000122F70000100000001 /* MemoryFilterSheets.swift */; };
+		B1A000032F70000100000001 /* MemoryLibraryModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1A000132F70000100000001 /* MemoryLibraryModels.swift */; };
 		33B3A11E2F35E15300AA82F7 /* MusicPlayerDetails.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33B3A11D2F35E15300AA82F7 /* MusicPlayerDetails.swift */; };
 		33B3A11F2F35E15300AA82F7 /* MusicPlayerBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33B3A11C2F35E15300AA82F7 /* MusicPlayerBar.swift */; };
 		33B3A1202F35E15300AA82F7 /* ContentWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33B3A11B2F35E15300AA82F7 /* ContentWindow.swift */; };
@@ -94,6 +101,9 @@
 		3338A23E2F6EA7EB0018FC58 /* HealthKitService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthKitService.swift; sourceTree = "<group>"; };
 		3338A23F2F6EA7EB0018FC58 /* LocationWeatherService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationWeatherService.swift; sourceTree = "<group>"; };
 		3338A2432F6EA93A0018FC58 /* Memory2MusicManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Memory2MusicManager.swift; sourceTree = "<group>"; };
+		B1A000112F70000100000001 /* MemoryComposerSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoryComposerSheet.swift; sourceTree = "<group>"; };
+		B1A000122F70000100000001 /* MemoryFilterSheets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoryFilterSheets.swift; sourceTree = "<group>"; };
+		B1A000132F70000100000001 /* MemoryLibraryModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoryLibraryModels.swift; sourceTree = "<group>"; };
 		33454E2D2F277BC100B15848 /* Butterfly V3.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "Butterfly V3.entitlements"; sourceTree = "<group>"; };
 		33B3A11B2F35E15300AA82F7 /* ContentWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentWindow.swift; sourceTree = "<group>"; };
 		33B3A11C2F35E15300AA82F7 /* MusicPlayerBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusicPlayerBar.swift; sourceTree = "<group>"; };
@@ -127,6 +137,10 @@
 		33F387FF2F20F6EF009CC102 /* ButterflyApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ButterflyApp.swift; sourceTree = "<group>"; };
 		33F388002F20F6EF009CC102 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		33F388012F20F6EF009CC102 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		5A1B10002F80000100000001 /* DeepLinkRouter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeepLinkRouter.swift; sourceTree = "<group>"; };
+		5A1B10022F80000100000001 /* MemoryCalendarService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoryCalendarService.swift; sourceTree = "<group>"; };
+		5A1B10062F80000100000001 /* compose.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = compose.png; sourceTree = SOURCE_ROOT; };
+		5A1B10072F80000100000001 /* share.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = share.png; sourceTree = SOURCE_ROOT; };
 		33F388032F20F6EF009CC102 /* MOMENTA.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = MOMENTA.xcodeproj; sourceTree = "<group>"; };
 		33F388042F20F6EF009CC102 /* AppTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppTheme.swift; sourceTree = "<group>"; };
 		33F388052F20F6EF009CC102 /* Backgrounds.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Backgrounds.swift; sourceTree = "<group>"; };
@@ -257,6 +271,7 @@
 			isa = PBXGroup;
 			children = (
 				33F387FF2F20F6EF009CC102 /* ButterflyApp.swift */,
+				5A1B10002F80000100000001 /* DeepLinkRouter.swift */,
 				33F388002F20F6EF009CC102 /* ContentView.swift */,
 				33F388012F20F6EF009CC102 /* Info.plist */,
 			);
@@ -313,6 +328,7 @@
 				3338A23D2F6EA7EB0018FC58 /* EmotionMLService.swift */,
 				3338A23E2F6EA7EB0018FC58 /* HealthKitService.swift */,
 				3338A23F2F6EA7EB0018FC58 /* LocationWeatherService.swift */,
+				5A1B10022F80000100000001 /* MemoryCalendarService.swift */,
 				33E430B32F2CBD7E00643877 /* music_related */,
 				33E430B42F2CBD7E00643877 /* User_related */,
 			);
@@ -353,7 +369,10 @@
 		33F388212F20F6EF009CC102 /* Memories */ = {
 			isa = PBXGroup;
 			children = (
+				B1A000132F70000100000001 /* MemoryLibraryModels.swift */,
 				3338A23B2F6EA6DE0018FC58 /* MemoryViewModel.swift */,
+				B1A000112F70000100000001 /* MemoryComposerSheet.swift */,
+				B1A000122F70000100000001 /* MemoryFilterSheets.swift */,
 				33F388202F20F6EF009CC102 /* MemoriesView.swift */,
 			);
 			path = Memories;
@@ -405,6 +424,8 @@
 				33F388282F20F6EF009CC102 /* Preview Content */,
 				33F388292F20F6EF009CC102 /* Assets.xcassets */,
 				33F3882A2F20F6EF009CC102 /* Background.mp4 */,
+				5A1B10062F80000100000001 /* compose.png */,
+				5A1B10072F80000100000001 /* share.png */,
 			);
 			path = Resources;
 			sourceTree = "<group>";
@@ -526,6 +547,8 @@
 				33F388492F20F6F0009CC102 /* Preview Assets.xcassets in Resources */,
 				33F3884A2F20F6F0009CC102 /* Background.mp4 in Resources */,
 				33F3884B2F20F6F0009CC102 /* Assets.xcassets in Resources */,
+				5A1B10042F80000100000001 /* compose.png in Resources */,
+				5A1B10052F80000100000001 /* share.png in Resources */,
 			);
 		};
 /* End PBXResourcesBuildPhase section */
@@ -566,12 +589,16 @@
 				33E430B52F2CBD7E00643877 /* OpenAILyricsService.swift in Sources */,
 				33E430B62F2CBD7E00643877 /* APIConfiguration.swift in Sources */,
 				33E430B72F2CBD7E00643877 /* MusicDatabaseService.swift in Sources */,
+				B1A000032F70000100000001 /* MemoryLibraryModels.swift in Sources */,
 				3338A23C2F6EA6DE0018FC58 /* MemoryViewModel.swift in Sources */,
+				B1A000012F70000100000001 /* MemoryComposerSheet.swift in Sources */,
+				B1A000022F70000100000001 /* MemoryFilterSheets.swift in Sources */,
 				33E430B82F2CBD7E00643877 /* SunoDirectService.swift in Sources */,
 				33E430B92F2CBD7E00643877 /* LLMServiceProtocol.swift in Sources */,
 				3338A2402F6EA7EB0018FC58 /* EmotionMLService.swift in Sources */,
 				3338A2412F6EA7EB0018FC58 /* HealthKitService.swift in Sources */,
 				3338A2422F6EA7EB0018FC58 /* LocationWeatherService.swift in Sources */,
+				5A1B10032F80000100000001 /* MemoryCalendarService.swift in Sources */,
 				33E430BA2F2CBD7E00643877 /* MusicServiceProtocol.swift in Sources */,
 				33F388A12F211E49009CC102 /* PresetCard.swift in Sources */,
 				33F3883D2F20F6F0009CC102 /* MusicParameters.swift in Sources */,
@@ -590,6 +617,7 @@
 				33F388A62F2202E0009CC102 /* WelcomeCard.swift in Sources */,
 				33E430C62F2CE94C00643877 /* AuthViewModel.swift in Sources */,
 				33F388432F20F6F0009CC102 /* MusicBaseManager.swift in Sources */,
+				5A1B10012F80000100000001 /* DeepLinkRouter.swift in Sources */,
 				33E430C82F2CE98C00643877 /* AuthService.swift in Sources */,
 				3338A2442F6EA93A0018FC58 /* Memory2MusicManager.swift in Sources */,
 				33E430C42F2CE94400643877 /* LoginView.swift in Sources */,

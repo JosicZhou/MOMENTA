@@ -201,6 +201,18 @@ class MusicDatabaseService {
         return decodeMusicList(from: response.data)
     }
 
+    /// 当前用户在 Memories 中生成的歌曲
+    func fetchMemorySongs(userId: UUID) async throws -> [GeneratedMusic] {
+        let response = try await client
+            .from("music_generations")
+            .select()
+            .eq("user_id", value: userId.uuidString.lowercased())
+            .eq("source", value: "memory")
+            .order("created_at", ascending: false)
+            .execute()
+        return decodeMusicList(from: response.data)
+    }
+
     /// 当前用户「共创」的歌曲
     func fetchCocreateSongs(userId: UUID) async throws -> [GeneratedMusic] {
         let response = try await client
