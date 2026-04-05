@@ -24,6 +24,10 @@ struct GeneratedMusic: Identifiable, Codable, Equatable {
     var source: String?
     /// 歌曲归属用户（music_generations.user_id），收藏/分享时用
     var ownerId: UUID?
+    /// 半成品裁剪点（秒）。非 nil 时播放器仅播放 0...continueAtSec
+    var continueAtSec: Double?
+    /// 歌曲总时长（秒），从 webhook duration 回写
+    var duration: Double?
 
     enum GenerationStatus: String, Codable {
         case pending = "pending"

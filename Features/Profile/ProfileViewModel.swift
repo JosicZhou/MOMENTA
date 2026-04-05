@@ -16,6 +16,14 @@ import Foundation
 import Combine
 import UIKit
 
+// MARK: - Accepted Notification Model
+
+struct AcceptedNotification: Identifiable, Codable {
+    let id: UUID          // friendId — unique per friend
+    let friendName: String
+    let friendAvatarUrl: String?
+}
+
 enum ProfileIdentityStore {
     static let displayNameKey = "momenta.profile.display-name"
 
@@ -120,16 +128,68 @@ class ProfileViewModel: ObservableObject {
     @Published var errorMessage: String?
     @Published var sortOptions: [PlaylistType: PlaylistSortOption] = [:]
 
+    // MARK: - Friend State
+    @Published private(set) var friends: [FriendProfile] = []
+    @Published private(set) var pendingRequests: [FriendRequest] = []
+    @Published private(set) var sentRequests: [SentRequest] = []
+    @Published private(set) var myFriendCode: String = ""
+    @Published var friendSearchResult: FriendProfile?
+    @Published var friendSearchError: String?
+    @Published var showFriendAddedAlert = false
+    @Published var friendAddedName: String?
+    @Published var incomingFriendCode: String?
+
+    /// 对方接受了我的好友申请 — 待我手动关闭的通知
+    @Published private(set) var acceptedNotifications: [AcceptedNotification] = []
+
+    /// 当前未读通知总数（pending requests + accepted notifications）
+    var friendNotificationCount: Int {
+        pendingRequests.count + acceptedNotifications.count
+    }
+
     private let musicDb = MusicDatabaseService.shared
     private let profileService = ProfileService.shared
+    private let friendService = FriendService.shared
     private let defaults = UserDefaults.standard
-    private let profilePhotoStorageKey = "momenta.profile.photo.data"
+
+    /// 用户专属本地缓存 key，防止多账号共用同一张头像
+    private func photoKey(for userId: UUID) -> String {
+        "momenta.profile.photo.\(userId.uuidString.lowercased())"
+    }
+
+    /// 上次 loadFriendData 时，我发出的待处理申请对方 id 集合（用于检测对方接受）
+    private func sentPendingKey(for userId: UUID) -> String {
+        "momenta.friends.sent-pending.\(userId.uuidString.lowercased())"
+    }
+
+    /// 尚未关闭的「接受通知」持久化 key
+    private func acceptedNotifKey(for userId: UUID) -> String {
+        "momenta.friends.accepted-notif.\(userId.uuidString.lowercased())"
+    }
+
+    private func loadPersistedNotifications(for userId: UUID) -> [AcceptedNotification] {
+        guard let data = defaults.data(forKey: acceptedNotifKey(for: userId)),
+              let saved = try? JSONDecoder().decode([AcceptedNotification].self, from: data)
+        else { return [] }
+        return saved
+    }
+
+    private func saveNotifications(_ notifications: [AcceptedNotification], for userId: UUID) {
+        if let data = try? JSONEncoder().encode(notifications) {
+            defaults.set(data, forKey: acceptedNotifKey(for: userId))
+        }
+    }
 
     init() {
         for type in PlaylistType.allCases {
             sortOptions[type] = .date
         }
-        loadStoredProfilePhoto()
+        // 同步读取当前已登录用户的缓存头像（userId 可从 currentUser 同步获取）
+        if let userId = AuthService.shared.currentUser?.id {
+            profilePhotoData = UserDefaults.standard.data(
+                forKey: "momenta.profile.photo.\(userId.uuidString.lowercased())"
+            )
+        }
     }
 
     var profileAvatarImage: UIImage? {
@@ -164,22 +224,37 @@ class ProfileViewModel: ObservableObject {
         } catch {
             errorMessage = error.localizedDescription
         }
+        await loadFriendData()
     }
 
     func updateProfilePhoto(with image: UIImage) {
         guard let data = image.jpegData(compressionQuality: 0.88) ?? image.pngData() else { return }
         profilePhotoData = data
-        defaults.set(data, forKey: profilePhotoStorageKey)
+        Task {
+            guard let userId = await SupabaseService.shared.getCurrentUserId() else { return }
+            defaults.set(data, forKey: photoKey(for: userId))
+            if let avatarUrl = try? await SupabaseService.shared.uploadAvatar(imageData: data, userId: userId) {
+                try? await friendService.updateAvatarUrl(avatarUrl, userId: userId)
+            }
+        }
     }
 
     func removeProfilePhoto() {
         profilePhotoData = nil
-        defaults.removeObject(forKey: profilePhotoStorageKey)
+        Task {
+            guard let userId = await SupabaseService.shared.getCurrentUserId() else { return }
+            defaults.removeObject(forKey: photoKey(for: userId))
+            try? await friendService.clearAvatarUrl(userId: userId)
+        }
     }
 
     func updateDisplayName(_ name: String) {
         ProfileIdentityStore.saveDisplayName(name)
         objectWillChange.send()
+        Task {
+            guard let userId = await SupabaseService.shared.getCurrentUserId() else { return }
+            try? await friendService.ensureProfile(userId: userId, displayName: name)
+        }
     }
 
     // MARK: - 歌单展示
@@ -302,7 +377,154 @@ class ProfileViewModel: ObservableObject {
         )
     }
 
-    private func loadStoredProfilePhoto() {
-        profilePhotoData = defaults.data(forKey: profilePhotoStorageKey)
+    // MARK: - Friend Management
+
+    func loadFriendData() async {
+        guard let userIdStr = AuthService.shared.currentUser?.id.uuidString,
+              let userId = UUID(uuidString: userIdStr) else { return }
+        do {
+            try await friendService.ensureProfile(userId: userId, displayName: displayName)
+            myFriendCode = try await friendService.getMyFriendCode()
+
+            // 拍下旧的「我发出的待处理申请」快照，用于检测对方接受
+            let sentPendingKey = sentPendingKey(for: userId)
+            let previousSentFriendIds: Set<String> = {
+                guard let arr = defaults.stringArray(forKey: sentPendingKey) else { return [] }
+                return Set(arr)
+            }()
+
+            let newFriends      = try await friendService.loadFriends()
+            let newPending      = try await friendService.loadPendingRequests()
+            let newSentRequests = try await friendService.loadSentRequests()
+
+            // ── 检测接受通知 ─────────────────────────────────────────
+            // 对方接受 = 之前在 sentRequests 里，现在不在了，但出现在 friends 里
+            let newSentFriendIds = Set(newSentRequests.map { $0.friendId.uuidString.lowercased() })
+            let newFriendIds     = Set(newFriends.map { $0.id.uuidString.lowercased() })
+            var notifications    = loadPersistedNotifications(for: userId)
+            let existingNotifIds = Set(notifications.map { $0.id.uuidString.lowercased() })
+
+            if !previousSentFriendIds.isEmpty {
+                // 从待处理消失 + 出现在好友列表 + 尚未通知过
+                let acceptedIds = previousSentFriendIds
+                    .subtracting(newSentFriendIds)
+                    .intersection(newFriendIds)
+                    .subtracting(existingNotifIds)
+
+                for idStr in acceptedIds {
+                    if let friend = newFriends.first(where: {
+                        $0.id.uuidString.lowercased() == idStr
+                    }) {
+                        notifications.append(AcceptedNotification(
+                            id: friend.id,
+                            friendName: friend.resolvedName,
+                            friendAvatarUrl: friend.avatarUrl
+                        ))
+                    }
+                }
+                saveNotifications(notifications, for: userId)
+            }
+
+            // 保存本次快照供下次对比
+            defaults.set(Array(newSentFriendIds), forKey: sentPendingKey)
+
+            // 更新 UI
+            friends               = newFriends
+            pendingRequests       = newPending
+            sentRequests          = newSentRequests
+            acceptedNotifications = notifications
+            // ─────────────────────────────────────────────────────────
+
+            // 加载该用户专属头像：优先本地缓存，否则从 Supabase 下载
+            let key = photoKey(for: userId)
+            if let cached = defaults.data(forKey: key) {
+                profilePhotoData = cached
+            } else if let urlString = try? await friendService.getMyAvatarUrl(),
+                      !urlString.isEmpty,
+                      let url = URL(string: urlString),
+                      let data = try? await SupabaseService.shared.downloadData(from: url) {
+                profilePhotoData = data
+                defaults.set(data, forKey: key)
+            } else {
+                profilePhotoData = nil
+            }
+        } catch {
+            print("[ProfileVM] loadFriendData error: \(error.localizedDescription)")
+        }
+    }
+
+    func acceptRequest(_ request: FriendRequest) async {
+        do {
+            try await friendService.acceptRequest(request.id)
+            await loadFriendData()
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
+    func declineRequest(_ request: FriendRequest) async {
+        do {
+            try await friendService.declineRequest(request.id)
+            await loadFriendData()
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
+    func addFriendByCode(_ code: String, note: String? = nil) async {
+        friendSearchError = nil
+        friendSearchResult = nil
+        let trimmed = code.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return }
+        do {
+            guard let profile = try await friendService.searchByFriendCode(trimmed) else {
+                friendSearchError = "No user found with this code"
+                return
+            }
+            let result = try await friendService.sendFriendRequest(to: profile.id, note: note)
+            switch result {
+            case .sent:
+                friendAddedName = profile.displayName
+                showFriendAddedAlert = true
+                await loadFriendData()
+            case .alreadyFriends:
+                friendSearchError = "You're already friends!"
+            case .alreadyPending:
+                friendSearchError = "Request already sent — waiting for their response"
+            case .cannotAddSelf:
+                friendSearchError = "That's your own code!"
+            }
+        } catch {
+            friendSearchError = error.localizedDescription
+        }
+    }
+
+    func cancelSentRequest(_ request: SentRequest) async {
+        do {
+            try await friendService.cancelSentRequest(request.id)
+            await loadFriendData()
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
+    func deleteFriend(_ friend: FriendProfile) async {
+        do {
+            try await friendService.deleteFriend(friend.id)
+            await loadFriendData()
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
+    func dismissAcceptedNotification(_ notification: AcceptedNotification) {
+        acceptedNotifications.removeAll { $0.id == notification.id }
+        guard let userIdStr = AuthService.shared.currentUser?.id.uuidString,
+              let userId = UUID(uuidString: userIdStr) else { return }
+        saveNotifications(acceptedNotifications, for: userId)
+    }
+
+    func handleIncomingFriendCode(_ code: String) async {
+        incomingFriendCode = code
     }
 }

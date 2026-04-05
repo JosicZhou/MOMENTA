@@ -45,6 +45,8 @@ final class PlayerManager {
     var isLoadingLyrics: Bool = false
     /// 歌词模式下底部控件是否可见（滚动方向控制：向下隐藏，向上/停止显示）
     var lyricsControlsVisible: Bool = true
+    /// 歌词有效截止时间（秒）；由外部（如 cocreate 页面）在播放前设置，fetchLyrics 据此裁剪歌词行
+    var effectiveLyricDuration: Double? = nil
     
     // MARK: - 私有
     
@@ -104,7 +106,7 @@ final class PlayerManager {
         currentTime = newTime
         playbackProgress = progress
         
-        // 立即更新歌词行索引，不等待 0.5s 定时器
+        // 立即更新歌词行索引，不等待定时器下一次触发
         if !lyrics.isEmpty {
             let newIndex = lyrics.lastIndex(where: { $0.startTime <= newTime }) ?? 0
             if newIndex != currentLineIndex {
@@ -119,7 +121,7 @@ final class PlayerManager {
         removeProgressTracking()
         guard let player = audioPlayer else { return }
         
-        let interval = CMTime(seconds: 0.5, preferredTimescale: 600)
+        let interval = CMTime(seconds: 0.1, preferredTimescale: 600)
         timeObserver = player.addPeriodicTimeObserver(
             forInterval: interval,
             queue: .main
@@ -128,12 +130,20 @@ final class PlayerManager {
                 guard let self = self,
                       let duration = self.audioPlayer?.currentItem?.duration,
                       duration.seconds.isFinite, duration.seconds > 0 else { return }
-                
+
+                let effectiveDuration = self.currentMusic?.continueAtSec ?? duration.seconds
+
+                // 半成品裁剪：到达 continueAtSec 自动暂停
+                if self.currentMusic?.continueAtSec != nil, time.seconds >= effectiveDuration {
+                    self.pause()
+                    self.seek(to: 0)
+                    return
+                }
+
                 self.currentTime = time.seconds
-                self.totalDuration = duration.seconds
-                self.playbackProgress = time.seconds / duration.seconds
-                
-                // 更新当前歌词行索引
+                self.totalDuration = effectiveDuration
+                self.playbackProgress = time.seconds / effectiveDuration
+
                 if !self.lyrics.isEmpty {
                     let newIndex = self.lyrics.lastIndex(where: { $0.startTime <= time.seconds }) ?? 0
                     if newIndex != self.currentLineIndex {
@@ -189,7 +199,7 @@ final class PlayerManager {
                     audioId: audioId
                 )
                 if !lines.isEmpty {
-                    lyrics = lines
+                    lyrics = filterLyrics(lines)
                     isLoadingLyrics = false
                     return
                 }
@@ -200,12 +210,12 @@ final class PlayerManager {
         
         // 第三步：所有 API 路径失败，降级为纯文本歌词
         print("📝 [PlayerManager] 降级为纯文本歌词")
-        lyrics = LyricLine.parseFromPlainText(music.prompt, totalDuration: totalDuration)
+        lyrics = filterLyrics(LyricLine.parseFromPlainText(music.prompt, totalDuration: totalDuration))
         isLoadingLyrics = false
     }
     
     // MARK: - 清理
-    
+
     func reset() {
         pause()
         removeProgressTracking()
@@ -220,5 +230,14 @@ final class PlayerManager {
         lyrics = []
         currentLineIndex = 0
         lyricsControlsVisible = true
+        effectiveLyricDuration = nil
+    }
+
+    // MARK: - 歌词工具
+
+    /// 若 effectiveLyricDuration 已设置，过滤掉超出该时长的歌词行
+    private func filterLyrics(_ lines: [LyricLine]) -> [LyricLine] {
+        guard let maxSec = effectiveLyricDuration else { return lines }
+        return lines.filter { $0.startTime < maxSec }
     }
 }

@@ -67,6 +67,7 @@ struct MemoryLocationSheet: View {
                 .padding(.horizontal, 14)
                 .padding(.bottom, 10)
         }
+        .scrollDismissesKeyboard(.immediately)
         .presentationDetents([.large])
         .presentationDragIndicator(.hidden)
         .presentationCornerRadius(34)

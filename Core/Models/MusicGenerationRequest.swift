@@ -25,6 +25,7 @@ struct MusicGenerationRequest: Codable {
         case v4_5 = "V4_5"
         case v4_5Plus = "V4_5PLUS"
         case v5 = "V5"
+        case v5_5 = "V5_5"
     }
     
     enum VocalGender: String, Codable {

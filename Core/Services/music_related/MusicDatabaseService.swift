@@ -15,9 +15,18 @@ class MusicDatabaseService {
     private init() {}
     
     /// 创建初始音乐生成记录（在任务提交后立即调用）
-    /// - Parameter source: "mine" | "cocreate"，缺省 "mine"
-    func createInitialRecord(taskId: String, prompt: String, style: String, userId: UUID, source: String = "mine") async throws {
-        let record: [String: AnyJSON] = [
+    /// - Parameter source: "mine" | "cocreate" | "memory"，缺省 "mine"
+    func createInitialRecord(
+        taskId: String,
+        prompt: String,
+        style: String,
+        userId: UUID,
+        source: String = "mine",
+        continueAtSec: Double? = nil,
+        parentAudioId: String? = nil,
+        cocreateSessionId: UUID? = nil
+    ) async throws {
+        var record: [String: AnyJSON] = [
             "task_id": .string(taskId),
             "user_id": .string(userId.uuidString.lowercased()),
             "prompt": .string(prompt),
@@ -26,11 +35,65 @@ class MusicDatabaseService {
             "created_at": .string(ISO8601DateFormatter().string(from: Date())),
             "source": .string(source)
         ]
-        
+
+        if let cap = continueAtSec {
+            record["continue_at_sec"] = .double(cap)
+        }
+        if let parentId = parentAudioId {
+            record["parent_audio_id"] = .string(parentId)
+        }
+        if let sessionId = cocreateSessionId {
+            record["cocreate_session_id"] = .string(sessionId.uuidString.lowercased())
+        }
+
         try await client
             .from("music_generations")
             .insert(record)
             .execute()
+    }
+
+    /// 更新已有记录的 continue_at_sec（A 端生成完成后回填裁剪点）
+    func updateContinueAt(taskId: String, continueAtSec: Double) async throws {
+        try await client
+            .from("music_generations")
+            .update(["continue_at_sec": continueAtSec] as [String: Double])
+            .eq("task_id", value: taskId)
+            .execute()
+    }
+
+    /// App 端轮询 Suno API 成功后，将完整数据同步回 Supabase（webhook 的应用侧备份）
+    /// 仅更新尚未完成的记录，避免覆盖 webhook 已写入的数据。
+    func syncCompletedMusic(_ music: GeneratedMusic) async {
+        guard music.status == .completed else { return }
+
+        var record: [String: AnyJSON] = [
+            "status": .string("completed"),
+            "title": .string(music.title),
+            "style": .string(music.style),
+        ]
+        if let urlStr = music.audioURL?.absoluteString {
+            record["audio_url"] = .string(urlStr)
+        }
+        if let imgStr = music.imageURL?.absoluteString {
+            record["image_url"] = .string(imgStr)
+        }
+        // 注意：music_generations 表没有 suno_audio_id 列，
+        // suno_audio_id 存在 cocreate_sessions 表里，此处不写入以免 UPDATE 整体失败。
+        if let dur = music.duration {
+            record["duration"] = .double(dur)
+        }
+
+        do {
+            try await client
+                .from("music_generations")
+                .update(record)
+                .eq("task_id", value: music.id)
+                .neq("status", value: "completed")  // 只更新尚未被 webhook 完成的记录
+                .execute()
+            print("✅ [MusicDB] 轮询结果已同步至 Supabase: \(music.id)")
+        } catch {
+            print("⚠️ [MusicDB] 同步轮询结果失败（非致命）: \(error.localizedDescription)")
+        }
     }
     
     /// 监听特定任务的状态更新
@@ -87,6 +150,17 @@ class MusicDatabaseService {
         }
     }
     
+    /// 批量按 task_id 查询多条音乐记录（共创完成后 A 端拉取 B 的续写结果）
+    func fetchMusicRecords(taskIds: [String]) async throws -> [GeneratedMusic] {
+        guard !taskIds.isEmpty else { return [] }
+        let response = try await client
+            .from("music_generations")
+            .select()
+            .in("task_id", values: taskIds)
+            .execute()
+        return decodeMusicList(from: response.data)
+    }
+
     /// 主动从数据库查询特定任务的状态
     func fetchMusicRecord(taskId: String) async throws -> GeneratedMusic? {
         let response = try await client
@@ -159,6 +233,16 @@ class MusicDatabaseService {
             sunoAudioId = extractSunoAudioId(from: payloadJSON)
         }
         
+        var continueAtSec: Double?
+        if let capJSON = record["continue_at_sec"], case .double(let cap) = capJSON {
+            continueAtSec = cap
+        }
+
+        var duration: Double?
+        if let durJSON = record["duration"], case .double(let dur) = durJSON {
+            duration = dur
+        }
+
         return GeneratedMusic(
             id: taskId,
             title: title,
@@ -170,7 +254,9 @@ class MusicDatabaseService {
             status: status,
             createdAt: createdAt,
             source: source,
-            ownerId: ownerId
+            ownerId: ownerId,
+            continueAtSec: continueAtSec,
+            duration: duration
         )
     }
     

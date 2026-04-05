@@ -6,6 +6,17 @@
 import SwiftUI
 import AVKit
 
+// MARK: - Keyboard Dismiss Helper
+
+extension View {
+    func hideKeyboard() {
+        UIApplication.shared.sendAction(
+            #selector(UIResponder.resignFirstResponder),
+            to: nil, from: nil, for: nil
+        )
+    }
+}
+
 // MARK: - GlassButtonStyle 实现
 
 struct GlassButtonStyle: ButtonStyle {

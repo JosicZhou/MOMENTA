@@ -116,31 +116,31 @@ class Memory2MusicManager: ObservableObject {
             source: "memory"
         )
 
-        // 8. 等待完成（Realtime + 轮询）
+        // 8. 等待完成：Realtime 与 Suno 直接轮询并发竞速
+        // - Task A：监听 Supabase Realtime（webhook 回填后触发），网络错误静默处理
+        // - Task B：直接轮询 Suno API（不依赖 webhook，始终可靠）
+        // 谁先返回结果谁赢，另一条路立刻取消
         onProgress("AI 正在后台创作，请稍候...")
 
         return try await withThrowingTaskGroup(of: GeneratedMusic?.self) { group in
+
+            // Task A：Supabase Realtime（需要 webhook，可能断线，出错静默返回 nil）
             group.addTask {
-                let stream = MusicDatabaseService.shared.subscribeToTaskUpdate(taskId: taskId)
-                for try await music in stream { return music }
+                do {
+                    let stream = MusicDatabaseService.shared.subscribeToTaskUpdate(taskId: taskId)
+                    for try await music in stream { return music }
+                } catch {
+                    print("⚠️ [Memory·Realtime] 连接中断，由 Suno 轮询接管: \(error.localizedDescription)")
+                }
                 return nil
             }
 
+            // Task B：直接轮询 Suno API（不依赖 webhook，始终可靠）
             group.addTask {
-                var attempts = 0
-                let maxAttempts = 15
-                while attempts < maxAttempts {
-                    try await Task.sleep(nanoseconds: 20 * 1_000_000_000)
-                    print("🔄 [Memory·Polling] 正在主动检查任务状态 (\(attempts + 1)/\(maxAttempts))...")
-                    if let music = try await MusicDatabaseService.shared.fetchMusicRecord(taskId: taskId),
-                       music.status == .completed {
-                        print("✅ [Memory·Polling] 主动查询发现任务已完成！")
-                        return music
-                    }
-                    attempts += 1
-                }
-                print("⚠️ [Memory·Polling] 达到最大轮询次数 \(maxAttempts)，放弃轮询")
-                return nil
+                let music = try await self.baseManager.waitForCompletion(taskId: taskId)
+                // webhook 未及时回填时同步数据至 Supabase
+                await MusicDatabaseService.shared.syncCompletedMusic(music)
+                return music
             }
 
             while let result = try await group.next() {
@@ -151,8 +151,7 @@ class Memory2MusicManager: ObservableObject {
                 }
             }
 
-            onProgress("正在同步生成状态...")
-            return try await baseManager.waitForCompletion(taskId: taskId)
+            throw MusicServiceError.timeout
         }
     }
 

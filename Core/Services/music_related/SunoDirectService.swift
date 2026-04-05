@@ -210,7 +210,8 @@ class SunoDirectService: MusicServiceProtocol {
                     imageURL: imageURL,
                     sunoAudioId: sunoData.id,
                     status: .completed,
-                    createdAt: Date()
+                    createdAt: Date(),
+                    duration: sunoData.duration
                 )
             }
             // 检查失败状态
@@ -277,5 +278,52 @@ class SunoDirectService: MusicServiceProtocol {
         let lines = LyricLine.parse(from: alignedWords)
         print("✅ [Suno] 解析得到 \(lines.count) 行歌词")
         return lines
+    }
+    
+    // MARK: - Extend Music (Cocreate)
+    
+    func extendMusic(request: MusicExtendRequest) async throws -> String {
+        guard let url = URL(string: "\(baseURL)/api/v1/generate/extend") else {
+            throw MusicServiceError.invalidURL
+        }
+        
+        var urlRequest = URLRequest(url: url)
+        urlRequest.httpMethod = "POST"
+        urlRequest.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+        urlRequest.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        
+        let encoder = JSONEncoder()
+        encoder.keyEncodingStrategy = .convertToSnakeCase
+        urlRequest.httpBody = try encoder.encode(request)
+        
+        let (data, response) = try await URLSession.shared.data(for: urlRequest)
+        
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw MusicServiceError.invalidResponse
+        }
+        
+        print("📡 [Suno] Extend 响应状态码: \(httpResponse.statusCode)")
+        if let jsonString = String(data: data, encoding: .utf8) {
+            print("📡 [Suno] Extend 原始响应: \(jsonString)")
+        }
+        
+        let decoder = JSONDecoder()
+        decoder.keyDecodingStrategy = .convertFromSnakeCase
+        let result = try decoder.decode(MusicGenerationResponse.self, from: data)
+        
+        if result.code == 200, let taskId = result.data?.taskId {
+            return taskId
+        } else {
+            let friendlyMessage: String
+            switch result.code {
+            case 433: friendlyMessage = "API调用次数已达上限，请稍后再试"
+            case 429: friendlyMessage = "请求过于频繁，请稍后再试"
+            case 402: friendlyMessage = "账户余额不足，请充值后继续使用"
+            case 401: friendlyMessage = "API密钥无效，请检查配置"
+            case 422: friendlyMessage = "请求参数错误: \(result.msg)"
+            default:  friendlyMessage = result.msg
+            }
+            throw MusicServiceError.apiError(code: result.code, message: friendlyMessage)
+        }
     }
 }

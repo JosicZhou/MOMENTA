@@ -55,6 +55,22 @@ class SupabaseService {
         return publicURL.absoluteString
     }
     
+    /// 上传头像图片到 Storage avatars bucket，返回公开访问 URL
+    func uploadAvatar(imageData: Data, userId: UUID) async throws -> String {
+        let path = "\(userId.uuidString.lowercased())/avatar.jpg"
+        _ = try await client.storage
+            .from("avatars")
+            .upload(
+                path,
+                data: imageData,
+                options: FileOptions(contentType: "image/jpeg", upsert: true)
+            )
+        let publicURL = try client.storage
+            .from("avatars")
+            .getPublicURL(path: path)
+        return publicURL.absoluteString
+    }
+
     /// 工具方法：从 URL 下载 Data
     func downloadData(from url: URL) async throws -> Data {
         let (data, _) = try await URLSession.shared.data(from: url)

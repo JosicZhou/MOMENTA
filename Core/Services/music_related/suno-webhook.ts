@@ -71,12 +71,13 @@ Deno.serve(async (req) => {
             status: 'completed',
             audio_url: musicData.audio_url,
             image_url: musicData.image_url,
-            suno_audio_id: musicData.id, // Suno 音频 track ID，用于歌词 API
+            suno_audio_id: musicData.id,
             title: musicData.title || 'Untitled',
-            payload: payload // 保存完整的原始回调数据以便查阅
+            duration: musicData.duration || null,
+            payload: payload
           })
           .eq('task_id', taskId)
-          .select() // 返回更新后的数据以确认是否成功
+          .select()
 
         if (updateError) {
           console.error(`数据库更新失败 (Task: ${taskId}):`, updateError)
