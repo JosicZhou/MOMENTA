@@ -28,6 +28,7 @@ struct LoginView: View {
                 .aspectRatio(contentMode: .fill)
                 .ignoresSafeArea()
                 .frame(minWidth: 0, maxWidth: .infinity, minHeight: 0, maxHeight: .infinity)
+                .onTapGesture { hideKeyboard() }
             
             // Bottom Sheet
             GeometryReader { geometry in

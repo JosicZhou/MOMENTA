@@ -45,7 +45,12 @@ struct ContentView: View {
                 await handlePendingMemoryDeepLinkIfNeeded()
             }
         }
-        .onChange(of: authViewModel.isAuthenticated) { _, _ in
+        .onChange(of: authViewModel.isAuthenticated) { _, isAuthenticated in
+            if isAuthenticated {
+                // 登录后：刷新好友数据 + 刷新音乐歌单（清除上一个账号的缓存数据）
+                Task { await profileViewModel.loadFriendData() }
+                Task { await profileViewModel.load() }
+            }
             Task {
                 await handlePendingMemoryDeepLinkIfNeeded()
             }
@@ -53,6 +58,14 @@ struct ContentView: View {
         .onChange(of: deepLinkRouter.pendingMemoryTaskId) { _, _ in
             Task {
                 await handlePendingMemoryDeepLinkIfNeeded()
+            }
+        }
+        .onChange(of: deepLinkRouter.pendingFriendCode) { _, newCode in
+            guard let code = newCode, !code.isEmpty, authViewModel.isAuthenticated else { return }
+            selectedTab = 3
+            Task {
+                await profileViewModel.handleIncomingFriendCode(code)
+                deepLinkRouter.clearPendingFriendCode()
             }
         }
     }
@@ -69,19 +82,19 @@ struct ContentView: View {
                     }
                     .tag(0)
                 
-                // 分享页面
-                ShareView()
-                    .tabItem {
-                        Image(systemName: "person.2.fill")
-                            .accessibilityLabel("Share")
-                    }
-                    .tag(1)
-                
                 // 回忆页面
                 MemoriesView(viewModel: memoryViewModel, profileViewModel: profileViewModel)
                     .tabItem {
                         Image(systemName: "photo.on.rectangle.angled")
                             .accessibilityLabel("Memories")
+                    }
+                    .tag(1)
+                
+                // 分享页面
+                ShareView()
+                    .tabItem {
+                        Image(systemName: "person.2.fill")
+                            .accessibilityLabel("Share")
                     }
                     .tag(2)
                 
@@ -147,18 +160,18 @@ struct ContentView: View {
     }
 
     private var activeGeneratedMusic: GeneratedMusic? {
-        if selectedTab == 2 {
+        if selectedTab == 1 {
             return memoryViewModel.generatedMusic ?? viewModel.generatedMusic
         }
         return viewModel.generatedMusic ?? memoryViewModel.generatedMusic
     }
 
     private var activeIsGenerating: Bool {
-        selectedTab == 2 ? memoryViewModel.isGenerating : viewModel.isGenerating
+        selectedTab == 1 ? memoryViewModel.isGenerating : viewModel.isGenerating
     }
 
     private var activeGenerationProgress: String {
-        selectedTab == 2 ? memoryViewModel.generationProgress : viewModel.generationProgress
+        selectedTab == 1 ? memoryViewModel.generationProgress : viewModel.generationProgress
     }
 
     private func handlePendingMemoryDeepLinkIfNeeded() async {
@@ -167,7 +180,7 @@ struct ContentView: View {
             return
         }
 
-        selectedTab = 2
+        selectedTab = 1
 
         do {
             if let music = try await MusicDatabaseService.shared.fetchMusicRecord(taskId: taskId) {

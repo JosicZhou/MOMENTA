@@ -23,6 +23,8 @@ struct ProfileView: View {
     @State private var selectedGenre: String?
     @State private var shareMode: ProfileShareMode = .share
     @State private var collapsedSongSections: Set<String> = []
+    @State private var showQRSheet = false
+    @State private var showScanSheet = false
 
     private let calendar = Calendar.current
 
@@ -72,6 +74,24 @@ struct ProfileView: View {
             .sheet(isPresented: $showAvatarPicker) {
                 ImagePicker(sourceType: avatarPickerSource, selectedImage: $pendingAvatarImage)
             }
+            .sheet(isPresented: $showQRSheet) {
+                FriendQRCodeView(
+                    friendCode: profileViewModel.myFriendCode,
+                    displayName: profileViewModel.displayName,
+                    avatarImage: profileViewModel.profileAvatarImage
+                )
+            }
+            .fullScreenCover(isPresented: $showScanSheet) {
+                ScanQRView { code, note in
+                    showScanSheet = false
+                    Task { await profileViewModel.addFriendByCode(code, note: note) }
+                }
+            }
+            .alert("Friend Request Sent", isPresented: $profileViewModel.showFriendAddedAlert) {
+                Button("OK", role: .cancel) {}
+            } message: {
+                Text("Request sent to \(profileViewModel.friendAddedName ?? "user")!")
+            }
             .sheet(item: $presentedFilterSheet) { sheet in
                 switch sheet {
                 case .pipeline:
@@ -97,6 +117,11 @@ struct ProfileView: View {
             guard let image else { return }
             profileViewModel.updateProfilePhoto(with: image)
         }
+        // Deep link 进来时自动打开好友列表（让 FriendsListView 接管 sheet）
+        .onChange(of: profileViewModel.incomingFriendCode) { _, code in
+            guard code != nil else { return }
+            // 自动导航到好友列表，由 FriendsListView.onChange 弹出 sheet
+        }
     }
 
     private var profileBackground: some View {
@@ -109,7 +134,11 @@ struct ProfileView: View {
                 HStack(alignment: .top) {
                     avatarView
                     Spacer(minLength: 0)
-                    settingsButton
+                    HStack(spacing: 8) {
+                        friendsListIconButton
+                        scanButton
+                        settingsButton
+                    }
                 }
 
                 Spacer(minLength: 0)
@@ -353,10 +382,53 @@ struct ProfileView: View {
                 .lineLimit(1)
                 .minimumScaleFactor(0.84)
 
-            Text("23 | Hong Kong")
-                .font(.system(size: 13, weight: .regular))
+            Button { showQRSheet = true } label: {
+                HStack(spacing: 5) {
+                    Image(systemName: "qrcode")
+                        .font(.system(size: 11, weight: .medium))
+                    Text(profileViewModel.myFriendCode.isEmpty ? "Loading..." : profileViewModel.myFriendCode)
+                        .font(.system(size: 13, weight: .medium, design: .monospaced))
+                }
                 .foregroundStyle(.black.opacity(0.6))
+            }
+            .buttonStyle(.plain)
         }
+    }
+
+    private var scanButton: some View {
+        Button { showScanSheet = true } label: {
+            Image(systemName: "qrcode.viewfinder")
+                .font(.system(size: 16, weight: .semibold))
+                .foregroundStyle(.black.opacity(0.58))
+                .frame(width: 48, height: 48)
+                .background(Color.black.opacity(0.05), in: Circle())
+        }
+        .buttonStyle(ProfilePressStyle())
+    }
+
+    private var friendsListIconButton: some View {
+        NavigationLink {
+            FriendsListView(profileViewModel: profileViewModel)
+        } label: {
+            ZStack(alignment: .topTrailing) {
+                Image(systemName: "person.2.fill")
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundStyle(.black.opacity(0.58))
+                    .frame(width: 48, height: 48)
+                    .background(Color.black.opacity(0.05), in: Circle())
+
+                if profileViewModel.friendNotificationCount > 0 {
+                    Text("\(profileViewModel.friendNotificationCount)")
+                        .font(.system(size: 10, weight: .bold))
+                        .foregroundStyle(.white)
+                        .frame(minWidth: 16, minHeight: 16)
+                        .padding(.horizontal, 4)
+                        .background(Color.red, in: Capsule())
+                        .offset(x: 6, y: -4)
+                }
+            }
+        }
+        .buttonStyle(ProfilePressStyle())
     }
 }
 

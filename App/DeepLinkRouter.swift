@@ -11,6 +11,7 @@ import SwiftUI
 @MainActor
 final class DeepLinkRouter: ObservableObject {
     @Published var pendingMemoryTaskId: String?
+    @Published var pendingFriendCode: String?
 
     @discardableResult
     func handle(_ url: URL) -> Bool {
@@ -21,11 +22,20 @@ final class DeepLinkRouter: ObservableObject {
             return true
         }
 
+        if let code = friendCode(from: url) {
+            pendingFriendCode = code
+            return true
+        }
+
         return false
     }
 
     func clearPendingMemoryTaskId() {
         pendingMemoryTaskId = nil
+    }
+
+    func clearPendingFriendCode() {
+        pendingFriendCode = nil
     }
 
     private func memoryTaskId(from url: URL) -> String? {
@@ -39,5 +49,16 @@ final class DeepLinkRouter: ObservableObject {
 
         let pathTaskId = url.pathComponents.dropFirst().first
         return pathTaskId?.isEmpty == false ? pathTaskId : nil
+    }
+
+    private func friendCode(from url: URL) -> String? {
+        guard url.host == "add-friend" else { return nil }
+
+        if let components = URLComponents(url: url, resolvingAgainstBaseURL: false),
+           let code = components.queryItems?.first(where: { $0.name == "code" })?.value,
+           !code.isEmpty {
+            return code
+        }
+        return nil
     }
 }
