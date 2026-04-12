@@ -22,6 +22,7 @@ struct MemoriesView: View {
     @State private var selectedDatePreset: MemoryDatePreset?
     @State private var isPaletteExpanded = true
     @State private var collapsedTimelineSections: Set<String> = []
+    @State private var pendingDeletionItem: MemoryLibraryItem?
 
     private let calendar = Calendar.current
     private var theme: MemoriesTheme { MemoriesTheme(colorScheme: colorScheme) }
@@ -40,18 +41,11 @@ struct MemoriesView: View {
 
             ScrollView {
                 VStack {
-                    LazyVStack(alignment: .leading, spacing: 30) {
+                    LazyVStack(alignment: .leading, spacing: 34) {
                         MemoriesHeader()
 
-                        MemoryFilterChipRow(
-                            dateLabel: dateChipLabel,
-                            genreLabel: genreChipLabel,
-                            hasSelectedLocation: selectedLocation != nil,
-                            hasSelectedDate: selectedDate != nil || selectedDatePreset != nil,
-                            hasSelectedGenre: selectedGenre != nil,
-                            onLocationTap: { presentFilterSheet(.location) },
-                            onDateTap: { presentFilterSheet(.date) },
-                            onGenreTap: { presentFilterSheet(.genre) }
+                        MemoryTopCreateButtonRow(
+                            action: presentComposer
                         )
 
                         MemoryPaletteSection(
@@ -64,10 +58,24 @@ struct MemoriesView: View {
                             onAdd: presentComposer
                         )
 
+                        MemoryFilterChipRow(
+                            dateLabel: dateChipLabel,
+                            genreLabel: genreChipLabel,
+                            hasSelectedLocation: selectedLocation != nil,
+                            hasSelectedDate: selectedDate != nil || selectedDatePreset != nil,
+                            hasSelectedGenre: selectedGenre != nil,
+                            onLocationTap: { presentFilterSheet(.location) },
+                            onDateTap: { presentFilterSheet(.date) },
+                            onGenreTap: { presentFilterSheet(.genre) }
+                        )
+
                         if viewModel.isLoadingLibrary && viewModel.libraryItems.isEmpty {
                             MemoryLoadingSection()
                         } else if timelineSections.isEmpty {
-                            MemoryEmptySection(onCreate: presentComposer)
+                            MemoryEmptySection(
+                                state: emptyState,
+                                onCreate: presentComposer
+                            )
                         } else {
                             ForEach(timelineSections) { section in
                                 MemoryTimelineSectionView(
@@ -77,17 +85,17 @@ struct MemoriesView: View {
                                     isExpanded: !collapsedTimelineSections.contains(section.id),
                                     onToggleExpanded: { toggleTimelineSection(section.id) },
                                     onPlay: handleSongTap(_:),
-                                    onFavorite: toggleFavorite(_:)
+                                    onFavorite: toggleFavorite(_:),
+                                    onDelete: promptDelete(_:)
                                 )
                             }
                         }
                     }
-                    .frame(maxWidth: 520, alignment: .leading)
+                    .frame(maxWidth: 520, alignment: .center)
                     .frame(maxWidth: .infinity, alignment: .center)
                 }
-                .padding(.leading, 28)
-                .padding(.trailing, 10)
-                .padding(.top, 14)
+                .padding(.horizontal, 24)
+                .padding(.top, 18)
                 .padding(.bottom, 132)
                 .animation(.snappy(duration: 0.28, extraBounce: 0), value: filterAnimationKey)
             }
@@ -123,6 +131,28 @@ struct MemoriesView: View {
         .sheet(isPresented: $isComposerPresented) {
             MemoryComposerSheet(viewModel: viewModel, profileViewModel: profileViewModel)
         }
+        .alert(
+            "Are you sure you want to delete?",
+            isPresented: Binding(
+                get: { pendingDeletionItem != nil },
+                set: { isPresented in
+                    if !isPresented {
+                        pendingDeletionItem = nil
+                    }
+                }
+            ),
+            presenting: pendingDeletionItem
+        ) { item in
+            Button("Delete", role: .destructive) {
+                Task {
+                    await viewModel.deleteMemory(musicId: item.id)
+                    pendingDeletionItem = nil
+                }
+            }
+            Button("Cancel", role: .cancel) {
+                pendingDeletionItem = nil
+            }
+        }
     }
 
     private var filteredItems: [MemoryLibraryItem] {
@@ -142,18 +172,50 @@ struct MemoriesView: View {
     }
 
     private var timelineSections: [MemoryTimelineSectionData] {
-        var groups: [(String, [MemoryLibraryItem])] = []
-
-        for item in filteredItems {
-            let title = sectionTitle(for: item.createdAt)
-            if let index = groups.firstIndex(where: { $0.0 == title }) {
-                groups[index].1.append(item)
-            } else {
-                groups.append((title, [item]))
-            }
+        if let selectedDate {
+            return timelineSections(
+                titled: timelineTitle(forSelectedDate: selectedDate),
+                items: filteredItems
+            )
         }
 
-        return groups.map { MemoryTimelineSectionData(title: $0.0, items: $0.1) }
+        if let selectedDatePreset {
+            return timelineSections(
+                titled: selectedDatePreset.title,
+                items: filteredItems
+            )
+        }
+
+        return defaultTimelineSections
+    }
+
+    private var emptyState: MemoryEmptyState {
+        guard let selectedDate else { return .yet }
+
+        let today = calendar.startOfDay(for: Date())
+        let selectedDay = calendar.startOfDay(for: selectedDate)
+
+        if selectedDay == today {
+            return .yet
+        }
+
+        return selectedDay < today ? .here : .future
+    }
+
+    // Default browsing keeps a stable recency ladder and omits empty buckets.
+    private var defaultTimelineSections: [MemoryTimelineSectionData] {
+        let todayItems = filteredItems.filter { calendar.isDateInToday($0.createdAt) }
+        let thisWeekItems = filteredItems.filter(isInCurrentWeekExcludingToday(_:))
+        let thisMonthItems = filteredItems.filter(isInCurrentMonthExcludingCurrentWeek(_:))
+        let thisYearItems = filteredItems.filter(isOutsideCurrentMonth(_:))
+
+        return [
+            MemoryTimelineSectionData(title: "Today", items: todayItems),
+            MemoryTimelineSectionData(title: "This Week", items: thisWeekItems),
+            MemoryTimelineSectionData(title: "This Month", items: thisMonthItems),
+            MemoryTimelineSectionData(title: "This Year", items: thisYearItems)
+        ]
+        .filter { !$0.items.isEmpty }
     }
 
     private var dateChipLabel: String {
@@ -204,12 +266,8 @@ struct MemoriesView: View {
         switch selectedDatePreset {
         case .today:
             return calendar.isDateInToday(date)
-        case .tomorrow:
-            return calendar.isDateInTomorrow(date)
         case .thisWeekend:
             return isInWeekend(date, weekOffset: 0)
-        case .nextWeekend:
-            return isInWeekend(date, weekOffset: 1)
         case .thisMonth:
             return calendar.isDate(date, equalTo: Date(), toGranularity: .month)
         }
@@ -224,21 +282,40 @@ struct MemoriesView: View {
         return calendar.isDateInWeekend(date) && weekInterval.contains(date)
     }
 
-    private func sectionTitle(for date: Date) -> String {
+    private func timelineSections(
+        titled title: String,
+        items: [MemoryLibraryItem]
+    ) -> [MemoryTimelineSectionData] {
+        guard !items.isEmpty else { return [] }
+        return [MemoryTimelineSectionData(title: title, items: items)]
+    }
+
+    private func timelineTitle(forSelectedDate date: Date) -> String {
         if calendar.isDateInToday(date) {
             return "Today"
         }
 
-        if calendar.isDate(date, equalTo: Date(), toGranularity: .weekOfYear) {
-            return "This Week"
-        }
+        return date.formatted(.dateTime.month(.wide).day().year())
+    }
 
-        if let nextWeek = calendar.date(byAdding: .weekOfYear, value: 1, to: Date()),
-           calendar.isDate(date, equalTo: nextWeek, toGranularity: .weekOfYear) {
-            return "Next Week"
+    private func isInCurrentWeekExcludingToday(_ item: MemoryLibraryItem) -> Bool {
+        let date = item.createdAt
+        guard calendar.isDate(date, equalTo: Date(), toGranularity: .weekOfYear) else {
+            return false
         }
+        return !calendar.isDateInToday(date)
+    }
 
-        return date.formatted(.dateTime.month(.wide).year())
+    private func isInCurrentMonthExcludingCurrentWeek(_ item: MemoryLibraryItem) -> Bool {
+        let date = item.createdAt
+        guard calendar.isDate(date, equalTo: Date(), toGranularity: .month) else {
+            return false
+        }
+        return !calendar.isDate(date, equalTo: Date(), toGranularity: .weekOfYear)
+    }
+
+    private func isOutsideCurrentMonth(_ item: MemoryLibraryItem) -> Bool {
+        !calendar.isDate(item.createdAt, equalTo: Date(), toGranularity: .month)
     }
 
     private func handleSongTap(_ item: MemoryLibraryItem) {
@@ -254,6 +331,10 @@ struct MemoriesView: View {
         Task {
             await viewModel.toggleFavorite(musicId: item.id, ownerId: item.music.ownerId)
         }
+    }
+
+    private func promptDelete(_ item: MemoryLibraryItem) {
+        pendingDeletionItem = item
     }
 
     private func presentFilterSheet(_ sheet: MemoryFilterSheet) {
@@ -296,6 +377,23 @@ private struct MemoryTimelineSectionData: Identifiable {
     var id: String { title }
 }
 
+private enum MemoryEmptyState {
+    case yet
+    case here
+    case future
+
+    var title: String {
+        switch self {
+        case .yet:
+            return "No Memories yet ..."
+        case .here:
+            return "No Memories here ..."
+        case .future:
+            return "No Memories From Future"
+        }
+    }
+}
+
 private enum MemoriesPalette {
     static let accent = Color(uiColor: .systemIndigo)
 }
@@ -303,12 +401,14 @@ private enum MemoriesPalette {
 private struct MemoriesTheme {
     let colorScheme: ColorScheme
 
+    private let groupedBackground = Color(uiColor: .systemGray6)
+
     var backgroundTop: Color {
-        colorScheme == .dark ? Color(red: 0.03, green: 0.03, blue: 0.04) : Color(red: 0.99, green: 0.99, blue: 0.995)
+        groupedBackground
     }
 
     var backgroundBottom: Color {
-        colorScheme == .dark ? Color(red: 0.01, green: 0.01, blue: 0.015) : .white
+        groupedBackground
     }
 
     var primaryText: Color {
@@ -358,27 +458,30 @@ private struct MemoriesHeader: View {
     private var theme: MemoriesTheme { MemoriesTheme(colorScheme: colorScheme) }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
+        VStack(spacing: 0) {
             Text("MEMORIES")
-                .font(.systemExpanded(size: 30, weight: .regular))
+                .font(.systemExpanded(size: 34, weight: .regular))
                 .foregroundStyle(theme.primaryText)
                 .tracking(0.05)
                 .lineLimit(1)
 
             Text("PALACE")
-                .font(.systemExpanded(size: 28, weight: .ultraLight))
+                .font(.systemExpanded(size: 32, weight: .ultraLight))
                 .foregroundStyle(theme.primaryText)
-                .tracking(0.42)
-                .padding(.top, 4)
+                .tracking(0.46)
+                .padding(.top, 6)
 
             Text("Where moments fade, it turns them into music that stay.")
-                .font(.system(size: 13, weight: .medium))
+                .font(.system(size: 14, weight: .regular))
                 .foregroundStyle(theme.secondaryText)
-                .padding(.top, 12)
+                .padding(.top, 24)
+                .lineSpacing(3)
                 .fixedSize(horizontal: false, vertical: true)
-                .frame(width: 231, alignment: .leading)
+                .frame(width: 264, alignment: .center)
+                .multilineTextAlignment(.center)
         }
-        .padding(.top, 6)
+        .frame(maxWidth: .infinity, alignment: .center)
+        .padding(.top, 42)
     }
 }
 
@@ -543,18 +646,81 @@ private struct MemorySectionHeader: View {
     private var theme: MemoriesTheme { MemoriesTheme(colorScheme: colorScheme) }
 
     var body: some View {
-        Button(action: action) {
-            HStack(spacing: 6) {
-                Text(title)
-                    .font(.system(size: 17, weight: .bold))
-                    .foregroundStyle(theme.primaryText)
-                Image(systemName: "chevron.right")
-                    .font(.system(size: 12, weight: .bold))
-                    .foregroundStyle(theme.secondaryText)
-                    .rotationEffect(.degrees(isExpanded ? 90 : 0))
+        HStack(alignment: .center, spacing: 12) {
+            Button(action: action) {
+                HStack(spacing: 6) {
+                    Text(title)
+                        .font(.system(size: 17, weight: .bold))
+                        .foregroundStyle(theme.primaryText)
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 12, weight: .bold))
+                        .foregroundStyle(theme.secondaryText)
+                        .rotationEffect(.degrees(isExpanded ? 90 : 0))
+                }
             }
+            .buttonStyle(.plain)
         }
-        .buttonStyle(.plain)
+    }
+}
+
+private struct MemoryTopCreateButtonRow: View {
+    let action: () -> Void
+
+    var body: some View {
+        HStack {
+            Spacer(minLength: 0)
+            MemoryNewMemoriesButton(action: action)
+            Spacer(minLength: 0)
+        }
+    }
+}
+
+private struct MemoryNewMemoriesButton: View {
+    let action: () -> Void
+
+    @Environment(\.colorScheme) private var colorScheme
+
+    private let buttonWidth: CGFloat = 352
+    private let buttonHeight: CGFloat = 50
+
+    @ViewBuilder
+    private var buttonBackground: some View {
+        if #available(iOS 26, *) {
+            Capsule(style: .continuous)
+                .fill(MemoriesPalette.accent)
+                .glassEffect(
+                    .regular.tint(MemoriesPalette.accent).interactive(),
+                    in: .capsule
+                )
+                .overlay {
+                    Capsule(style: .continuous)
+                        .stroke(Color.white.opacity(colorScheme == .dark ? 0.18 : 0.16), lineWidth: 0.9)
+                }
+                .shadow(
+                    color: MemoriesPalette.accent.opacity(colorScheme == .dark ? 0.28 : 0.18),
+                    radius: 14,
+                    y: 7
+                )
+        } else {
+            Capsule(style: .continuous)
+                .fill(MemoriesPalette.accent)
+                .overlay {
+                    Capsule(style: .continuous)
+                        .stroke(Color.white.opacity(colorScheme == .dark ? 0.18 : 0.16), lineWidth: 0.9)
+                }
+                .shadow(color: MemoriesPalette.accent.opacity(colorScheme == .dark ? 0.28 : 0.18), radius: 14, y: 7)
+        }
+    }
+
+    var body: some View {
+        Button(action: action) {
+            Image(systemName: "plus")
+                .font(.system(size: 20, weight: .semibold))
+                .foregroundStyle(Color.white.opacity(0.96))
+                .frame(width: buttonWidth, height: buttonHeight)
+                .background(buttonBackground)
+        }
+        .buttonStyle(MemoriesPressStyle())
     }
 }
 
@@ -563,32 +729,196 @@ private struct MemoryComposerLaunchCard: View {
 
     @Environment(\.colorScheme) private var colorScheme
 
-    private var theme: MemoriesTheme { MemoriesTheme(colorScheme: colorScheme) }
-
     var body: some View {
-        Button(action: onCreate) {
-            MemoryFeatureCardShell(
-                accentAlignment: .topTrailing
-            ) {
-                VStack(alignment: .leading, spacing: 12) {
-                    MemoryDateSticker(date: Date.now, compactMonth: false)
+        MemoryStaticArtworkCard(
+            title: "Compose Music",
+            subtitle: "All the content you provide becomes part of the memory.",
+            artwork: composeArtwork,
+            action: onCreate
+        )
+    }
 
-                    Spacer()
-
-                    VStack(alignment: .leading, spacing: 10) {
-                        Text("Compose Music")
-                            .font(.system(size: 22, weight: .bold))
-                            .foregroundStyle(theme.primaryText)
-
-                        Text("All the content you provide becomes part of the memory.")
-                            .font(.system(size: 14, weight: .medium))
-                            .foregroundStyle(theme.secondaryText)
-                            .lineLimit(3)
-                    }
+    private var composeArtwork: some View {
+        Group {
+            if let uiImage = composeUIImage {
+                Image(uiImage: uiImage)
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+                    .saturation(1.06)
+                    .contrast(1.14)
+                    .brightness(-0.02)
+            } else {
+                LinearGradient(
+                    colors: [
+                        MemoriesPalette.accent.opacity(0.18),
+                        Color(uiColor: .systemGray6),
+                        Color(uiColor: .systemBackground)
+                    ],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+                .overlay {
+                    Image(systemName: "wand.and.stars")
+                        .font(.system(size: 28, weight: .medium))
+                        .foregroundStyle(Color.secondary.opacity(0.74))
                 }
             }
         }
-        .buttonStyle(MemoriesPressStyle())
+    }
+
+    private var composeUIImage: UIImage? {
+        UIImage(named: "compose")
+            ?? UIImage(named: "compose.png")
+            ?? Bundle.main.url(forResource: "compose", withExtension: "png")
+                .flatMap { UIImage(contentsOfFile: $0.path) }
+    }
+}
+
+private struct MemoryStaticArtworkCard<Artwork: View>: View {
+    let title: String
+    let subtitle: String
+    let artwork: Artwork
+    var action: (() -> Void)? = nil
+
+    @Environment(\.colorScheme) private var colorScheme
+
+    private var theme: MemoriesTheme { MemoriesTheme(colorScheme: colorScheme) }
+    private let imageHeight: CGFloat = 196
+    private let transitionHeight: CGFloat = 64
+    private let cardWidth: CGFloat = 252
+    private let cardHeight: CGFloat = 292
+
+    @ViewBuilder
+    private var cardBackground: some View {
+        if #available(iOS 26, *) {
+            RoundedRectangle(cornerRadius: 24, style: .continuous)
+                .fill(Color.white.opacity(colorScheme == .dark ? 0.05 : 0.18))
+                .glassEffect(
+                    .regular,
+                    in: .rect(cornerRadius: 24)
+                )
+        } else {
+            RoundedRectangle(cornerRadius: 24, style: .continuous)
+                .fill(.ultraThinMaterial)
+                .overlay {
+                    RoundedRectangle(cornerRadius: 24, style: .continuous)
+                        .stroke(Color.white.opacity(colorScheme == .dark ? 0.08 : 0.18), lineWidth: 0.8)
+                }
+        }
+    }
+
+    private var lowerSurfaceColor: Color {
+        colorScheme == .dark ? theme.softSurface.opacity(0.88) : Color.white.opacity(0.72)
+    }
+
+    var body: some View {
+        Group {
+            if let action {
+                Button(action: action) {
+                    cardBody
+                }
+                .buttonStyle(MemoriesPressStyle())
+            } else {
+                cardBody
+            }
+        }
+    }
+
+    private var cardBody: some View {
+        cardBackground
+            .overlay {
+                RoundedRectangle(cornerRadius: 24, style: .continuous)
+                    .stroke(theme.pillBorder.opacity(colorScheme == .dark ? 0.90 : 0.58), lineWidth: 0.8)
+            }
+            .overlay {
+                RoundedRectangle(cornerRadius: 24, style: .continuous)
+                    .stroke(Color.white.opacity(colorScheme == .dark ? 0.06 : 0.26), lineWidth: 0.6)
+                    .padding(1.1)
+            }
+            .overlay {
+                VStack(spacing: 0) {
+                    imageLayer
+                        .frame(maxWidth: .infinity)
+                        .frame(height: imageHeight)
+                        .clipped()
+
+                    Spacer(minLength: 0)
+                }
+            }
+            .overlay(alignment: .bottomLeading) {
+                VStack(alignment: .leading, spacing: 7) {
+                    Text(title)
+                        .font(.system(size: 22, weight: .bold))
+                        .foregroundStyle(theme.primaryText)
+
+                    Text(subtitle)
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundStyle(theme.secondaryText)
+                        .lineLimit(2)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, 18)
+                .padding(.bottom, 18)
+            }
+            .frame(width: cardWidth, height: cardHeight)
+            .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+            .shadow(color: .black.opacity(colorScheme == .dark ? 0.18 : 0.07), radius: 16, y: 8)
+    }
+
+    private var imageLayer: some View {
+        artwork
+            .frame(maxWidth: .infinity)
+            .mask(
+                LinearGradient(
+                    stops: [
+                        .init(color: .black, location: 0.0),
+                        .init(color: .black, location: 0.70),
+                        .init(color: .black.opacity(0.80), location: 0.82),
+                        .init(color: .black.opacity(0.34), location: 0.93),
+                        .init(color: .clear, location: 1.0)
+                    ],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+            )
+            .overlay(alignment: .bottom) {
+                transitionLayer
+                    .frame(height: transitionHeight)
+                    .offset(y: transitionHeight * 0.18)
+            }
+    }
+
+    private var transitionLayer: some View {
+        artwork
+            .frame(maxWidth: .infinity)
+            .blur(radius: 18)
+            .scaleEffect(1.05)
+            .mask(
+                LinearGradient(
+                    stops: [
+                        .init(color: .clear, location: 0.0),
+                        .init(color: .black.opacity(0.45), location: 0.20),
+                        .init(color: .black, location: 0.58),
+                        .init(color: .clear, location: 1.0)
+                    ],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+            )
+            .overlay {
+                LinearGradient(
+                    stops: [
+                        .init(color: lowerSurfaceColor.opacity(0.00), location: 0.0),
+                        .init(color: lowerSurfaceColor.opacity(0.18), location: 0.34),
+                        .init(color: lowerSurfaceColor.opacity(0.76), location: 0.78),
+                        .init(color: lowerSurfaceColor, location: 1.0)
+                    ],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+            }
+            .opacity(0.92)
+            .allowsHitTesting(false)
     }
 }
 
@@ -656,14 +986,24 @@ private struct MemorySingleGlassModifier: ViewModifier {
 
 private struct MemoryFeaturePill: View {
     let title: String
+    var systemImage: String? = nil
+    var symbolColor: Color? = nil
 
     @Environment(\.colorScheme) private var colorScheme
 
     private var theme: MemoriesTheme { MemoriesTheme(colorScheme: colorScheme) }
 
     var body: some View {
-        Text(title)
-            .font(.system(size: 12, weight: .semibold))
+        HStack(spacing: 6) {
+            if let systemImage {
+                Image(systemName: systemImage)
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundStyle(symbolColor ?? theme.primaryText.opacity(0.84))
+            }
+
+            Text(title)
+                .font(.system(size: 12, weight: .semibold))
+        }
             .foregroundStyle(theme.primaryText.opacity(0.84))
             .padding(.horizontal, 10)
             .frame(height: 28)
@@ -678,28 +1018,47 @@ private struct MemoryFeaturePill: View {
 private struct MemoryFutureCollectionCard: View {
     @Environment(\.colorScheme) private var colorScheme
 
-    private var theme: MemoriesTheme { MemoriesTheme(colorScheme: colorScheme) }
-
     var body: some View {
-        MemoryFeatureCardShell(
-            accentAlignment: .center
-        ) {
-            VStack(alignment: .leading, spacing: 0) {
-                Spacer()
+        MemoryStaticArtworkCard(
+            title: "Share",
+            subtitle: "Let your friends know what your memory is.",
+            artwork: shareArtwork
+        )
+        .accessibilityHidden(true)
+    }
 
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Share")
-                        .font(.system(size: 22, weight: .bold))
-                        .foregroundStyle(theme.primaryText)
-
-                    Text("Let your friends know what your memory is.")
-                        .font(.system(size: 13, weight: .medium))
-                        .foregroundStyle(theme.secondaryText)
-                        .lineLimit(2)
+    private var shareArtwork: some View {
+        Group {
+            if let uiImage = shareUIImage {
+                Image(uiImage: uiImage)
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+                    .saturation(1.04)
+                    .contrast(1.05)
+            } else {
+                LinearGradient(
+                    colors: [
+                        MemoriesPalette.accent.opacity(0.30),
+                        Color(uiColor: .systemGray5),
+                        Color(uiColor: .systemBackground)
+                    ],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+                .overlay {
+                    Image(systemName: "square.and.arrow.up")
+                        .font(.system(size: 30, weight: .medium))
+                        .foregroundStyle(Color.secondary.opacity(0.74))
                 }
             }
         }
-        .accessibilityHidden(true)
+    }
+
+    private var shareUIImage: UIImage? {
+        UIImage(named: "share")
+            ?? UIImage(named: "share.png")
+            ?? Bundle.main.url(forResource: "share", withExtension: "png")
+                .flatMap { UIImage(contentsOfFile: $0.path) }
     }
 }
 
@@ -709,41 +1068,32 @@ private struct MemoryCollectionCard: View {
     let onPlay: () -> Void
     let onFavorite: () -> Void
 
+    @Environment(\.colorScheme) private var colorScheme
+
+    private var theme: MemoriesTheme { MemoriesTheme(colorScheme: colorScheme) }
+    private let imageHeight: CGFloat = 196
+    private let transitionHeight: CGFloat = 64
+
     var body: some View {
-        Button(action: onPlay) {
-            ZStack(alignment: .topLeading) {
-                cardArtwork
+        ZStack(alignment: .topTrailing) {
+            Button(action: onPlay) {
+                cardShell
+            }
+            .buttonStyle(MemoriesPressStyle())
 
-                LinearGradient(
-                    colors: [.clear, .clear, Color.black.opacity(0.68)],
-                    startPoint: .top,
-                    endPoint: .bottom
-                )
-
-                VStack(alignment: .leading, spacing: 0) {
-                    MemoryDateSticker(date: item.createdAt, compactMonth: false)
-                    Spacer()
-                    VStack(alignment: .leading, spacing: 3) {
-                        Text(item.title)
-                            .font(.system(size: 18, weight: .semibold))
-                            .foregroundStyle(.white)
-                            .lineLimit(2)
-                        Text(item.typeLabel)
-                            .font(.system(size: 13, weight: .medium))
-                            .foregroundStyle(.white.opacity(0.84))
-                            .lineLimit(1)
-                        Text(memoryTimestampLine(for: item.createdAt))
-                            .font(.system(size: 13, weight: .medium))
-                            .foregroundStyle(.white.opacity(0.82))
-                            .lineLimit(1)
-                    }
+            if isFavorite {
+                Button(action: onFavorite) {
+                    MemoryFeaturePill(
+                        title: "Saved",
+                        systemImage: "heart.fill",
+                        symbolColor: .red
+                    )
                 }
+                .buttonStyle(.plain)
                 .padding(18)
             }
-            .frame(width: 252, height: 292)
-            .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
         }
-        .buttonStyle(MemoriesPressStyle())
+        .shadow(color: .black.opacity(colorScheme == .dark ? 0.18 : 0.07), radius: 16, y: 8)
         .contextMenu {
             Button(isFavorite ? "Remove from Collection" : "Add to Collection",
                    systemImage: isFavorite ? "heart.slash" : "heart") {
@@ -752,7 +1102,133 @@ private struct MemoryCollectionCard: View {
         }
     }
 
+    private var cardShell: some View {
+        cardBackground
+            .overlay {
+                RoundedRectangle(cornerRadius: 24, style: .continuous)
+                    .stroke(theme.pillBorder.opacity(colorScheme == .dark ? 0.90 : 0.58), lineWidth: 0.8)
+            }
+            .overlay {
+                RoundedRectangle(cornerRadius: 24, style: .continuous)
+                    .stroke(Color.white.opacity(colorScheme == .dark ? 0.06 : 0.26), lineWidth: 0.6)
+                    .padding(1.1)
+            }
+            .overlay {
+                VStack(spacing: 0) {
+                    imageLayer
+                        .frame(height: imageHeight)
+                        .clipped()
+
+                    Spacer(minLength: 0)
+                }
+            }
+            .overlay(alignment: .topLeading) {
+                MemoryDateSticker(date: item.createdAt, compactMonth: false)
+                    .padding(18)
+            }
+            .overlay(alignment: .bottomLeading) {
+                VStack(alignment: .leading, spacing: 5) {
+                    Text(item.title)
+                        .font(.system(size: 18, weight: .semibold))
+                        .foregroundStyle(theme.primaryText)
+                        .lineLimit(2)
+
+                    Text(memoryCollectionDetailLine(for: item))
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundStyle(theme.secondaryText)
+                        .lineLimit(1)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, 18)
+                .padding(.bottom, 18)
+            }
+            .frame(width: 252, height: 292)
+            .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+    }
+
+    @ViewBuilder
+    private var cardBackground: some View {
+        if #available(iOS 26, *) {
+            RoundedRectangle(cornerRadius: 24, style: .continuous)
+                .fill(Color.white.opacity(colorScheme == .dark ? 0.05 : 0.18))
+                .glassEffect(
+                    .regular,
+                    in: .rect(cornerRadius: 24)
+                )
+        } else {
+            RoundedRectangle(cornerRadius: 24, style: .continuous)
+                .fill(.ultraThinMaterial)
+                .overlay {
+                    RoundedRectangle(cornerRadius: 24, style: .continuous)
+                        .stroke(Color.white.opacity(colorScheme == .dark ? 0.08 : 0.18), lineWidth: 0.8)
+                }
+        }
+    }
+
+    private var lowerSurfaceColor: Color {
+        colorScheme == .dark ? theme.softSurface.opacity(0.88) : Color.white.opacity(0.72)
+    }
+
     private var cardArtwork: some View {
+        artworkContent
+            .frame(maxWidth: .infinity)
+    }
+
+    private var imageLayer: some View {
+        cardArtwork
+            .mask(
+                LinearGradient(
+                    stops: [
+                        .init(color: .black, location: 0.0),
+                        .init(color: .black, location: 0.70),
+                        .init(color: .black.opacity(0.80), location: 0.82),
+                        .init(color: .black.opacity(0.34), location: 0.93),
+                        .init(color: .clear, location: 1.0)
+                    ],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+            )
+            .overlay(alignment: .bottom) {
+                transitionLayer
+                    .frame(height: transitionHeight)
+                    .offset(y: transitionHeight * 0.18)
+            }
+    }
+
+    private var transitionLayer: some View {
+        cardArtwork
+            .blur(radius: 18)
+            .scaleEffect(1.05)
+            .mask(
+                LinearGradient(
+                    stops: [
+                        .init(color: .clear, location: 0.0),
+                        .init(color: .black.opacity(0.45), location: 0.20),
+                        .init(color: .black, location: 0.58),
+                        .init(color: .clear, location: 1.0)
+                    ],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+            )
+            .overlay {
+                LinearGradient(
+                    stops: [
+                        .init(color: lowerSurfaceColor.opacity(0.00), location: 0.0),
+                        .init(color: lowerSurfaceColor.opacity(0.18), location: 0.34),
+                        .init(color: lowerSurfaceColor.opacity(0.76), location: 0.78),
+                        .init(color: lowerSurfaceColor, location: 1.0)
+                    ],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+            }
+            .opacity(0.92)
+            .allowsHitTesting(false)
+    }
+
+    private var artworkContent: some View {
         Group {
             if let url = item.music.imageURL {
                 AsyncImage(url: url) { phase in
@@ -767,10 +1243,6 @@ private struct MemoryCollectionCard: View {
             } else {
                 fallbackArtwork
             }
-        }
-        .overlay {
-            RoundedRectangle(cornerRadius: 24, style: .continuous)
-                .stroke(Color.white.opacity(0.12), lineWidth: 1)
         }
     }
 
@@ -800,6 +1272,7 @@ private struct MemoryTimelineSectionView: View {
     let onToggleExpanded: () -> Void
     let onPlay: (MemoryLibraryItem) -> Void
     let onFavorite: (MemoryLibraryItem) -> Void
+    let onDelete: (MemoryLibraryItem) -> Void
 
     @Environment(\.colorScheme) private var colorScheme
 
@@ -807,7 +1280,11 @@ private struct MemoryTimelineSectionView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
-            MemorySectionHeader(title: title, isExpanded: isExpanded, action: onToggleExpanded)
+            MemorySectionHeader(
+                title: title,
+                isExpanded: isExpanded,
+                action: onToggleExpanded
+            )
 
             if isExpanded {
                 LazyVStack(spacing: 0) {
@@ -816,7 +1293,8 @@ private struct MemoryTimelineSectionView: View {
                             item: item,
                             isFavorite: favoriteIds.contains(item.id),
                             onPlay: { onPlay(item) },
-                            onFavorite: { onFavorite(item) }
+                            onFavorite: { onFavorite(item) },
+                            onDelete: { onDelete(item) }
                         )
 
                         if index != items.count - 1 {
@@ -836,45 +1314,100 @@ private struct MemorySongRow: View {
     let isFavorite: Bool
     let onPlay: () -> Void
     let onFavorite: () -> Void
+    let onDelete: () -> Void
 
     @Environment(\.colorScheme) private var colorScheme
 
     private var theme: MemoriesTheme { MemoriesTheme(colorScheme: colorScheme) }
 
     var body: some View {
-        Button(action: onPlay) {
-            HStack(alignment: .top, spacing: 16) {
-                MemorySongArtwork(item: item)
+        HStack(alignment: .top, spacing: 12) {
+            Button(action: onPlay) {
+                HStack(alignment: .top, spacing: 16) {
+                    MemorySongArtwork(item: item)
 
-                VStack(alignment: .leading, spacing: 3) {
-                    Text(item.title)
-                        .font(.system(size: 18, weight: .semibold))
-                        .foregroundStyle(theme.primaryText)
-                        .lineLimit(1)
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text(item.title)
+                            .font(.system(size: 18, weight: .semibold))
+                            .foregroundStyle(theme.primaryText)
+                            .lineLimit(1)
 
-                    Text(item.typeLabel)
-                        .font(.system(size: 14, weight: .medium))
-                        .foregroundStyle(theme.secondaryText)
-                        .lineLimit(1)
+                        Text(item.typeLabel)
+                            .font(.system(size: 14, weight: .medium))
+                            .foregroundStyle(theme.secondaryText)
+                            .lineLimit(1)
 
-                    Text(memoryRowDetailLine(for: item))
-                        .font(.system(size: 14, weight: .regular))
-                        .foregroundStyle(theme.secondaryText)
-                        .lineLimit(1)
+                        Text(memoryRowDetailLine(for: item))
+                            .font(.system(size: 14, weight: .regular))
+                            .foregroundStyle(theme.secondaryText)
+                            .lineLimit(1)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.top, 3)
                 }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.top, 3)
+                .contentShape(Rectangle())
             }
-            .contentShape(Rectangle())
-            .padding(.vertical, 12)
-        }
-        .buttonStyle(MemoriesPressStyle())
-        .contextMenu {
-            Button(isFavorite ? "Remove from Collection" : "Add to Collection",
-                   systemImage: isFavorite ? "heart.slash" : "heart") {
-                onFavorite()
+            .buttonStyle(MemoriesPressStyle())
+
+            HStack(alignment: .center, spacing: 4) {
+                if isFavorite {
+                    Button(action: onFavorite) {
+                        Image(systemName: "heart.fill")
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundStyle(.red)
+                            .frame(width: 28, height: 28)
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("Remove favorite")
+                }
+
+                MemorySongMoreMenu(
+                    item: item,
+                    isFavorite: isFavorite,
+                    onFavorite: onFavorite,
+                    onDelete: onDelete
+                )
             }
+            .padding(.top, 10)
         }
+        .padding(.vertical, 12)
+    }
+}
+
+private struct MemorySongMoreMenu: View {
+    let item: MemoryLibraryItem
+    let isFavorite: Bool
+    let onFavorite: () -> Void
+    let onDelete: () -> Void
+
+    @Environment(\.colorScheme) private var colorScheme
+
+    private var theme: MemoriesTheme { MemoriesTheme(colorScheme: colorScheme) }
+
+    var body: some View {
+        Menu {
+            Button("Share", systemImage: "square.and.arrow.up") {}
+            Button("Set for Widget", systemImage: "apps.iphone") {
+                SystemSongSnapshotStore().pin(
+                    SystemSongSnapshot.from(item.music, kind: .memory)
+                )
+            }
+            Button(
+                isFavorite ? "Remove Favorite" : "Favorite",
+                systemImage: isFavorite ? "heart.slash" : "heart",
+                action: onFavorite
+            )
+            Button("Delete", systemImage: "trash", role: .destructive, action: onDelete)
+        } label: {
+            Image(systemName: "ellipsis")
+                .font(.system(size: 18, weight: .semibold))
+                .foregroundStyle(theme.secondaryText)
+                .frame(width: 32, height: 32)
+                .contentShape(Rectangle())
+        }
+        .menuIndicator(.hidden)
+        .buttonStyle(.plain)
+        .accessibilityLabel("More actions")
     }
 }
 
@@ -982,6 +1515,7 @@ private struct MemoryLoadingSection: View {
 }
 
 private struct MemoryEmptySection: View {
+    let state: MemoryEmptyState
     let onCreate: () -> Void
 
     @Environment(\.colorScheme) private var colorScheme
@@ -989,27 +1523,95 @@ private struct MemoryEmptySection: View {
     private var theme: MemoriesTheme { MemoriesTheme(colorScheme: colorScheme) }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("No memory songs yet")
-                .font(.system(size: 24, weight: .bold))
-                .foregroundStyle(theme.primaryText)
-            Text("Create your first memory track, then revisit it by place, date, and genre.")
-                .font(.system(size: 15, weight: .medium))
+        VStack(spacing: 0) {
+            ViewThatFits(in: .horizontal) {
+                titleLabel(fontSize: 28)
+                titleLabel(fontSize: 26)
+                titleLabel(fontSize: 24)
+                titleLabel(fontSize: 22)
+            }
+            .frame(maxWidth: 344)
+            .frame(maxWidth: .infinity)
+
+            Text("Capture the moment before it fades.")
+                .font(.system(size: 17, weight: .regular))
                 .foregroundStyle(theme.secondaryText)
-            Text("Build a memory by hand, and it will live here with the rest of your collection.")
-                .font(.system(size: 15, weight: .medium))
+                .multilineTextAlignment(.center)
+                .lineSpacing(2)
+                .padding(.top, 28)
+
+            Text("Create a memory today.")
+                .font(.system(size: 17, weight: .regular))
                 .foregroundStyle(theme.secondaryText)
-            Button("New Memory", action: onCreate)
-                .buttonStyle(.borderedProminent)
-                .tint(MemoriesPalette.accent)
+                .multilineTextAlignment(.center)
+                .padding(.top, 18)
+
+            MemoryLiquidGlassPlusButton(action: onCreate)
+                .padding(.top, 36)
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(22)
-        .background(theme.pillBackground, in: RoundedRectangle(cornerRadius: 26, style: .continuous))
-        .overlay {
-            RoundedRectangle(cornerRadius: 26, style: .continuous)
-                .stroke(theme.pillBorder, lineWidth: 1)
+        .frame(maxWidth: 320)
+        .frame(maxWidth: .infinity)
+        .padding(.top, 86)
+        .padding(.bottom, 28)
+    }
+
+    private func titleLabel(fontSize: CGFloat) -> some View {
+        Text(state.title)
+            .font(.system(size: fontSize, weight: .bold))
+            .foregroundStyle(theme.primaryText)
+            .multilineTextAlignment(.center)
+            .lineLimit(1)
+            .allowsTightening(true)
+    }
+}
+
+private struct MemoryLiquidGlassPlusButton: View {
+    let action: () -> Void
+
+    @Environment(\.colorScheme) private var colorScheme
+
+    var body: some View {
+        Button(action: action) {
+            Group {
+                if #available(iOS 26, *) {
+                    ZStack {
+                        Circle()
+                            .fill(MemoriesPalette.accent.opacity(colorScheme == .dark ? 0.52 : 0.46))
+
+                        Image(systemName: "plus")
+                            .font(.system(size: 23, weight: .light))
+                            .foregroundStyle(.white.opacity(0.98))
+                    }
+                    .frame(width: 45, height: 45)
+                    .glassEffect(
+                        .regular
+                            .tint(MemoriesPalette.accent.opacity(colorScheme == .dark ? 0.92 : 0.84))
+                            .interactive(),
+                        in: .circle
+                    )
+                    .overlay {
+                        Circle()
+                            .stroke(Color.white.opacity(colorScheme == .dark ? 0.18 : 0.34), lineWidth: 0.8)
+                    }
+                } else {
+                    ZStack {
+                        Circle()
+                            .fill(MemoriesPalette.accent.opacity(colorScheme == .dark ? 0.82 : 0.88))
+
+                        Image(systemName: "plus")
+                            .font(.system(size: 23, weight: .light))
+                            .foregroundStyle(.white.opacity(0.98))
+                    }
+                    .frame(width: 45, height: 45)
+                    .background(.ultraThinMaterial, in: Circle())
+                    .overlay {
+                        Circle()
+                            .stroke(Color.white.opacity(colorScheme == .dark ? 0.14 : 0.26), lineWidth: 0.8)
+                    }
+                }
+            }
         }
+        .buttonStyle(MemoriesPressStyle())
     }
 }
 
@@ -1038,6 +1640,10 @@ private func memoryTimestampLine(for date: Date) -> String {
     let day = date.formatted(.dateTime.weekday(.wide))
     let time = date.formatted(date: .omitted, time: .shortened)
     return "\(day) · \(time)"
+}
+
+private func memoryCollectionDetailLine(for item: MemoryLibraryItem) -> String {
+    "\(item.typeLabel) · \(memoryTimestampLine(for: item.createdAt))"
 }
 
 private func memoryRowDetailLine(for item: MemoryLibraryItem) -> String {

@@ -210,7 +210,8 @@ class SunoDirectService: MusicServiceProtocol {
                     imageURL: imageURL,
                     sunoAudioId: sunoData.id,
                     status: .completed,
-                    createdAt: Date()
+                    createdAt: Date(),
+                    duration: sunoData.duration
                 )
             }
             // 检查失败状态
@@ -277,5 +278,57 @@ class SunoDirectService: MusicServiceProtocol {
         let lines = LyricLine.parse(from: alignedWords)
         print("✅ [Suno] 解析得到 \(lines.count) 行歌词")
         return lines
+    }
+
+    func extendMusic(request: MusicExtendRequest) async throws -> String {
+        guard let url = URL(string: "\(baseURL)/api/v1/generate/extend") else {
+            throw MusicServiceError.invalidURL
+        }
+
+        var urlRequest = URLRequest(url: url)
+        urlRequest.httpMethod = "POST"
+        urlRequest.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+        urlRequest.setValue("application/json", forHTTPHeaderField: "Content-Type")
+
+        let encoder = JSONEncoder()
+        encoder.keyEncodingStrategy = .convertToSnakeCase
+        urlRequest.httpBody = try encoder.encode(request)
+
+        let (data, response) = try await URLSession.shared.data(for: urlRequest)
+
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw MusicServiceError.invalidResponse
+        }
+
+        print("📡 [Suno] Extend status code: \(httpResponse.statusCode)")
+        if let jsonString = String(data: data, encoding: .utf8) {
+            print("📡 [Suno] Extend response: \(jsonString)")
+        }
+
+        let decoder = JSONDecoder()
+        decoder.keyDecodingStrategy = .convertFromSnakeCase
+        let result = try decoder.decode(MusicGenerationResponse.self, from: data)
+
+        if result.code == 200, let taskId = result.data?.taskId {
+            return taskId
+        }
+
+        let friendlyMessage: String
+        switch result.code {
+        case 433:
+            friendlyMessage = "API calls are rate-limited right now. Try again shortly."
+        case 429:
+            friendlyMessage = "Requests are too frequent. Try again shortly."
+        case 402:
+            friendlyMessage = "Account credit is insufficient."
+        case 401:
+            friendlyMessage = "API key is invalid."
+        case 422:
+            friendlyMessage = "Request parameters are invalid: \(result.msg)"
+        default:
+            friendlyMessage = result.msg
+        }
+
+        throw MusicServiceError.apiError(code: result.code, message: friendlyMessage)
     }
 }

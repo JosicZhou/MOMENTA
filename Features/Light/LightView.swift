@@ -5,115 +5,148 @@
 
 import SwiftUI
 import AVFoundation
+import UIKit
 
 struct LightView: View {
     @ObservedObject var viewModel: LightViewModel
     @FocusState private var isInputFocused: Bool
-    
+
+    private var resolvedName: String {
+        let fullName = ProfileIdentityStore.resolvedDisplayName(email: AuthService.shared.currentUser?.email)
+        return fullName
+            .split(separator: " ")
+            .first
+            .map(String.init) ?? fullName
+    }
+
     var body: some View {
-        GeometryReader { geometry in
+        GeometryReader { proxy in
+            let contentWidth = min(340.0, proxy.size.width - 40)
+            let topPadding = proxy.safeAreaInsets.top + 24
+            let headerToPromptSpacing = max(52, proxy.size.height * 0.13)
+            let promptToComposerSpacing = max(34, proxy.size.height * 0.075)
+            let lowerInset = max(proxy.safeAreaInsets.bottom + 88, 108)
+
             ZStack {
-                // 背景图片 - 沙漠背景
-                Image("desert_background")
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
-                    .frame(width: geometry.size.width, height: geometry.size.height)
-                    .clipped()
+                Color(uiColor: .systemGray6)
                     .ignoresSafeArea()
 
-                // 用 ScrollView 让系统检测到可滚动区域，底部栏自动变通透
-                ScrollView {
-                    // 内容区域（最小高度 = 屏幕高度，保持原有 Spacer 布局）
-                    VStack(spacing: 0) {
-                        // 顶部文字区域
-                        WelcomeCard(
-                            userName: "JOSIC",
-                            isGenerating: viewModel.isGenerating,
-                            isRefreshingWeather: viewModel.isRefreshingWeather,
-                            weatherSymbolName: viewModel.weatherSymbolName,
-                            onWeatherTap: {
-                                viewModel.refreshWeather()
-                            },
-                            onDateTap: {
-                                // 跳转系统日历
-                                if let url = URL(string: "calshow://") {
-                                    UIApplication.shared.open(url)
-                                }
+                VStack(spacing: 0) {
+                    WelcomeCard(
+                        userName: resolvedName,
+                        isGenerating: viewModel.isGenerating,
+                        isRefreshingWeather: viewModel.isRefreshingWeather,
+                        weatherSymbolName: viewModel.weatherSymbolName,
+                        onWeatherTap: {
+                            viewModel.refreshWeather()
+                        },
+                        onDateTap: {
+                            if let url = URL(string: "calshow://") {
+                                UIApplication.shared.open(url)
+                            }
+                        }
+                    )
+                    .frame(width: contentWidth)
+                    .padding(.top, topPadding)
+
+                    Spacer(minLength: headerToPromptSpacing)
+
+                    LightCenterPrompt()
+                        .frame(width: contentWidth)
+
+                    Spacer(minLength: promptToComposerSpacing)
+
+                    WhiteGlassInputBar(
+                        prompt: $viewModel.prompt,
+                        isTextFieldFocused: $isInputFocused,
+                        hasSelectedImage: viewModel.selectedImage != nil,
+                        isGenerating: viewModel.isGenerating,
+                        hasVocals: viewModel.hasVocals,
+                        selectedInstrument: viewModel.instrument,
+                        useAIRecommendation: viewModel.useAIRecommendation,
+                        onCameraPress: { viewModel.openCamera() },
+                        onPhotoPress: { viewModel.openPhotoLibrary() },
+                        onVocalsChange: { viewModel.hasVocals = $0 },
+                        onInstrumentSelect: { viewModel.instrument = $0 },
+                        onAIToggle: { viewModel.useAIRecommendation.toggle() },
+                        onGeneratePress: {
+                            Task { await viewModel.generateMusic() }
+                        }
+                    )
+                    .frame(width: contentWidth)
+
+                    HStack(spacing: 9) {
+                        PresetCard(
+                            title: "Today's my pet's birthday",
+                            icon: "dog.fill",
+                            action: {
+                                viewModel.prompt = "Today's my pet's birthday."
                             }
                         )
-                        
-                        Spacer()
-                            .frame(maxHeight: viewModel.selectedImage != nil ? 60 : 120)
-                        
-                        // 图片预览
-                        if let image = viewModel.selectedImage {
-                            ImagePreview(image: image) {
-                                viewModel.removeImage()
-                            }
-                            .frame(width: 200, height: 200)
-                            .padding(.bottom, 12)
-                        }
-                        
-                        // 输入框 (组件化)
-                        WhiteGlassInputBar(
-                            prompt: $viewModel.prompt,
-                            isTextFieldFocused: $isInputFocused,
-                            hasSelectedImage: viewModel.selectedImage != nil,
-                            isGenerating: viewModel.isGenerating,
-                            onCameraPress: { viewModel.openCamera() },
-                            onPhotoPress: { viewModel.openPhotoLibrary() },
-                            onGeneratePress: {
-                                Task { await viewModel.generateMusic() }
+
+                        PresetCard(
+                            title: "It's a raining day.",
+                            icon: "cloud.rain",
+                            action: {
+                                viewModel.prompt = "It's a raining day."
                             }
                         )
-                        .frame(width: 340, height: 50)
-                        
-                        // 预设卡片 (组件化)
-                        HStack(spacing: 6) {
-                            PresetCard(
-                                title: "It's a\nthunderbolt day.",
-                                icon: "cloud.bolt",
-                                width: 89,
-                                action: {
-                                    viewModel.prompt = "It's a thunderbolt day."
-                                }
-                            )
-                            
-                            PresetCard(
-                                title: "Play some Piano.",
-                                icon: "pianokeys",
-                                width: 101,
-                                action: {
-                                    viewModel.prompt = "Play some Piano."
-                                }
-                            )
-                            
-                            PresetCard(
-                                title: "Today's my pet's birthday.",
-                                icon: "dog",
-                                width: 129,
-                                action: {
-                                    viewModel.prompt = "Today's my pet's birthday."
-                                }
-                            )
-                        }
-                        .frame(height: 95)
-                        .padding(.top, 10)
-                        .padding(.bottom, 100)
+
+                        PresetCard(
+                            title: "Play some piano.",
+                            icon: "pianokeys",
+                            action: {
+                                viewModel.prompt = "Play some piano."
+                            }
+                        )
                     }
-                    .frame(maxWidth: 390)
-                    .frame(maxWidth: .infinity)
-                    .frame(minHeight: geometry.size.height)
-                    .padding(.horizontal, 20)
-                    .contentShape(Rectangle())
-                    .onTapGesture {
-                        isInputFocused = false
-                    }
+                    .frame(width: contentWidth)
+                    .padding(.top, 12)
+
+                    Spacer(minLength: lowerInset)
                 }
-                .scrollIndicators(.hidden)
-                .scrollDismissesKeyboard(.interactively)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+                .contentShape(Rectangle())
+                .ignoresSafeArea(.keyboard, edges: .bottom)
+                .onTapGesture {
+                    isInputFocused = false
+                }
             }
         }
-        .ignoresSafeArea()
+    }
+}
+
+private struct LightCenterPrompt: View {
+    var body: some View {
+        VStack(spacing: 14) {
+            IntelligenceGlyph(size: 24, color: Color(uiColor: .systemIndigo))
+
+            VStack(spacing: 4) {
+                Text("Create with MOMENTA MUSIC.")
+                    .font(.system(size: 17, weight: .medium))
+                    .foregroundStyle(.primary)
+
+                Text("Let your personal context be your melody.")
+                    .font(.system(size: 16, weight: .regular))
+                    .foregroundStyle(.secondary)
+            }
+            .multilineTextAlignment(.center)
+        }
+        .frame(maxWidth: .infinity)
+    }
+}
+
+struct IntelligenceGlyph: View {
+    let size: CGFloat
+    let color: Color
+
+    private var symbolName: String {
+        UIImage(systemName: "apple.intelligence") == nil ? "sparkles" : "apple.intelligence"
+    }
+
+    var body: some View {
+        Image(systemName: symbolName)
+            .font(.system(size: size, weight: .regular))
+            .foregroundStyle(color)
     }
 }

@@ -192,7 +192,7 @@ class LightViewModel: NSObject, ObservableObject, CLLocationManagerDelegate {
         
         let parameters = MusicParameters(
             style: style,
-            instrument: instrument,
+            instrument: instrument.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? nil : instrument,
             hasVocals: hasVocals,
             language: language,
             useAIRecommendation: useAIRecommendation

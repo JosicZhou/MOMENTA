@@ -29,7 +29,6 @@ struct LyricsGenerationRequest {
     func buildPrompt() -> String {
         if let rawPrompt { return rawPrompt }
 
-        let photoValue = photo ?? ""
         let photoPresentValue = photoPresent ? "true" : "false"
         let instrumentalValue = instrumentalOnly ? "yes" : "no"
         

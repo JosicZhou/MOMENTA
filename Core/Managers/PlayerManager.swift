@@ -8,6 +8,7 @@
 
 import SwiftUI
 import AVFoundation
+import MediaPlayer
 
 @Observable
 @MainActor
@@ -25,7 +26,12 @@ final class PlayerManager {
     /// 是否正在播放
     var isPlaying: Bool = false
     /// 当前播放的音乐
-    var currentMusic: GeneratedMusic?
+    var currentMusic: GeneratedMusic? {
+        didSet {
+            guard oldValue?.id != currentMusic?.id else { return }
+            handleCurrentMusicChanged()
+        }
+    }
     /// 播放进度 (0.0 ~ 1.0)
     var playbackProgress: Double = 0
     /// 当前播放时间（秒）
@@ -51,7 +57,24 @@ final class PlayerManager {
     private var audioPlayer: AVPlayer?
     private var timeObserver: Any?
     private let sunoService = SunoDirectService()
-    
+    nonisolated(unsafe) private var endObserver: NSObjectProtocol?
+    nonisolated(unsafe) private var interruptionObserver: NSObjectProtocol?
+    nonisolated(unsafe) private var routeChangeObserver: NSObjectProtocol?
+    private var artworkLoadTask: Task<Void, Never>?
+    private var cachedArtworkURL: URL?
+    private var currentArtworkImage: UIImage?
+    private var lastLiveActivitySyncDate: Date = .distantPast
+    private var lastLiveActivityProgress: Double = -1
+    private var lyricsFetchTask: Task<Void, Never>?
+    #if canImport(ActivityKit)
+    private let liveActivityManager = PlaybackLiveActivityManager()
+    #endif
+
+    init() {
+        configureRemoteCommands()
+        observeAudioSessionLifecycle()
+    }
+
     // MARK: - 播放控制
     
     func play() {
@@ -70,16 +93,21 @@ final class PlayerManager {
         if audioPlayer == nil || currentURL != audioURL {
             removeProgressTracking()
             audioPlayer = AVPlayer(url: audioURL)
+            observePlayerItemEnd()
         }
         
         audioPlayer?.play()
         isPlaying = true
         startProgressTracking()
+        updateNowPlayingInfo()
+        updateLiveActivity(force: true)
     }
     
     func pause() {
         audioPlayer?.pause()
         isPlaying = false
+        updateNowPlayingInfo()
+        updateLiveActivity(force: true)
     }
     
     func togglePlayback() {
@@ -104,13 +132,10 @@ final class PlayerManager {
         currentTime = newTime
         playbackProgress = progress
         
-        // 立即更新歌词行索引，不等待 0.5s 定时器
-        if !lyrics.isEmpty {
-            let newIndex = lyrics.lastIndex(where: { $0.startTime <= newTime }) ?? 0
-            if newIndex != currentLineIndex {
-                currentLineIndex = newIndex
-            }
-        }
+        updateCurrentLyricIndex(for: newTime)
+
+        updateNowPlayingInfo()
+        updateLiveActivity(force: true)
     }
     
     // MARK: - 进度追踪
@@ -119,7 +144,7 @@ final class PlayerManager {
         removeProgressTracking()
         guard let player = audioPlayer else { return }
         
-        let interval = CMTime(seconds: 0.5, preferredTimescale: 600)
+        let interval = CMTime(seconds: 0.2, preferredTimescale: 600)
         timeObserver = player.addPeriodicTimeObserver(
             forInterval: interval,
             queue: .main
@@ -132,14 +157,11 @@ final class PlayerManager {
                 self.currentTime = time.seconds
                 self.totalDuration = duration.seconds
                 self.playbackProgress = time.seconds / duration.seconds
-                
-                // 更新当前歌词行索引
-                if !self.lyrics.isEmpty {
-                    let newIndex = self.lyrics.lastIndex(where: { $0.startTime <= time.seconds }) ?? 0
-                    if newIndex != self.currentLineIndex {
-                        self.currentLineIndex = newIndex
-                    }
-                }
+
+                self.updateCurrentLyricIndex(for: time.seconds)
+
+                self.updateNowPlayingInfo()
+                self.updateLiveActivity()
             }
         }
     }
@@ -157,6 +179,7 @@ final class PlayerManager {
     /// 当 sunoAudioId 不可用时，先通过 record-info API 查询正确的 audioId。
     func fetchLyrics() async {
         guard let music = currentMusic else { return }
+        let musicID = music.id
         // 如果已经加载过，不重复请求
         if !lyrics.isEmpty { return }
         
@@ -189,7 +212,9 @@ final class PlayerManager {
                     audioId: audioId
                 )
                 if !lines.isEmpty {
+                    guard currentMusic?.id == musicID else { return }
                     lyrics = lines
+                    updateCurrentLyricIndex(for: currentTime)
                     isLoadingLyrics = false
                     return
                 }
@@ -200,7 +225,9 @@ final class PlayerManager {
         
         // 第三步：所有 API 路径失败，降级为纯文本歌词
         print("📝 [PlayerManager] 降级为纯文本歌词")
+        guard currentMusic?.id == musicID else { return }
         lyrics = LyricLine.parseFromPlainText(music.prompt, totalDuration: totalDuration)
+        updateCurrentLyricIndex(for: currentTime)
         isLoadingLyrics = false
     }
     
@@ -210,6 +237,7 @@ final class PlayerManager {
         pause()
         removeProgressTracking()
         audioPlayer = nil
+        removePlayerEndObserver()
         currentMusic = nil
         playbackProgress = 0
         currentTime = 0
@@ -220,5 +248,270 @@ final class PlayerManager {
         lyrics = []
         currentLineIndex = 0
         lyricsControlsVisible = true
+        currentArtworkImage = nil
+        cachedArtworkURL = nil
+        lastLiveActivitySyncDate = .distantPast
+        lastLiveActivityProgress = -1
+        lyricsFetchTask?.cancel()
+        artworkLoadTask?.cancel()
+        MPNowPlayingInfoCenter.default().nowPlayingInfo = nil
+        if #available(iOS 13.0, *) {
+            MPNowPlayingInfoCenter.default().playbackState = .stopped
+        }
+        Task {
+            #if canImport(ActivityKit)
+            await liveActivityManager.end()
+            #endif
+        }
+        do {
+            try AVAudioSession.sharedInstance().setActive(false, options: [.notifyOthersOnDeactivation])
+        } catch {
+            print("⚠️ [PlayerManager] Failed to deactivate audio session: \(error.localizedDescription)")
+        }
+    }
+
+    deinit {
+        if let endObserver {
+            NotificationCenter.default.removeObserver(endObserver)
+        }
+        if let interruptionObserver {
+            NotificationCenter.default.removeObserver(interruptionObserver)
+        }
+        if let routeChangeObserver {
+            NotificationCenter.default.removeObserver(routeChangeObserver)
+        }
+    }
+
+    private func handleCurrentMusicChanged() {
+        currentTime = 0
+        playbackProgress = 0
+        totalDuration = currentMusic?.duration ?? 0
+        lyrics = []
+        currentLineIndex = 0
+        isLoadingLyrics = false
+        lyricsControlsVisible = true
+        currentArtworkImage = nil
+        cachedArtworkURL = nil
+        artworkLoadTask?.cancel()
+        lyricsFetchTask?.cancel()
+        guard currentMusic != nil else {
+            updateNowPlayingInfo()
+            updateLiveActivity(force: true)
+            return
+        }
+        updateNowPlayingInfo()
+        loadArtworkIfNeeded()
+        updateLiveActivity(force: true)
+        if showLyrics {
+            lyricsFetchTask = Task { [weak self] in
+                await self?.fetchLyrics()
+            }
+        }
+    }
+
+    private func updateCurrentLyricIndex(for time: TimeInterval) {
+        guard !lyrics.isEmpty else {
+            currentLineIndex = 0
+            return
+        }
+
+        let adjustedTime = max(0, time + 0.04)
+
+        if let exactMatch = lyrics.lastIndex(where: { line in
+            adjustedTime >= line.startTime && adjustedTime < max(line.endTime, line.startTime + 0.01)
+        }) {
+            currentLineIndex = exactMatch
+            return
+        }
+
+        currentLineIndex = lyrics.lastIndex(where: { $0.startTime <= adjustedTime }) ?? 0
+    }
+
+    private func observePlayerItemEnd() {
+        removePlayerEndObserver()
+        guard let item = audioPlayer?.currentItem else { return }
+        endObserver = NotificationCenter.default.addObserver(
+            forName: .AVPlayerItemDidPlayToEndTime,
+            object: item,
+            queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor [weak self] in
+                guard let self else { return }
+                self.isPlaying = false
+                self.playbackProgress = 1
+                self.updateNowPlayingInfo()
+                self.updateLiveActivity(force: true)
+            }
+        }
+    }
+
+    private func removePlayerEndObserver() {
+        if let endObserver {
+            NotificationCenter.default.removeObserver(endObserver)
+            self.endObserver = nil
+        }
+    }
+
+    private func observeAudioSessionLifecycle() {
+        interruptionObserver = NotificationCenter.default.addObserver(
+            forName: AVAudioSession.interruptionNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] notification in
+            Task { @MainActor [weak self] in
+                guard let self else { return }
+                guard let typeValue = notification.userInfo?[AVAudioSessionInterruptionTypeKey] as? UInt,
+                      let type = AVAudioSession.InterruptionType(rawValue: typeValue),
+                      type == .began else {
+                    return
+                }
+                self.pause()
+            }
+        }
+
+        routeChangeObserver = NotificationCenter.default.addObserver(
+            forName: AVAudioSession.routeChangeNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] notification in
+            Task { @MainActor [weak self] in
+                guard let self else { return }
+                guard let reasonValue = notification.userInfo?[AVAudioSessionRouteChangeReasonKey] as? UInt,
+                      let reason = AVAudioSession.RouteChangeReason(rawValue: reasonValue),
+                      reason == .oldDeviceUnavailable else {
+                    return
+                }
+                self.pause()
+            }
+        }
+    }
+
+    private func configureRemoteCommands() {
+        let commandCenter = MPRemoteCommandCenter.shared()
+        commandCenter.playCommand.isEnabled = true
+        commandCenter.pauseCommand.isEnabled = true
+        commandCenter.togglePlayPauseCommand.isEnabled = true
+        commandCenter.changePlaybackPositionCommand.isEnabled = true
+        commandCenter.nextTrackCommand.isEnabled = false
+        commandCenter.previousTrackCommand.isEnabled = false
+
+        commandCenter.playCommand.removeTarget(nil)
+        commandCenter.pauseCommand.removeTarget(nil)
+        commandCenter.togglePlayPauseCommand.removeTarget(nil)
+        commandCenter.changePlaybackPositionCommand.removeTarget(nil)
+
+        commandCenter.playCommand.addTarget { [weak self] _ in
+            guard let self else { return .commandFailed }
+            self.play()
+            return .success
+        }
+        commandCenter.pauseCommand.addTarget { [weak self] _ in
+            guard let self else { return .commandFailed }
+            self.pause()
+            return .success
+        }
+        commandCenter.togglePlayPauseCommand.addTarget { [weak self] _ in
+            guard let self else { return .commandFailed }
+            self.togglePlayback()
+            return .success
+        }
+        commandCenter.changePlaybackPositionCommand.addTarget { [weak self] event in
+            guard let self, let event = event as? MPChangePlaybackPositionCommandEvent else {
+                return .commandFailed
+            }
+            self.seek(toTime: event.positionTime)
+            return .success
+        }
+    }
+
+    private func seek(toTime time: TimeInterval) {
+        guard let player = audioPlayer else { return }
+        let targetTime = CMTime(seconds: time, preferredTimescale: 600)
+        player.seek(to: targetTime, toleranceBefore: .zero, toleranceAfter: .zero)
+        currentTime = time
+        if totalDuration > 0 {
+            playbackProgress = min(max(time / totalDuration, 0), 1)
+        }
+        updateCurrentLyricIndex(for: time)
+        updateNowPlayingInfo()
+        updateLiveActivity(force: true)
+    }
+
+    private func updateNowPlayingInfo() {
+        guard let currentMusic else {
+            MPNowPlayingInfoCenter.default().nowPlayingInfo = nil
+            return
+        }
+
+        var info = MPNowPlayingInfoCenter.default().nowPlayingInfo ?? [:]
+        info[MPMediaItemPropertyTitle] = currentMusic.title.isEmpty ? "Untitled Song" : currentMusic.title
+        if !currentMusic.style.isEmpty {
+            info[MPMediaItemPropertyArtist] = currentMusic.style
+        } else {
+            info[MPMediaItemPropertyArtist] = "MOMENTA"
+        }
+        info[MPNowPlayingInfoPropertyElapsedPlaybackTime] = currentTime
+        info[MPMediaItemPropertyPlaybackDuration] = max(totalDuration, currentMusic.duration ?? totalDuration)
+        info[MPNowPlayingInfoPropertyPlaybackRate] = isPlaying ? 1.0 : 0.0
+
+        if let currentArtworkImage {
+            info[MPMediaItemPropertyArtwork] = MPMediaItemArtwork(boundsSize: currentArtworkImage.size) { _ in
+                currentArtworkImage
+            }
+        }
+
+        MPNowPlayingInfoCenter.default().nowPlayingInfo = info
+        if #available(iOS 13.0, *) {
+            MPNowPlayingInfoCenter.default().playbackState = isPlaying ? .playing : .paused
+        }
+    }
+
+    private func loadArtworkIfNeeded() {
+        guard let artworkURL = currentMusic?.imageURL, artworkURL != cachedArtworkURL else { return }
+        cachedArtworkURL = artworkURL
+        artworkLoadTask = Task { [weak self] in
+            guard let self else { return }
+            do {
+                let (data, _) = try await URLSession.shared.data(from: artworkURL)
+                guard !Task.isCancelled, let image = UIImage(data: data) else { return }
+                await MainActor.run {
+                    self.currentArtworkImage = image
+                    self.updateNowPlayingInfo()
+                }
+            } catch {
+                print("⚠️ [PlayerManager] Failed to load now playing artwork: \(error.localizedDescription)")
+            }
+        }
+    }
+
+    private func updateLiveActivity(force: Bool = false) {
+        guard let currentMusic else {
+            Task {
+                #if canImport(ActivityKit)
+                await liveActivityManager.end()
+                #endif
+            }
+            return
+        }
+
+        let now = Date()
+        let shouldSync = force
+            || now.timeIntervalSince(lastLiveActivitySyncDate) >= 2
+            || abs(playbackProgress - lastLiveActivityProgress) >= 0.04
+
+        guard shouldSync else { return }
+        lastLiveActivitySyncDate = now
+        lastLiveActivityProgress = playbackProgress
+        Task {
+            #if canImport(ActivityKit)
+            await liveActivityManager.startOrUpdate(
+                song: currentMusic,
+                isPlaying: isPlaying,
+                progress: playbackProgress,
+                elapsedTime: currentTime,
+                remainingTime: max(0, totalDuration - currentTime)
+            )
+            #endif
+        }
     }
 }

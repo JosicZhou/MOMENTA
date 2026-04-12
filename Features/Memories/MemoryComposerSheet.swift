@@ -144,11 +144,11 @@ struct MemoryComposerSheet: View {
         }
         .scrollDismissesKeyboard(.immediately)
         .scrollDisabled(!isMapExpanded)
-        .presentationDetents([.custom(MemoryComposerCompactDetent.self)])
-        .presentationDragIndicator(.visible)
-        .presentationCornerRadius(36)
-        .presentationBackground(colorScheme == .dark ? .regularMaterial : .thinMaterial)
-        .interactiveDismissDisabled(viewModel.isGenerating)
+        .memorySheetChrome(
+            detents: [.custom(MemoryComposerCompactDetent.self)],
+            dragIndicator: .visible,
+            cornerRadius: 36
+        )
         .sheet(isPresented: $viewModel.showImagePicker) {
             ImagePicker(
                 sourceType: viewModel.imagePickerSourceType,
@@ -164,13 +164,6 @@ struct MemoryComposerSheet: View {
         }
         .onReceive(viewModel.locationWeather.$coordinate) { coordinate in
             syncMapPosition(with: coordinate)
-        }
-        .alert("Error", isPresented: $viewModel.showErrorAlert) {
-            Button("OK", role: .cancel) {
-                viewModel.dismissError()
-            }
-        } message: {
-            Text(viewModel.errorMessage ?? "")
         }
     }
 

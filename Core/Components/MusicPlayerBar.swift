@@ -36,6 +36,9 @@ struct MusicPlayerBar: View {
     // MARK: - 内部状态
     @State private var textIndex = 0
 
+    private var titleStyle: Color { .primary }
+    private var subtitleStyle: Color { .secondary }
+
     private let loadingPhrases = [
         "Compiling your memory now",
         "This isn't just storage; it's structure.",
@@ -88,20 +91,29 @@ struct MusicPlayerBar: View {
 
     /// 三段轮循文案
     private var loadingText: some View {
-        Text(loadingPhrases[textIndex])
-            .font(.system(size: 12, weight: .semibold))
-            .foregroundStyle(.white)
-            .lineLimit(2)
-            .multilineTextAlignment(.leading)
-            .animation(.easeInOut(duration: 0.4), value: textIndex)
-            .task(id: isGenerating) {
-                guard isGenerating else { return }
-                textIndex = 0
-                while !Task.isCancelled {
-                    try? await Task.sleep(for: .seconds(5))
-                    textIndex = (textIndex + 1) % 3
-                }
+        VStack(alignment: .leading, spacing: 2) {
+            Text(loadingPhrases[textIndex])
+                .font(.system(size: 12, weight: .semibold))
+                .foregroundStyle(titleStyle)
+                .lineLimit(2)
+                .multilineTextAlignment(.leading)
+
+            if !progress.isEmpty {
+                Text(progress)
+                    .font(.system(size: 10.5, weight: .medium))
+                    .foregroundStyle(subtitleStyle)
+                    .lineLimit(1)
             }
+        }
+        .animation(.easeInOut(duration: 0.4), value: textIndex)
+        .task(id: isGenerating) {
+            guard isGenerating else { return }
+            textIndex = 0
+            while !Task.isCancelled {
+                try? await Task.sleep(for: .seconds(5))
+                textIndex = (textIndex + 1) % 3
+            }
+        }
     }
 
     /// 专辑封面（有 imageURL 时加载，否则占位）
@@ -144,7 +156,7 @@ struct MusicPlayerBar: View {
             .overlay(
                 Image(systemName: "music.note")
                     .font(.system(size: 11, weight: .medium))
-                    .foregroundStyle(.white)
+                    .foregroundStyle(subtitleStyle)
             )
     }
 
@@ -153,11 +165,11 @@ struct MusicPlayerBar: View {
         VStack(alignment: .leading, spacing: 1) {
             Text(songTitle)
                 .font(.system(size: 12, weight: .semibold))
-                .foregroundStyle(.white)
+                .foregroundStyle(titleStyle)
                 .lineLimit(1)
             Text(artistName)
                 .font(.system(size: 11, weight: .regular))
-                .foregroundStyle(.white)
+                .foregroundStyle(subtitleStyle)
                 .lineLimit(1)
         }
     }
@@ -169,9 +181,10 @@ struct MusicPlayerBar: View {
         } label: {
             Image(systemName: isPlaying ? "pause.fill" : "play.fill")
                 .font(.system(size: 14, weight: .medium))
-                .foregroundStyle(.white)
+                .foregroundStyle(titleStyle)
                 .frame(width: 28, height: 28)
         }
+        .buttonStyle(.plain)
     }
 
     /// 展开歌词按钮
@@ -181,9 +194,10 @@ struct MusicPlayerBar: View {
         } label: {
             Image(systemName: "text.quote")
                 .font(.system(size: 12, weight: .medium))
-                .foregroundStyle(.white)
+                .foregroundStyle(titleStyle)
                 .frame(width: 28, height: 28)
         }
+        .buttonStyle(.plain)
     }
 }
 

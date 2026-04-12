@@ -131,6 +131,22 @@ final class MemoryViewModel: ObservableObject {
         }
     }
 
+    func deleteMemory(musicId: String) async {
+        guard let userId = await SupabaseService.shared.getCurrentUserId() else { return }
+
+        do {
+            if favoriteIds.contains(musicId) {
+                try await profileService.removeFavorite(userId: userId, musicId: musicId)
+            }
+
+            try await musicDb.deleteMusic(taskId: musicId, userId: userId)
+            metadataStore.remove(musicId: musicId)
+            await refreshLibrary()
+        } catch {
+            showError(error.localizedDescription)
+        }
+    }
+
     // MARK: - Camera
 
     func openCamera() {

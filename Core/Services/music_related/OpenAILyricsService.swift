@@ -31,10 +31,14 @@ class OpenAILyricsService: LLMServiceProtocol {
             throw LLMServiceError.missingAPIKey
         }
         
-        print("🎵 [LLM] 开始构建请求...")
+        let requestStartedAt = Date()
+        let prompt = request.buildPrompt()
+        print("🎵 [LLM] Starting lyrics request...")
         
         // 构建OpenAI请求
-        let messages = buildMessages(from: request)
+        let messageBuildStartedAt = Date()
+        let messages = buildMessages(prompt: prompt, request: request)
+        let messageBuildDuration = Date().timeIntervalSince(messageBuildStartedAt)
         
         // 不使用function calling，改用普通prompt
         let requestBody: [String: Any] = [
@@ -55,36 +59,42 @@ class OpenAILyricsService: LLMServiceProtocol {
         urlRequest.setValue("application/json", forHTTPHeaderField: "Content-Type")
         urlRequest.httpBody = try JSONSerialization.data(withJSONObject: requestBody)
         
-        print("🚀 [LLM] 发送请求到: \(url)")
-        print("📦 [LLM] 模型: \(model)")
+        print("🚀 [LLM] Sending request to: \(url)")
+        print("📦 [LLM] Model: \(model)")
+        print("⏱️ [LLM] Prepared request in \(Self.formattedSeconds(messageBuildDuration)) | prompt=\(prompt.count) chars | image=\(request.photoPresent ? "yes" : "no")")
         
         do {
+            let networkStartedAt = Date()
             let (data, response) = try await urlSession.data(for: urlRequest)
+            let networkDuration = Date().timeIntervalSince(networkStartedAt)
             
-            print("✅ [LLM] 收到响应")
+            print("✅ [LLM] Response received in \(Self.formattedSeconds(networkDuration))")
             
             guard let httpResponse = response as? HTTPURLResponse else {
                 throw LLMServiceError.invalidResponse
             }
             
-            print("📊 [LLM] HTTP状态码: \(httpResponse.statusCode)")
+            print("📊 [LLM] HTTP status: \(httpResponse.statusCode)")
             
             guard httpResponse.statusCode == 200 else {
                 let errorMessage = String(data: data, encoding: .utf8) ?? "Unknown error"
-                print("❌ [LLM] API错误: \(errorMessage)")
+                print("❌ [LLM] API error: \(errorMessage)")
                 throw LLMServiceError.apiError("HTTP \(httpResponse.statusCode): \(errorMessage)")
             }
             
             // 解析响应
-            print("📝 [LLM] 开始解析响应...")
+            print("📝 [LLM] Parsing response...")
             
             // 打印原始响应（用于调试）
             if let responseString = String(data: data, encoding: .utf8) {
-                print("📄 [LLM] 原始响应: \(responseString.prefix(500))...") // 只打印前500字符
+                print("📄 [LLM] Raw response: \(responseString.prefix(500))...")
             }
             
+            let parseStartedAt = Date()
             let result = try parseResponse(data: data)
-            print("✅ [LLM] 解析成功")
+            let parseDuration = Date().timeIntervalSince(parseStartedAt)
+            let totalDuration = Date().timeIntervalSince(requestStartedAt)
+            print("✅ [LLM] Parsed in \(Self.formattedSeconds(parseDuration)) | total=\(Self.formattedSeconds(totalDuration))")
             return result
             
         } catch let error as LLMServiceError {
@@ -92,32 +102,33 @@ class OpenAILyricsService: LLMServiceProtocol {
         } catch let error as NSError {
             // 检查是否是超时错误
             if error.domain == NSURLErrorDomain && error.code == NSURLErrorTimedOut {
-                print("⏱️ [LLM] 请求超时 - 可能是网络慢或API响应慢")
-                throw LLMServiceError.apiError("请求超时，请检查网络连接或稍后重试")
+                print("⏱️ [LLM] Request timed out")
+                throw LLMServiceError.apiError("The lyrics request timed out. Please try again.")
             }
-            print("❌ [LLM] 网络错误: \(error.localizedDescription)")
+            print("❌ [LLM] Network error: \(error.localizedDescription)")
             throw LLMServiceError.networkError(error)
         }
     }
     
     // MARK: - Private Methods
     
-    private func buildMessages(from request: LyricsGenerationRequest) -> [[String: Any]] {
+    private func buildMessages(prompt: String, request: LyricsGenerationRequest) -> [[String: Any]] {
         var content: [[String: Any]] = []
         
         // 添加文本内容
         content.append([
             "type": "text",
-            "text": request.buildPrompt()
+            "text": prompt
         ])
         
         // 如果有图片，添加图片
         if let photoBase64 = request.photo, request.photoPresent {
-            print("🖼️ [LLM] 包含图片，大小约: \(photoBase64.count / 1024)KB")
+            print("🖼️ [LLM] Inline image attached, about \(photoBase64.count / 1024)KB")
             content.append([
                 "type": "image_url",
                 "image_url": [
-                    "url": "data:image/jpeg;base64,\(photoBase64)"
+                    "url": "data:image/jpeg;base64,\(photoBase64)",
+                    "detail": "low"
                 ]
             ])
         }
@@ -229,5 +240,9 @@ class OpenAILyricsService: LLMServiceProtocol {
         let replacement = "\"prompt\": \"\(escapedPrompt)\""
         
         return nsString.replacingCharacters(in: fullMatchRange, with: replacement)
+    }
+
+    private static func formattedSeconds(_ seconds: TimeInterval) -> String {
+        String(format: "%.2fs", seconds)
     }
 }

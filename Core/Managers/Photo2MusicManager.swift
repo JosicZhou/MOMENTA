@@ -36,26 +36,31 @@ class Photo2MusicManager: ObservableObject {
         parameters: MusicParameters,
         onProgress: (String) -> Void
     ) async throws -> GeneratedMusic {
+        let generationStartedAt = Date()
         
         // 1. 调用 LLM 生成歌词和建议风格
-        onProgress("正在通过 AI 解析灵感...")
+        onProgress("Interpreting your prompt with Apple-style clarity...")
+        let lyricsStartedAt = Date()
         let lyricsResponse = try await generateLyrics(
             userInput: userInput,
             selectedImage: selectedImage,
             parameters: parameters
         )
+        print("⏱️ [Light] Lyrics phase finished in \(Self.formattedSeconds(Date().timeIntervalSince(lyricsStartedAt)))")
         
         // 2. 构建最终的生成请求
-        onProgress("正在准备音乐生成...")
+        onProgress("Preparing the composition...")
         let sunoRequest = buildSunoRequest(
             lyricsResponse: lyricsResponse,
             parameters: parameters
         )
         
         // 3. 提交任务给 Suno 并获取 taskId
-        onProgress("正在提交生成任务...")
+        onProgress("Submitting the generation task...")
         print("🚀 [Suno] 发送请求的回调地址: \(APIConfiguration.sunoCallbackURL)")
+        let submissionStartedAt = Date()
         let taskId = try await baseManager.startMusicTask(request: sunoRequest)
+        print("⏱️ [Light] Suno submission finished in \(Self.formattedSeconds(Date().timeIntervalSince(submissionStartedAt)))")
         
         // 4. 在 Supabase 创建初始记录
         guard let userId = await SupabaseService.shared.getCurrentUserId() else {
@@ -69,51 +74,38 @@ class Photo2MusicManager: ObservableObject {
             userId: userId
         )
         
-        // 5. 等待服务器完成 (Realtime + 轮询 双重保障)
-        onProgress("AI 正在后台创作，请稍候...")
-        
+        // 5. 等待服务器完成：Realtime 与 Suno 直接轮询并发竞速
+        onProgress("Creating in the background...")
+
         return try await withThrowingTaskGroup(of: GeneratedMusic?.self) { group in
-            // 方式 A: Realtime 监听
             group.addTask {
-                let musicStream = MusicDatabaseService.shared.subscribeToTaskUpdate(taskId: taskId)
-                for try await completedMusic in musicStream {
-                    return completedMusic
-                }
-                return nil
-            }
-            
-            // 方式 B: 定时轮询 (每 20 秒查一次)
-            group.addTask {
-                var attempts = 0
-                let maxPollingAttempts = 15 // 最多轮询 5 分钟 (15 * 20s)
-                
-                while attempts < maxPollingAttempts {
-                    // 等待 20 秒再开始第一次轮询，给 Suno 一点时间
-                    try await Task.sleep(nanoseconds: 20 * 1_000_000_000)
-                    
-                    print("🔄 [Polling] 正在主动检查任务状态 (\(attempts + 1)/\(maxPollingAttempts))...")
-                    if let music = try await MusicDatabaseService.shared.fetchMusicRecord(taskId: taskId),
-                       music.status == .completed {
-                        print("✅ [Polling] 主动查询发现任务已完成！")
-                        return music
+                do {
+                    let musicStream = MusicDatabaseService.shared.subscribeToTaskUpdate(taskId: taskId)
+                    for try await completedMusic in musicStream {
+                        return completedMusic
                     }
-                    attempts += 1
+                } catch {
+                    print("⚠️ [Light·Realtime] Stream closed, falling back to direct status polling: \(error.localizedDescription)")
                 }
                 return nil
             }
             
-            // 只要其中任何一个任务返回了完成的音乐，就结束
+            group.addTask {
+                let music = try await self.baseManager.waitForCompletion(taskId: taskId)
+                await MusicDatabaseService.shared.syncCompletedMusic(music)
+                return music
+            }
+            
             while let result = try await group.next() {
                 if let music = result {
-                    group.cancelAll() // 停止另一个任务
-                    onProgress("音乐创作完成！")
+                    group.cancelAll()
+                    onProgress("Music creation complete.")
+                    print("⏱️ [Light] Total generation completed in \(Self.formattedSeconds(Date().timeIntervalSince(generationStartedAt)))")
                     return music
                 }
             }
             
-            // 如果都失败了，使用旧的轮询作为最后兜底
-            onProgress("正在同步生成状态...")
-            return try await baseManager.waitForCompletion(taskId: taskId)
+            throw MusicServiceError.timeout
         }
     }
     
@@ -220,5 +212,9 @@ class Photo2MusicManager: ObservableObject {
             return .female
         }
         return nil
+    }
+
+    private static func formattedSeconds(_ seconds: TimeInterval) -> String {
+        String(format: "%.2fs", seconds)
     }
 }

@@ -35,9 +35,7 @@ struct MemoryLibraryItem: Identifiable, Equatable {
 
 enum MemoryDatePreset: String, CaseIterable, Identifiable {
     case today
-    case tomorrow
     case thisWeekend
-    case nextWeekend
     case thisMonth
 
     var id: String { rawValue }
@@ -46,12 +44,8 @@ enum MemoryDatePreset: String, CaseIterable, Identifiable {
         switch self {
         case .today:
             return "Today"
-        case .tomorrow:
-            return "Tomorrow"
         case .thisWeekend:
             return "This Weekend"
-        case .nextWeekend:
-            return "Next Weekend"
         case .thisMonth:
             return "This Month"
         }
@@ -95,6 +89,11 @@ final class MemorySongMetadataStore {
             typeLabel: normalizedType(from: typeLabel),
             createdAt: createdAt
         )
+        persist()
+    }
+
+    func remove(musicId: String) {
+        cache.removeValue(forKey: musicId)
         persist()
     }
 

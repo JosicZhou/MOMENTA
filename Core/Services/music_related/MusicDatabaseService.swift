@@ -15,9 +15,18 @@ class MusicDatabaseService {
     private init() {}
     
     /// 创建初始音乐生成记录（在任务提交后立即调用）
-    /// - Parameter source: "mine" | "cocreate"，缺省 "mine"
-    func createInitialRecord(taskId: String, prompt: String, style: String, userId: UUID, source: String = "mine") async throws {
-        let record: [String: AnyJSON] = [
+    /// - Parameter source: "mine" | "memory" | "cocreate"，缺省 "mine"
+    func createInitialRecord(
+        taskId: String,
+        prompt: String,
+        style: String,
+        userId: UUID,
+        source: String = "mine",
+        continueAtSec: Double? = nil,
+        parentAudioId: String? = nil,
+        cocreateSessionId: UUID? = nil
+    ) async throws {
+        var record: [String: AnyJSON] = [
             "task_id": .string(taskId),
             "user_id": .string(userId.uuidString.lowercased()),
             "prompt": .string(prompt),
@@ -26,11 +35,60 @@ class MusicDatabaseService {
             "created_at": .string(ISO8601DateFormatter().string(from: Date())),
             "source": .string(source)
         ]
+
+        if let continueAtSec {
+            record["continue_at_sec"] = .double(continueAtSec)
+        }
+        if let parentAudioId, !parentAudioId.isEmpty {
+            record["parent_audio_id"] = .string(parentAudioId)
+        }
+        if let cocreateSessionId {
+            record["cocreate_session_id"] = .string(cocreateSessionId.uuidString.lowercased())
+        }
         
         try await client
             .from("music_generations")
             .insert(record)
             .execute()
+    }
+
+    func updateContinueAt(taskId: String, continueAtSec: Double) async throws {
+        try await client
+            .from("music_generations")
+            .update(["continue_at_sec": continueAtSec] as [String: Double])
+            .eq("task_id", value: taskId)
+            .execute()
+    }
+
+    func syncCompletedMusic(_ music: GeneratedMusic) async {
+        guard music.status == .completed else { return }
+
+        var record: [String: AnyJSON] = [
+            "status": .string(GeneratedMusic.GenerationStatus.completed.rawValue),
+            "title": .string(music.title),
+            "style": .string(music.style)
+        ]
+
+        if let audioURL = music.audioURL?.absoluteString {
+            record["audio_url"] = .string(audioURL)
+        }
+        if let imageURL = music.imageURL?.absoluteString {
+            record["image_url"] = .string(imageURL)
+        }
+        if let duration = music.duration {
+            record["duration"] = .double(duration)
+        }
+
+        do {
+            try await client
+                .from("music_generations")
+                .update(record)
+                .eq("task_id", value: music.id)
+                .neq("status", value: GeneratedMusic.GenerationStatus.completed.rawValue)
+                .execute()
+        } catch {
+            print("⚠️ [MusicDB] Failed to sync completed music: \(error.localizedDescription)")
+        }
     }
     
     /// 监听特定任务的状态更新
@@ -101,6 +159,16 @@ class MusicDatabaseService {
         let record = try decoder.decode([String: AnyJSON].self, from: response.data)
         return parseGeneratedMusic(from: record, taskId: taskId)
     }
+
+    func fetchMusicRecords(taskIds: [String]) async throws -> [GeneratedMusic] {
+        guard !taskIds.isEmpty else { return [] }
+        let response = try await client
+            .from("music_generations")
+            .select()
+            .in("task_id", values: taskIds)
+            .execute()
+        return decodeMusicList(from: response.data)
+    }
     
     /// 从数据库记录解析 GeneratedMusic（record 需包含 task_id）
     /// 供列表接口使用；支持 created_at、source 解析
@@ -159,6 +227,16 @@ class MusicDatabaseService {
             sunoAudioId = extractSunoAudioId(from: payloadJSON)
         }
         
+        var continueAtSec: Double?
+        if let capJSON = record["continue_at_sec"], case .double(let cap) = capJSON {
+            continueAtSec = cap
+        }
+
+        var duration: Double?
+        if let durationJSON = record["duration"], case .double(let value) = durationJSON {
+            duration = value
+        }
+
         return GeneratedMusic(
             id: taskId,
             title: title,
@@ -170,7 +248,9 @@ class MusicDatabaseService {
             status: status,
             createdAt: createdAt,
             source: source,
-            ownerId: ownerId
+            ownerId: ownerId,
+            duration: duration,
+            continueAtSec: continueAtSec
         )
     }
     
@@ -247,5 +327,310 @@ class MusicDatabaseService {
         let decoder = JSONDecoder()
         guard let array = try? decoder.decode([[String: AnyJSON]].self, from: data) else { return [] }
         return array.compactMap { parseGeneratedMusic(from: $0) }
+    }
+}
+
+final class CocreateService {
+    static let shared = CocreateService()
+    private let client = SupabaseConfig.client
+
+    private init() {}
+
+    func createSession(
+        sourceTaskId: String,
+        sunoAudioId: String?,
+        continueAtSec: Double,
+        model: String,
+        profileA: CocreateProfileSnapshot,
+        sourceTitle: String? = nil,
+        sourceImageURL: URL? = nil
+    ) async throws -> UUID {
+        guard let userId = try? await client.auth.session.user.id else {
+            throw CocreateServiceError.notAuthenticated
+        }
+
+        var record: [String: AnyJSON] = [
+            "creator_id": .string(userId.uuidString.lowercased()),
+            "status": .string(CocreateSession.Status.halfReady.rawValue),
+            "source_task_id": .string(sourceTaskId),
+            "suno_audio_id": .string(sunoAudioId ?? ""),
+            "continue_at_sec": .double(continueAtSec),
+            "model": .string(model),
+            "profile_a": try snapshotToAnyJSON(profileA)
+        ]
+
+        if let sourceTitle, !sourceTitle.isEmpty {
+            record["source_title"] = .string(sourceTitle)
+        }
+        if let sourceImageURL {
+            record["source_image_url"] = .string(sourceImageURL.absoluteString)
+        }
+
+        let response = try await client
+            .from("cocreate_sessions")
+            .insert(record)
+            .select("id")
+            .single()
+            .execute()
+
+        struct Row: Decodable { let id: UUID }
+        return try JSONDecoder().decode(Row.self, from: response.data).id
+    }
+
+    func inviteFriend(sessionId: UUID, friendId: UUID) async throws {
+        try await client
+            .from("cocreate_sessions")
+            .update([
+                "invitee_id": friendId.uuidString.lowercased(),
+                "status": CocreateSession.Status.invited.rawValue
+            ] as [String: String])
+            .eq("id", value: sessionId.uuidString.lowercased())
+            .execute()
+    }
+
+    func loadMySessions(userId: UUID) async throws -> [CocreateSession] {
+        let response = try await client
+            .from("cocreate_sessions")
+            .select()
+            .eq("creator_id", value: userId.uuidString.lowercased())
+            .order("created_at", ascending: false)
+            .execute()
+        return try await enrichSessions(decodeSessions(from: response.data))
+    }
+
+    func loadInvitedSessions(userId: UUID) async throws -> [CocreateSession] {
+        let response = try await client
+            .from("cocreate_sessions")
+            .select()
+            .eq("invitee_id", value: userId.uuidString.lowercased())
+            .eq("status", value: CocreateSession.Status.invited.rawValue)
+            .order("created_at", ascending: false)
+            .execute()
+        return try await enrichSessions(decodeSessions(from: response.data))
+    }
+
+    func loadMyCompletedSessions(userId: UUID) async throws -> [CocreateSession] {
+        let response = try await client
+            .from("cocreate_sessions")
+            .select()
+            .eq("creator_id", value: userId.uuidString.lowercased())
+            .eq("status", value: CocreateSession.Status.completed.rawValue)
+            .order("created_at", ascending: false)
+            .execute()
+        return try await enrichSessions(decodeSessions(from: response.data))
+    }
+
+    func updateSessionForExtend(
+        sessionId: UUID,
+        extendTaskId: String,
+        profileB: CocreateProfileSnapshot
+    ) async throws {
+        let updates: [String: AnyJSON] = [
+            "extend_task_id": .string(extendTaskId),
+            "status": .string(CocreateSession.Status.extending.rawValue),
+            "profile_b": try snapshotToAnyJSON(profileB)
+        ]
+        try await client
+            .from("cocreate_sessions")
+            .update(updates)
+            .eq("id", value: sessionId.uuidString.lowercased())
+            .execute()
+    }
+
+    func markCompleted(sessionId: UUID) async throws {
+        try await client
+            .from("cocreate_sessions")
+            .update(["status": CocreateSession.Status.completed.rawValue] as [String: String])
+            .eq("id", value: sessionId.uuidString.lowercased())
+            .execute()
+    }
+
+    func declineSession(sessionId: UUID) async throws {
+        try await client
+            .from("cocreate_sessions")
+            .update(["status": CocreateSession.Status.expired.rawValue] as [String: String])
+            .eq("id", value: sessionId.uuidString.lowercased())
+            .execute()
+    }
+
+    func fetchSession(id: UUID) async throws -> CocreateSession? {
+        let response = try await client
+            .from("cocreate_sessions")
+            .select()
+            .eq("id", value: id.uuidString.lowercased())
+            .single()
+            .execute()
+        return try await enrichSessions(decodeSessions(from: response.data)).first
+    }
+
+    private func snapshotToAnyJSON(_ snapshot: CocreateProfileSnapshot) throws -> AnyJSON {
+        let data = try JSONEncoder().encode(snapshot)
+        return try JSONDecoder().decode(AnyJSON.self, from: data)
+    }
+
+    private struct FlexSnapshot: Decodable {
+        let value: CocreateProfileSnapshot?
+
+        init(from decoder: Decoder) throws {
+            let container = try decoder.singleValueContainer()
+            if let direct = try? container.decode(CocreateProfileSnapshot.self) {
+                value = direct
+                return
+            }
+            if let raw = try? container.decode(String.self),
+               let data = raw.data(using: .utf8),
+               let decoded = try? JSONDecoder().decode(CocreateProfileSnapshot.self, from: data) {
+                value = decoded
+                return
+            }
+            value = nil
+        }
+    }
+
+    private struct RawSession: Decodable {
+        let id: UUID
+        let creatorId: UUID
+        let inviteeId: UUID?
+        let status: String
+        let sourceTaskId: String
+        let sourceTitle: String?
+        let sourceImageUrl: String?
+        let sunoAudioId: String?
+        let continueAtSec: Double
+        let model: String
+        let profileA: FlexSnapshot?
+        let extendTaskId: String?
+        let profileB: FlexSnapshot?
+        let createdAt: String?
+        let expiresAt: String?
+    }
+
+    private func decodeSessions(from data: Data) -> [CocreateSession] {
+        let decoder = JSONDecoder()
+        decoder.keyDecodingStrategy = .convertFromSnakeCase
+
+        if let rows = try? decoder.decode([RawSession].self, from: data) {
+            return rows.map(mapRawSession)
+        }
+        if let row = try? decoder.decode(RawSession.self, from: data) {
+            return [mapRawSession(row)]
+        }
+        return []
+    }
+
+    private func mapRawSession(_ raw: RawSession) -> CocreateSession {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        let createdAt = raw.createdAt.flatMap { formatter.date(from: $0) }
+            ?? raw.createdAt.flatMap { ISO8601DateFormatter().date(from: $0) }
+            ?? Date()
+        let expiresAt = raw.expiresAt.flatMap { formatter.date(from: $0) }
+            ?? raw.expiresAt.flatMap { ISO8601DateFormatter().date(from: $0) }
+
+        return CocreateSession(
+            id: raw.id,
+            creatorId: raw.creatorId,
+            inviteeId: raw.inviteeId,
+            status: CocreateSession.Status(rawValue: raw.status) ?? .halfReady,
+            sourceTaskId: raw.sourceTaskId,
+            sunoAudioId: raw.sunoAudioId,
+            continueAtSec: raw.continueAtSec,
+            model: raw.model,
+            profileA: raw.profileA?.value ?? CocreateProfileSnapshot(),
+            extendTaskId: raw.extendTaskId,
+            profileB: raw.profileB?.value,
+            createdAt: createdAt,
+            expiresAt: expiresAt,
+            creatorDisplayName: nil,
+            sourceTitle: raw.sourceTitle,
+            sourceImageURL: raw.sourceImageUrl.flatMap(URL.init(string:)),
+            inviteeDisplayName: nil
+        )
+    }
+
+    private func enrichSessions(_ sessions: [CocreateSession]) async throws -> [CocreateSession] {
+        guard !sessions.isEmpty else { return [] }
+
+        var enriched = sessions
+        let profileIds = Array(Set(
+            sessions.flatMap { session in
+                [session.creatorId] + (session.inviteeId.map { [$0] } ?? [])
+            }
+        ))
+
+        if !profileIds.isEmpty {
+            let response = try await client
+                .from("profiles")
+                .select("id, display_name")
+                .in("id", values: profileIds.map { $0.uuidString.lowercased() })
+                .execute()
+
+            struct ProfileRow: Decodable {
+                let id: UUID
+                let display_name: String?
+            }
+
+            let rows = (try? JSONDecoder().decode([ProfileRow].self, from: response.data)) ?? []
+            let nameMap = Dictionary(uniqueKeysWithValues: rows.map { ($0.id, $0.display_name) })
+
+            for index in enriched.indices {
+                enriched[index].creatorDisplayName = nameMap[enriched[index].creatorId] ?? enriched[index].creatorDisplayName
+                if let inviteeId = enriched[index].inviteeId {
+                    enriched[index].inviteeDisplayName = nameMap[inviteeId] ?? enriched[index].inviteeDisplayName
+                }
+            }
+        }
+
+        let missingTaskIds = Array(Set(
+            enriched
+                .filter { $0.sourceTitle == nil || $0.sourceImageURL == nil }
+                .map(\.sourceTaskId)
+        ))
+
+        if !missingTaskIds.isEmpty {
+            let response = try await client
+                .from("music_generations")
+                .select("task_id, title, image_url")
+                .in("task_id", values: missingTaskIds)
+                .execute()
+
+            struct MusicRow: Decodable {
+                let task_id: String
+                let title: String?
+                let image_url: String?
+            }
+
+            let rows = (try? JSONDecoder().decode([MusicRow].self, from: response.data)) ?? []
+            let musicMap = Dictionary(uniqueKeysWithValues: rows.map { ($0.task_id, $0) })
+
+            for index in enriched.indices {
+                guard let music = musicMap[enriched[index].sourceTaskId] else { continue }
+                if enriched[index].sourceTitle == nil || enriched[index].sourceTitle?.isEmpty == true {
+                    enriched[index].sourceTitle = music.title
+                }
+                if enriched[index].sourceImageURL == nil {
+                    enriched[index].sourceImageURL = music.image_url.flatMap(URL.init(string:))
+                }
+            }
+        }
+
+        return enriched
+    }
+}
+
+enum CocreateServiceError: LocalizedError {
+    case notAuthenticated
+    case sessionNotFound
+    case invalidState(String)
+
+    var errorDescription: String? {
+        switch self {
+        case .notAuthenticated:
+            return "User not authenticated"
+        case .sessionNotFound:
+            return "Cocreate session not found"
+        case .invalidState(let message):
+            return message
+        }
     }
 }

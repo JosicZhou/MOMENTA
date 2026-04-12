@@ -91,6 +91,10 @@ struct SettingsView: View {
                         Text(profileViewModel.displayName)
                             .font(.system(size: 17, weight: .semibold))
 
+                        Text(profileViewModel.displayLocation)
+                            .font(.system(size: 13))
+                            .foregroundStyle(.secondary)
+
                         Text(viewModel.userEmail)
                             .font(.system(size: 13))
                             .foregroundStyle(.secondary)
@@ -271,6 +275,7 @@ private struct EditAccountView: View {
     let email: String
 
     @State private var displayName = ""
+    @State private var displayLocation = ""
     @State private var showAvatarOptions = false
     @State private var showAvatarPicker = false
     @State private var avatarPickerSource: UIImagePickerController.SourceType = .photoLibrary
@@ -324,6 +329,7 @@ private struct EditAccountView: View {
 
             Section("Profile") {
                 TextField("Name", text: $displayName)
+                TextField("Address", text: $displayLocation)
 
                 HStack {
                     Text("Email")
@@ -342,13 +348,14 @@ private struct EditAccountView: View {
             ToolbarItem(placement: .topBarTrailing) {
                 Button("Save") {
                     profileViewModel.updateDisplayName(displayName)
+                    profileViewModel.updateDisplayLocation(displayLocation)
                     dismiss()
                 }
-                .disabled(displayName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
             }
         }
         .onAppear {
             displayName = profileViewModel.displayName
+            displayLocation = profileViewModel.displayLocation
         }
         .confirmationDialog(
             "Profile Photo",

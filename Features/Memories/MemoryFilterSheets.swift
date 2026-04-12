@@ -20,57 +20,50 @@ struct MemoryLocationSheet: View {
     private var theme: MemorySheetTheme { MemorySheetTheme(colorScheme: colorScheme) }
 
     var body: some View {
-        ZStack {
-            theme.locationBackground
-                .ignoresSafeArea()
+        VStack(spacing: 0) {
+            MemorySheetTitleBar(title: "Location") {
+                dismiss()
+            }
+            .padding(.top, 12)
 
-            VStack(spacing: 0) {
-                MemorySheetTitleBar(title: "Location") {
-                    dismiss()
-                }
-                .padding(.top, 12)
+            ScrollView {
+                VStack(alignment: .leading, spacing: 18) {
+                    Text("Nearby Location")
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundStyle(theme.subtleText)
 
-                ScrollView {
-                    VStack(alignment: .leading, spacing: 18) {
-                        Text("Nearby Location")
-                            .font(.system(size: 15, weight: .semibold))
-                            .foregroundStyle(theme.subtleText)
+                    VStack(spacing: 12) {
+                        if let currentLocation {
+                            locationButton(
+                                title: currentLocation,
+                                subtitle: "Current location",
+                                isSelected: selectedLocation == currentLocation
+                            )
+                        }
 
-                        VStack(spacing: 12) {
-                            if let currentLocation {
-                                locationButton(
-                                    title: currentLocation,
-                                    subtitle: "Current location",
-                                    isSelected: selectedLocation == currentLocation
-                                )
-                            }
-
-                            ForEach(filteredLocations, id: \.self) { location in
-                                locationButton(
-                                    title: location,
-                                    subtitle: "Saved memory place",
-                                    isSelected: selectedLocation == location
-                                )
-                            }
+                        ForEach(filteredLocations, id: \.self) { location in
+                            locationButton(
+                                title: location,
+                                subtitle: "Saved memory place",
+                                isSelected: selectedLocation == location
+                            )
                         }
                     }
-                    .padding(.horizontal, 18)
-                    .padding(.top, 20)
-                    .padding(.bottom, 120)
-                    .frame(maxWidth: .infinity, alignment: .leading)
                 }
-                .scrollIndicators(.hidden)
+                .padding(.horizontal, 18)
+                .padding(.top, 20)
+                .padding(.bottom, 16)
+                .frame(maxWidth: .infinity, alignment: .leading)
             }
-        }
-        .safeAreaInset(edge: .bottom) {
+            .scrollIndicators(.hidden)
+
             MemoryLocationSearchBar(searchText: $searchText)
-                .padding(.horizontal, 14)
-                .padding(.bottom, 10)
+                .padding(.horizontal, 18)
+                .padding(.top, 10)
+                .padding(.bottom, 12)
         }
-        .presentationDetents([.large])
-        .presentationDragIndicator(.hidden)
-        .presentationCornerRadius(34)
-        .presentationBackground(colorScheme == .dark ? .regularMaterial : .thinMaterial)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        .memoryFilterSheetChrome(detents: [.large], dragIndicator: .hidden, cornerRadius: 34)
     }
 
     private var filteredLocations: [String] {
@@ -136,63 +129,69 @@ struct MemoryDateSheet: View {
     private var theme: MemorySheetTheme { MemorySheetTheme(colorScheme: colorScheme) }
 
     var body: some View {
-        ScrollView(.vertical, showsIndicators: false) {
-            VStack(spacing: 18) {
-                MemorySheetTitleBar(title: "Dates") {
-                    dismiss()
-                }
-                .padding(.top, 12)
+        VStack(spacing: 0) {
+            ScrollView(.vertical, showsIndicators: false) {
+                VStack(spacing: 18) {
+                    MemorySheetTitleBar(title: "Dates") {
+                        dismiss()
+                    }
+                    .padding(.top, 12)
 
-                LazyVGrid(columns: [GridItem(.adaptive(minimum: 112), spacing: 10)], spacing: 10) {
-                    ForEach(quickPresets) { preset in
+                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 112), spacing: 10)], spacing: 10) {
                         Button {
-                            selectedPreset = preset
+                            selectedPreset = nil
                             selectedDate = nil
                         } label: {
                             MemoryDateQuickChip(
-                                title: preset.title,
-                                isSelected: selectedPreset == preset
+                                title: "All",
+                                isSelected: selectedPreset == nil && selectedDate == nil
                             )
                         }
                         .buttonStyle(MemorySheetPressStyle())
-                    }
-                }
 
-                MemoryMonthCalendar(
-                    displayedMonth: $displayedMonth,
-                    selectedDate: $selectedDate,
-                    selectedPreset: $selectedPreset
-                )
+                        ForEach(quickPresets) { preset in
+                            Button {
+                                selectedPreset = preset
+                                selectedDate = nil
+                            } label: {
+                                MemoryDateQuickChip(
+                                    title: preset.title,
+                                    isSelected: selectedPreset == preset
+                                )
+                            }
+                            .buttonStyle(MemorySheetPressStyle())
+                        }
+                    }
+
+                    MemoryMonthCalendar(
+                        displayedMonth: $displayedMonth,
+                        selectedDate: $selectedDate,
+                        selectedPreset: $selectedPreset
+                    )
+                }
+                .padding(.horizontal, 18)
+                .padding(.top, 12)
+                .padding(.bottom, 12)
+                .frame(maxWidth: .infinity, alignment: .top)
             }
-            .padding(.horizontal, 18)
-            .padding(.top, 12)
-            .padding(.bottom, 8)
-            .frame(maxWidth: .infinity, alignment: .top)
-        }
-        .safeAreaInset(edge: .bottom) {
+
+            Spacer(minLength: 8)
+
             Button {
                 dismiss()
             } label: {
-                Text("Show Memories")
-                    .font(.system(size: 17, weight: .semibold))
-                    .foregroundStyle(.white)
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 54)
-                    .background(MemorySheetPalette.accent, in: Capsule(style: .continuous))
+                MemorySheetPrimaryActionLabel(title: "Show Memories")
             }
             .buttonStyle(MemorySheetPressStyle())
             .padding(.horizontal, 18)
-            .padding(.top, 10)
-            .padding(.bottom, 12)
-            .background(.clear)
+            .padding(.top, 8)
+            .padding(.bottom, 14)
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .onAppear {
             displayedMonth = monthStart(for: selectedDate ?? Date())
         }
-        .presentationDetents([.fraction(0.60)])
-        .presentationDragIndicator(.visible)
-        .presentationCornerRadius(34)
-        .presentationBackground(colorScheme == .dark ? .regularMaterial : .thinMaterial)
+        .memoryFilterSheetChrome(detents: [.fraction(0.72), .large], dragIndicator: .hidden, cornerRadius: 34)
     }
 
     private func monthStart(for date: Date) -> Date {
@@ -210,57 +209,52 @@ struct MemoryGenreSheet: View {
     private var theme: MemorySheetTheme { MemorySheetTheme(colorScheme: colorScheme) }
 
     var body: some View {
-        ScrollView(.vertical, showsIndicators: false) {
-            VStack(spacing: 18) {
-                MemorySheetTitleBar(title: "Genres") {
-                    dismiss()
-                }
-                .padding(.top, 12)
-
-                LazyVGrid(columns: [GridItem(.adaptive(minimum: 132), spacing: 10)], spacing: 10) {
-                    Button {
-                        selectedGenre = nil
-                    } label: {
-                        MemoryTypeChip(title: "All Genres", isSelected: selectedGenre == nil)
+        VStack(spacing: 0) {
+            ScrollView(.vertical, showsIndicators: false) {
+                VStack(spacing: 18) {
+                    MemorySheetTitleBar(title: "Genres") {
+                        dismiss()
                     }
-                    .buttonStyle(MemorySheetPressStyle())
+                    .padding(.top, 12)
 
-                    ForEach(genres, id: \.self) { genre in
+                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 132), spacing: 10)], spacing: 10) {
                         Button {
-                            selectedGenre = selectedGenre == genre ? nil : genre
+                            selectedGenre = nil
                         } label: {
-                            MemoryTypeChip(title: genre, isSelected: selectedGenre == genre)
+                            MemoryTypeChip(title: "All Genres", isSelected: selectedGenre == nil)
                         }
                         .buttonStyle(MemorySheetPressStyle())
+
+                        ForEach(genres, id: \.self) { genre in
+                            Button {
+                                selectedGenre = selectedGenre == genre ? nil : genre
+                            } label: {
+                                MemoryTypeChip(title: genre, isSelected: selectedGenre == genre)
+                            }
+                            .buttonStyle(MemorySheetPressStyle())
+                        }
                     }
                 }
+                .padding(.horizontal, 18)
+                .padding(.top, 12)
+                .padding(.bottom, 12)
+                .frame(maxWidth: .infinity, alignment: .top)
             }
-            .padding(.horizontal, 18)
-            .padding(.top, 12)
-            .padding(.bottom, 8)
-            .frame(maxWidth: .infinity, alignment: .top)
-        }
-        .safeAreaInset(edge: .bottom) {
+
+            Spacer(minLength: 8)
+
             Button {
                 dismiss()
             } label: {
-                Text("Show Memories")
-                    .font(.system(size: 17, weight: .semibold))
-                    .foregroundStyle(.white)
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 54)
-                    .background(MemorySheetPalette.accent, in: Capsule(style: .continuous))
+                MemorySheetPrimaryActionLabel(title: "Show Memories")
             }
             .buttonStyle(MemorySheetPressStyle())
             .padding(.horizontal, 18)
-            .padding(.top, 10)
-            .padding(.bottom, 12)
-            .background(.clear)
+            .padding(.top, 8)
+            .padding(.bottom, 14)
         }
-        .presentationDetents([.fraction(0.54)])
-        .presentationDragIndicator(.visible)
-        .presentationCornerRadius(34)
-        .presentationBackground(colorScheme == .dark ? .regularMaterial : .thinMaterial)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        .memoryFilterSheetChrome(detents: [.fraction(0.52), .large], dragIndicator: .hidden, cornerRadius: 34)
     }
 }
 
@@ -333,6 +327,59 @@ struct MemoryFloatingCard<Content: View>: View {
     }
 }
 
+struct MemoryNativeSheetBackground: View {
+    @Environment(\.colorScheme) private var colorScheme
+
+    var body: some View {
+        Rectangle()
+            .fill(colorScheme == .dark ? Color(uiColor: .secondarySystemBackground) : Color(uiColor: .systemBackground))
+            .ignoresSafeArea()
+    }
+}
+
+struct MemorySheetPrimaryActionLabel: View {
+    let title: String
+
+    var body: some View {
+        Text(title)
+            .font(.system(size: 17, weight: .semibold))
+            .foregroundStyle(.white)
+            .frame(maxWidth: .infinity)
+            .frame(height: 54)
+            .background(MemorySheetPalette.accent, in: Capsule(style: .continuous))
+    }
+}
+
+extension View {
+    func memoryFilterSheetChrome(
+        detents: Set<PresentationDetent>,
+        dragIndicator: Visibility,
+        cornerRadius: CGFloat
+    ) -> some View {
+        self
+            .presentationDetents(detents)
+            .presentationDragIndicator(dragIndicator)
+            .presentationCornerRadius(cornerRadius)
+            .presentationBackground {
+                MemoryNativeSheetBackground()
+            }
+    }
+
+    func memorySheetChrome(
+        detents: Set<PresentationDetent>,
+        dragIndicator: Visibility,
+        cornerRadius: CGFloat
+    ) -> some View {
+        self
+            .presentationDetents(detents)
+            .presentationDragIndicator(dragIndicator)
+            .presentationCornerRadius(cornerRadius)
+            .presentationBackground {
+                MemoryNativeSheetBackground()
+            }
+    }
+}
+
 private enum MemorySheetPalette {
     static let accent = Color(uiColor: .systemIndigo)
 }
@@ -341,11 +388,11 @@ private struct MemorySheetTheme {
     let colorScheme: ColorScheme
 
     var locationBackground: Color {
-        colorScheme == .dark ? Color(red: 0.08, green: 0.08, blue: 0.09) : Color(red: 0.95, green: 0.95, blue: 0.97)
+        colorScheme == .dark ? Color(uiColor: .secondarySystemBackground) : Color(uiColor: .systemBackground)
     }
 
     var sheetBackground: Color {
-        colorScheme == .dark ? Color(red: 0.11, green: 0.11, blue: 0.12) : Color(red: 0.985, green: 0.985, blue: 0.992)
+        colorScheme == .dark ? Color(uiColor: .secondarySystemBackground) : Color(uiColor: .systemBackground)
     }
 
     var primaryText: Color {
@@ -431,6 +478,15 @@ private struct MemoryLocationSearchBar: View {
     private var theme: MemorySheetTheme { MemorySheetTheme(colorScheme: colorScheme) }
 
     var body: some View {
+        baseField
+            .background(theme.secondarySurface, in: Capsule(style: .continuous))
+            .overlay {
+                Capsule(style: .continuous)
+                    .stroke(theme.border, lineWidth: 1)
+            }
+    }
+
+    private var baseField: some View {
         HStack(spacing: 10) {
             Image(systemName: "magnifyingglass")
                 .font(.system(size: 17, weight: .medium))
@@ -448,11 +504,6 @@ private struct MemoryLocationSearchBar: View {
         }
         .padding(.horizontal, 16)
         .frame(height: 52)
-        .background(theme.secondarySurface, in: Capsule(style: .continuous))
-        .overlay {
-            Capsule(style: .continuous)
-                .stroke(theme.border, lineWidth: 1)
-        }
     }
 }
 
@@ -467,13 +518,17 @@ private struct MemoryDateQuickChip: View {
     var body: some View {
         Text(title)
             .font(.system(size: 15, weight: .semibold))
-            .foregroundStyle(theme.primaryText)
+            .foregroundStyle(isSelected ? .white : theme.primaryText)
             .frame(maxWidth: .infinity)
             .frame(height: 38)
             .background(
                 Capsule(style: .continuous)
-                    .fill(isSelected ? theme.secondarySurface.opacity(colorScheme == .dark ? 1 : 0.92) : theme.secondarySurface.opacity(colorScheme == .dark ? 0.76 : 0.7))
+                    .fill(isSelected ? MemorySheetPalette.accent.opacity(colorScheme == .dark ? 0.78 : 0.72) : theme.secondarySurface.opacity(colorScheme == .dark ? 0.96 : 0.92))
             )
+            .overlay {
+                Capsule(style: .continuous)
+                    .stroke(isSelected ? Color.clear : theme.border, lineWidth: 1)
+            }
     }
 }
 

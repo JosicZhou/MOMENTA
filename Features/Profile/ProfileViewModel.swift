@@ -18,6 +18,7 @@ import UIKit
 
 enum ProfileIdentityStore {
     static let displayNameKey = "momenta.profile.display-name"
+    static let displayLocationKey = "momenta.profile.display-location"
 
     static func resolvedDisplayName(email: String?) -> String {
         if let saved = UserDefaults.standard.string(forKey: displayNameKey)?
@@ -47,6 +48,21 @@ enum ProfileIdentityStore {
             UserDefaults.standard.removeObject(forKey: displayNameKey)
         } else {
             UserDefaults.standard.set(trimmed, forKey: displayNameKey)
+        }
+    }
+
+    static func resolvedDisplayLocation() -> String {
+        let saved = UserDefaults.standard.string(forKey: displayLocationKey)?
+            .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        return saved.isEmpty ? "Address" : saved
+    }
+
+    static func saveDisplayLocation(_ location: String?) {
+        let trimmed = location?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        if trimmed.isEmpty {
+            UserDefaults.standard.removeObject(forKey: displayLocationKey)
+        } else {
+            UserDefaults.standard.set(trimmed, forKey: displayLocationKey)
         }
     }
 }
@@ -141,6 +157,10 @@ class ProfileViewModel: ObservableObject {
         ProfileIdentityStore.resolvedDisplayName(email: AuthService.shared.currentUser?.email)
     }
 
+    var displayLocation: String {
+        ProfileIdentityStore.resolvedDisplayLocation()
+    }
+
     var displayBadgeName: String {
         displayName.uppercased()
     }
@@ -179,6 +199,11 @@ class ProfileViewModel: ObservableObject {
 
     func updateDisplayName(_ name: String) {
         ProfileIdentityStore.saveDisplayName(name)
+        objectWillChange.send()
+    }
+
+    func updateDisplayLocation(_ location: String) {
+        ProfileIdentityStore.saveDisplayLocation(location)
         objectWillChange.send()
     }
 

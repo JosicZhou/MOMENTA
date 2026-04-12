@@ -45,23 +45,28 @@ class Memory2MusicManager: ObservableObject {
         context: MemoryMusicContext,
         onProgress: (String) -> Void
     ) async throws -> GeneratedMusic {
+        let generationStartedAt = Date()
         var ctx = context
 
         // 1. 健康数据 → 情绪推理（若 ViewModel 未提前算好则在此补算）
         if ctx.healthHints == nil, let hr = ctx.heartRate {
-            onProgress("正在分析生理情绪状态...")
+            onProgress("Reading emotional context from your session...")
+            let emotionStartedAt = Date()
             let hrvForModel = ctx.hrv ?? 50.0
             ctx.healthHints = try? emotionML.predict(heartRate: hr, hrv: hrvForModel)
+            print("⏱️ [Memory] Emotion inference finished in \(Self.formattedSeconds(Date().timeIntervalSince(emotionStartedAt)))")
         }
 
         // 2. 构建 prompt（歌词 vs 纯音乐）
-        onProgress("正在通过 AI 构思音乐...")
+        onProgress("Shaping the memory into music...")
+        let promptStartedAt = Date()
         let promptText: String
         if ctx.instrumentalOnly {
             promptText = MemoryInstrumentalPromptBuilder.build(from: ctx)
         } else {
             promptText = MemoryLyricsPromptBuilder.build(from: ctx)
         }
+        print("⏱️ [Memory] Prompt assembly finished in \(Self.formattedSeconds(Date().timeIntervalSince(promptStartedAt))) | prompt=\(promptText.count) chars")
 
         // 3. 调用 LLM
         let request = LyricsGenerationRequest(
@@ -73,7 +78,9 @@ class Memory2MusicManager: ObservableObject {
             rawPrompt: promptText
         )
 
+        let lyricsStartedAt = Date()
         let llmResponse = try await llmService.generateLyrics(request: request)
+        print("⏱️ [Memory] Lyrics phase finished in \(Self.formattedSeconds(Date().timeIntervalSince(lyricsStartedAt)))")
 
         // 4. 合并 style（LLM 输出 + 健康 + 环境）
         let mergedStyle = mergeStyle(
@@ -83,7 +90,7 @@ class Memory2MusicManager: ObservableObject {
         )
 
         // 5. 构建 Suno 请求
-        onProgress("正在准备音乐生成...")
+        onProgress("Preparing the composition...")
         let sunoRequest = MusicGenerationRequest(
             prompt: llmResponse.prompt ?? "",
             style: mergedStyle,
@@ -100,8 +107,10 @@ class Memory2MusicManager: ObservableObject {
         )
 
         // 6. 提交 Suno 任务
-        onProgress("正在提交生成任务...")
+        onProgress("Submitting the generation task...")
+        let submissionStartedAt = Date()
         let taskId = try await baseManager.startMusicTask(request: sunoRequest)
+        print("⏱️ [Memory] Suno submission finished in \(Self.formattedSeconds(Date().timeIntervalSince(submissionStartedAt)))")
 
         // 7. Supabase 初始记录
         guard let userId = await SupabaseService.shared.getCurrentUserId() else {
@@ -116,43 +125,36 @@ class Memory2MusicManager: ObservableObject {
             source: "memory"
         )
 
-        // 8. 等待完成（Realtime + 轮询）
-        onProgress("AI 正在后台创作，请稍候...")
+        // 8. 等待完成：Realtime 与 Suno 直接轮询并发竞速
+        onProgress("Creating in the background...")
 
         return try await withThrowingTaskGroup(of: GeneratedMusic?.self) { group in
             group.addTask {
-                let stream = MusicDatabaseService.shared.subscribeToTaskUpdate(taskId: taskId)
-                for try await music in stream { return music }
+                do {
+                    let stream = MusicDatabaseService.shared.subscribeToTaskUpdate(taskId: taskId)
+                    for try await music in stream { return music }
+                } catch {
+                    print("⚠️ [Memory·Realtime] Stream closed, falling back to direct status polling: \(error.localizedDescription)")
+                }
                 return nil
             }
 
             group.addTask {
-                var attempts = 0
-                let maxAttempts = 15
-                while attempts < maxAttempts {
-                    try await Task.sleep(nanoseconds: 20 * 1_000_000_000)
-                    print("🔄 [Memory·Polling] 正在主动检查任务状态 (\(attempts + 1)/\(maxAttempts))...")
-                    if let music = try await MusicDatabaseService.shared.fetchMusicRecord(taskId: taskId),
-                       music.status == .completed {
-                        print("✅ [Memory·Polling] 主动查询发现任务已完成！")
-                        return music
-                    }
-                    attempts += 1
-                }
-                print("⚠️ [Memory·Polling] 达到最大轮询次数 \(maxAttempts)，放弃轮询")
-                return nil
+                let music = try await self.baseManager.waitForCompletion(taskId: taskId)
+                await MusicDatabaseService.shared.syncCompletedMusic(music)
+                return music
             }
 
             while let result = try await group.next() {
                 if let music = result {
                     group.cancelAll()
-                    onProgress("音乐创作完成！")
+                    onProgress("Music creation complete.")
+                    print("⏱️ [Memory] Total generation completed in \(Self.formattedSeconds(Date().timeIntervalSince(generationStartedAt)))")
                     return music
                 }
             }
 
-            onProgress("正在同步生成状态...")
-            return try await baseManager.waitForCompletion(taskId: taskId)
+            throw MusicServiceError.timeout
         }
     }
 
@@ -201,5 +203,9 @@ class Memory2MusicManager: ObservableObject {
             return .female
         }
         return nil
+    }
+
+    private static func formattedSeconds(_ seconds: TimeInterval) -> String {
+        String(format: "%.2fs", seconds)
     }
 }

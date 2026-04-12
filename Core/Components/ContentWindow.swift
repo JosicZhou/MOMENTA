@@ -14,6 +14,7 @@ struct LiquidWindow2<Content: View>: View {
     var cornerRadius: CGFloat
     var horizontalPadding: CGFloat
     var verticalPadding: CGFloat
+    @Environment(\.colorScheme) private var colorScheme
 
     init(
         width: CGFloat? = nil,
@@ -30,11 +31,36 @@ struct LiquidWindow2<Content: View>: View {
     }
 
     var body: some View {
-        content()
+        let baseContent = content()
             .padding(.horizontal, horizontalPadding)
             .padding(.vertical, verticalPadding)
             .frame(maxWidth: width ?? .infinity)
-            .glassEffect(.clear, in: .rect(cornerRadius: cornerRadius))
+
+        Group {
+            if #available(iOS 26, *) {
+                baseContent
+                    .glassEffect(.regular, in: .rect(cornerRadius: cornerRadius))
+            } else {
+                baseContent
+                    .background(
+                        .regularMaterial,
+                        in: RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                    )
+                    .overlay {
+                        RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                            .stroke(
+                                Color.primary.opacity(colorScheme == .dark ? 0.12 : 0.06),
+                                lineWidth: 0.5
+                            )
+                    }
+            }
+        }
+        .shadow(
+            color: Color.black.opacity(colorScheme == .dark ? 0.18 : 0.08),
+            radius: 18,
+            x: 0,
+            y: 8
+        )
     }
 }
 

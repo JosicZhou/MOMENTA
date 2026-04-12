@@ -24,7 +24,7 @@ struct LyricsScrollView: View {
     /// 上一次检测到的滚动偏移，用于计算滚动方向
     @State private var lastScrollOffset: CGFloat = 0
     
-    private let lyricAnimation = Animation.spring(response: 0.42, dampingFraction: 0.9)
+    private let lyricAnimation = Animation.spring(response: 0.34, dampingFraction: 0.92)
     
     var body: some View {
         ScrollViewReader { proxy in
@@ -52,9 +52,22 @@ struct LyricsScrollView: View {
                       newIndex < playerManager.lyrics.count else { return }
                 
                 lastAutoScrollTime = Date()
-                withAnimation(.easeInOut(duration: 0.6)) {
+                withAnimation(.snappy(duration: 0.26, extraBounce: 0.01)) {
                     // anchor 约 1/3 处，让当前行显示在上方，下方留出预览空间（Apple Music 风格）
-                    proxy.scrollTo(playerManager.lyrics[newIndex].id, anchor: UnitPoint(x: 0.5, y: 0.35))
+                    proxy.scrollTo(playerManager.lyrics[newIndex].id, anchor: UnitPoint(x: 0.5, y: 0.37))
+                }
+            }
+            .onChange(of: isUserScrolling) { _, isScrolling in
+                guard !isScrolling,
+                      playerManager.currentLineIndex >= 0,
+                      playerManager.currentLineIndex < playerManager.lyrics.count else { return }
+
+                lastAutoScrollTime = Date()
+                withAnimation(.snappy(duration: 0.28, extraBounce: 0.01)) {
+                    proxy.scrollTo(
+                        playerManager.lyrics[playerManager.currentLineIndex].id,
+                        anchor: UnitPoint(x: 0.5, y: 0.37)
+                    )
                 }
             }
         }
@@ -65,22 +78,29 @@ struct LyricsScrollView: View {
     @ViewBuilder
     private func lyricLineView(line: LyricLine, index: Int) -> some View {
         let isCurrent = index == playerManager.currentLineIndex
+        let distance = abs(index - playerManager.currentLineIndex)
         
         if line.isSection {
             // 段落标记：小号、半透明、不模糊
             Text(line.text.replacingOccurrences(of: "[", with: "").replacingOccurrences(of: "]", with: ""))
                 .font(.caption.weight(.semibold))
-                .foregroundColor(.white.opacity(0.3))
+                .foregroundStyle(.white.opacity(0.3))
                 .textCase(.uppercase)
                 .fixedSize(horizontal: false, vertical: true)
                 .padding(.horizontal, 24)
                 .padding(.top, 8)
         } else {
             Text(line.text)
-                .font(.system(size: isCurrent ? 31 : 24, weight: isCurrent ? .semibold : .medium))
-                .foregroundColor(.white.opacity(isCurrent ? 0.98 : 0.32))
-                .scaleEffect(isCurrent ? 1.0 : 0.96, anchor: .leading)
-                .offset(y: isCurrent ? 0 : -1)
+                .font(
+                    .system(
+                        size: lyricFontSize(isCurrent: isCurrent, distance: distance),
+                        weight: isCurrent ? .bold : .semibold
+                    )
+                )
+                .foregroundStyle(.white.opacity(lyricOpacity(isCurrent: isCurrent, distance: distance)))
+                .blur(radius: lyricBlur(distance: distance))
+                .scaleEffect(isCurrent ? 1.0 : 0.98, anchor: .leading)
+                .offset(y: isCurrent ? 0 : -2)
                 .fixedSize(horizontal: false, vertical: true)
                 .padding(.horizontal, 24)
                 .animation(lyricAnimation, value: playerManager.currentLineIndex)
@@ -105,8 +125,8 @@ struct LyricsScrollView: View {
     
     /// 当检测到滚动偏移变化时调用
     private func handleScrollChange(newOffset: CGFloat) {
-        // 如果是程序触发的自动滚动（0.8 秒内），仅更新 offset 但不处理
-        if Date().timeIntervalSince(lastAutoScrollTime) < 0.8 {
+        // 如果是程序触发的自动滚动（0.45 秒内），仅更新 offset 但不处理
+        if Date().timeIntervalSince(lastAutoScrollTime) < 0.45 {
             lastScrollOffset = newOffset
             return
         }
@@ -137,15 +157,42 @@ struct LyricsScrollView: View {
         // 取消之前的恢复计时
         scrollResetTask?.cancel()
         
-        // 3 秒后恢复自动滚动 + 重新显示控件
+        // 1.5 秒后恢复自动滚动 + 重新显示控件
         scrollResetTask = Task {
-            try? await Task.sleep(for: .seconds(3))
+            try? await Task.sleep(for: .seconds(1.5))
             if !Task.isCancelled {
                 isUserScrolling = false
                 withAnimation(.easeInOut(duration: 0.3)) {
                     playerManager.lyricsControlsVisible = true
                 }
             }
+        }
+    }
+
+    private func lyricFontSize(isCurrent: Bool, distance: Int) -> CGFloat {
+        if isCurrent { return 34 }
+        switch distance {
+        case 1: return 29
+        case 2: return 25
+        default: return 22
+        }
+    }
+
+    private func lyricOpacity(isCurrent: Bool, distance: Int) -> Double {
+        if isCurrent { return 0.98 }
+        switch distance {
+        case 1: return 0.56
+        case 2: return 0.3
+        default: return 0.12
+        }
+    }
+
+    private func lyricBlur(distance: Int) -> CGFloat {
+        switch distance {
+        case 0: return 0
+        case 1: return 0.25
+        case 2: return 1.1
+        default: return 3.2
         }
     }
 }
