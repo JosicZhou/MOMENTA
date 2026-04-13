@@ -7,20 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		6A1000012F90000100000001 /* SystemSongSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A1001112F90000100000001 /* SystemSongSnapshot.swift */; };
-		6A1000022F90000100000001 /* SystemSongSnapshotStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A1001122F90000100000001 /* SystemSongSnapshotStore.swift */; };
-		6A1000032F90000100000001 /* SystemSongLibrarySync.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A1001132F90000100000001 /* SystemSongLibrarySync.swift */; };
-		6A1000042F90000100000001 /* PlaybackLiveActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A1001142F90000100000001 /* PlaybackLiveActivityAttributes.swift */; };
-		6A1000052F90000100000001 /* PlaybackLiveActivityManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A1001152F90000100000001 /* PlaybackLiveActivityManager.swift */; };
-		6A1000062F90000100000001 /* SongSystemIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A1001162F90000100000001 /* SongSystemIntents.swift */; };
-		6A1000072F90000100000001 /* MomentaWidgets.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = 6A10011E2F90000100000001 /* MomentaWidgets.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
-		6A1000082F90000100000001 /* MomentaWidgetsBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A1001192F90000100000001 /* MomentaWidgetsBundle.swift */; };
-		6A1000092F90000100000001 /* SongWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A10011A2F90000100000001 /* SongWidget.swift */; };
-		6A10000A2F90000100000001 /* PlaybackLiveActivityWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A10011B2F90000100000001 /* PlaybackLiveActivityWidget.swift */; };
-		6A10000B2F90000100000001 /* SystemSongSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A1001112F90000100000001 /* SystemSongSnapshot.swift */; };
-		6A10000C2F90000100000001 /* SystemSongSnapshotStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A1001122F90000100000001 /* SystemSongSnapshotStore.swift */; };
-		6A10000D2F90000100000001 /* SongSystemIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A1001162F90000100000001 /* SongSystemIntents.swift */; };
-		6A10000E2F90000100000001 /* PlaybackLiveActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A1001142F90000100000001 /* PlaybackLiveActivityAttributes.swift */; };
 		3338A2352F6EA3A20018FC58 /* MemoryMusicContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3338A22F2F6EA3A20018FC58 /* MemoryMusicContext.swift */; };
 		3338A2362F6EA3A20018FC58 /* model_valence.mlmodel in Sources */ = {isa = PBXBuildFile; fileRef = 3338A2312F6EA3A20018FC58 /* model_valence.mlmodel */; };
 		3338A2372F6EA3A20018FC58 /* MemoryLyricsPromptBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3338A22E2F6EA3A20018FC58 /* MemoryLyricsPromptBuilder.swift */; };
@@ -32,13 +18,6 @@
 		3338A2412F6EA7EB0018FC58 /* HealthKitService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3338A23E2F6EA7EB0018FC58 /* HealthKitService.swift */; };
 		3338A2422F6EA7EB0018FC58 /* LocationWeatherService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3338A23F2F6EA7EB0018FC58 /* LocationWeatherService.swift */; };
 		3338A2442F6EA93A0018FC58 /* Memory2MusicManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3338A2432F6EA93A0018FC58 /* Memory2MusicManager.swift */; };
-		5A1B10012F80000100000001 /* DeepLinkRouter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A1B10002F80000100000001 /* DeepLinkRouter.swift */; };
-		5A1B10032F80000100000001 /* MemoryCalendarService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A1B10022F80000100000001 /* MemoryCalendarService.swift */; };
-		5A1B10042F80000100000001 /* compose.png in Resources */ = {isa = PBXBuildFile; fileRef = 5A1B10062F80000100000001 /* compose.png */; };
-		5A1B10052F80000100000001 /* share.png in Resources */ = {isa = PBXBuildFile; fileRef = 5A1B10072F80000100000001 /* share.png */; };
-		B1A000012F70000100000001 /* MemoryComposerSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1A000112F70000100000001 /* MemoryComposerSheet.swift */; };
-		B1A000022F70000100000001 /* MemoryFilterSheets.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1A000122F70000100000001 /* MemoryFilterSheets.swift */; };
-		B1A000032F70000100000001 /* MemoryLibraryModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1A000132F70000100000001 /* MemoryLibraryModels.swift */; };
 		33B3A11E2F35E15300AA82F7 /* MusicPlayerDetails.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33B3A11D2F35E15300AA82F7 /* MusicPlayerDetails.swift */; };
 		33B3A11F2F35E15300AA82F7 /* MusicPlayerBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33B3A11C2F35E15300AA82F7 /* MusicPlayerBar.swift */; };
 		33B3A1202F35E15300AA82F7 /* ContentWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33B3A11B2F35E15300AA82F7 /* ContentWindow.swift */; };
@@ -101,6 +80,28 @@
 		33F388A12F211E49009CC102 /* PresetCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33F3889D2F211E49009CC102 /* PresetCard.swift */; };
 		33F388A62F2202E0009CC102 /* WelcomeCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33F388A52F2202E0009CC102 /* WelcomeCard.swift */; };
 		33F388B12F2D0001009CC102 /* IntelligenceGlowEffect.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33F388B02F2D0001009CC102 /* IntelligenceGlowEffect.swift */; };
+		5A1B10012F80000100000001 /* DeepLinkRouter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A1B10002F80000100000001 /* DeepLinkRouter.swift */; };
+		5A1B10032F80000100000001 /* MemoryCalendarService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A1B10022F80000100000001 /* MemoryCalendarService.swift */; };
+		5A1B10042F80000100000001 /* compose.png in Resources */ = {isa = PBXBuildFile; fileRef = 5A1B10062F80000100000001 /* compose.png */; };
+		5A1B10052F80000100000001 /* share.png in Resources */ = {isa = PBXBuildFile; fileRef = 5A1B10072F80000100000001 /* share.png */; };
+		6A1000012F90000100000001 /* SystemSongSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A1001112F90000100000001 /* SystemSongSnapshot.swift */; };
+		6A1000022F90000100000001 /* SystemSongSnapshotStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A1001122F90000100000001 /* SystemSongSnapshotStore.swift */; };
+		6A1000032F90000100000001 /* SystemSongLibrarySync.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A1001132F90000100000001 /* SystemSongLibrarySync.swift */; };
+		6A1000042F90000100000001 /* PlaybackLiveActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A1001142F90000100000001 /* PlaybackLiveActivityAttributes.swift */; };
+		6A1000052F90000100000001 /* PlaybackLiveActivityManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A1001152F90000100000001 /* PlaybackLiveActivityManager.swift */; };
+		6A1000062F90000100000001 /* SongSystemIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A1001162F90000100000001 /* SongSystemIntents.swift */; };
+		6A1000072F90000100000001 /* MomentaWidgets.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = 6A10011E2F90000100000001 /* MomentaWidgets.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		6A1000082F90000100000001 /* MomentaWidgetsBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A1001192F90000100000001 /* MomentaWidgetsBundle.swift */; };
+		6A1000092F90000100000001 /* SongWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A10011A2F90000100000001 /* SongWidget.swift */; };
+		6A10000A2F90000100000001 /* PlaybackLiveActivityWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A10011B2F90000100000001 /* PlaybackLiveActivityWidget.swift */; };
+		6A1002202F90000100000001 /* SharedPicksWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A1002212F90000100000001 /* SharedPicksWidget.swift */; };
+		6A10000B2F90000100000001 /* SystemSongSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A1001112F90000100000001 /* SystemSongSnapshot.swift */; };
+		6A10000C2F90000100000001 /* SystemSongSnapshotStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A1001122F90000100000001 /* SystemSongSnapshotStore.swift */; };
+		6A10000D2F90000100000001 /* SongSystemIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A1001162F90000100000001 /* SongSystemIntents.swift */; };
+		6A10000E2F90000100000001 /* PlaybackLiveActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A1001142F90000100000001 /* PlaybackLiveActivityAttributes.swift */; };
+		B1A000012F70000100000001 /* MemoryComposerSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1A000112F70000100000001 /* MemoryComposerSheet.swift */; };
+		B1A000022F70000100000001 /* MemoryFilterSheets.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1A000122F70000100000001 /* MemoryFilterSheets.swift */; };
+		B1A000032F70000100000001 /* MemoryLibraryModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1A000132F70000100000001 /* MemoryLibraryModels.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -116,30 +117,16 @@
 /* Begin PBXCopyFilesBuildPhase section */
 		6A1002012F90000100000001 /* Embed App Extensions */ = {
 			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
 			dstPath = "";
-			dstSubfolderSpec = 13;
+			dstSubfolder = PlugIns;
 			files = (
 				6A1000072F90000100000001 /* MomentaWidgets.appex in Embed App Extensions */,
 			);
 			name = "Embed App Extensions";
-			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		6A1001112F90000100000001 /* SystemSongSnapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemSongSnapshot.swift; sourceTree = "<group>"; };
-		6A1001122F90000100000001 /* SystemSongSnapshotStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemSongSnapshotStore.swift; sourceTree = "<group>"; };
-		6A1001132F90000100000001 /* SystemSongLibrarySync.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemSongLibrarySync.swift; sourceTree = "<group>"; };
-		6A1001142F90000100000001 /* PlaybackLiveActivityAttributes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaybackLiveActivityAttributes.swift; sourceTree = "<group>"; };
-		6A1001152F90000100000001 /* PlaybackLiveActivityManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaybackLiveActivityManager.swift; sourceTree = "<group>"; };
-		6A1001162F90000100000001 /* SongSystemIntents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SongSystemIntents.swift; sourceTree = "<group>"; };
-		6A1001192F90000100000001 /* MomentaWidgetsBundle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MomentaWidgetsBundle.swift; sourceTree = "<group>"; };
-		6A10011A2F90000100000001 /* SongWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SongWidget.swift; sourceTree = "<group>"; };
-		6A10011B2F90000100000001 /* PlaybackLiveActivityWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaybackLiveActivityWidget.swift; sourceTree = "<group>"; };
-		6A10011C2F90000100000001 /* MomentaWidgets-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "MomentaWidgets-Info.plist"; sourceTree = "<group>"; };
-		6A10011D2F90000100000001 /* MomentaWidgets.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = MomentaWidgets.entitlements; sourceTree = "<group>"; };
-		6A10011E2F90000100000001 /* MomentaWidgets.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = MomentaWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		3338A22C2F6EA3A20018FC58 /* HealthMusicHints.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthMusicHints.swift; sourceTree = "<group>"; };
 		3338A22D2F6EA3A20018FC58 /* MemoryInstrumentalPromptBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoryInstrumentalPromptBuilder.swift; sourceTree = "<group>"; };
 		3338A22E2F6EA3A20018FC58 /* MemoryLyricsPromptBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoryLyricsPromptBuilder.swift; sourceTree = "<group>"; };
@@ -151,9 +138,6 @@
 		3338A23E2F6EA7EB0018FC58 /* HealthKitService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthKitService.swift; sourceTree = "<group>"; };
 		3338A23F2F6EA7EB0018FC58 /* LocationWeatherService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationWeatherService.swift; sourceTree = "<group>"; };
 		3338A2432F6EA93A0018FC58 /* Memory2MusicManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Memory2MusicManager.swift; sourceTree = "<group>"; };
-		B1A000112F70000100000001 /* MemoryComposerSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoryComposerSheet.swift; sourceTree = "<group>"; };
-		B1A000122F70000100000001 /* MemoryFilterSheets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoryFilterSheets.swift; sourceTree = "<group>"; };
-		B1A000132F70000100000001 /* MemoryLibraryModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoryLibraryModels.swift; sourceTree = "<group>"; };
 		33454E2D2F277BC100B15848 /* Butterfly V3.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "Butterfly V3.entitlements"; sourceTree = "<group>"; };
 		33B3A11B2F35E15300AA82F7 /* ContentWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentWindow.swift; sourceTree = "<group>"; };
 		33B3A11C2F35E15300AA82F7 /* MusicPlayerBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusicPlayerBar.swift; sourceTree = "<group>"; };
@@ -187,10 +171,6 @@
 		33F387FF2F20F6EF009CC102 /* ButterflyApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ButterflyApp.swift; sourceTree = "<group>"; };
 		33F388002F20F6EF009CC102 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		33F388012F20F6EF009CC102 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		5A1B10002F80000100000001 /* DeepLinkRouter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeepLinkRouter.swift; sourceTree = "<group>"; };
-		5A1B10022F80000100000001 /* MemoryCalendarService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoryCalendarService.swift; sourceTree = "<group>"; };
-		5A1B10062F80000100000001 /* compose.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = compose.png; sourceTree = SOURCE_ROOT; };
-		5A1B10072F80000100000001 /* share.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = share.png; sourceTree = SOURCE_ROOT; };
 		33F388032F20F6EF009CC102 /* MOMENTA.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = MOMENTA.xcodeproj; sourceTree = "<group>"; };
 		33F388042F20F6EF009CC102 /* AppTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppTheme.swift; sourceTree = "<group>"; };
 		33F388052F20F6EF009CC102 /* Backgrounds.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Backgrounds.swift; sourceTree = "<group>"; };
@@ -217,7 +197,27 @@
 		33F3889E2F211E49009CC102 /* WhiteGlassInputBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WhiteGlassInputBar.swift; sourceTree = "<group>"; };
 		33F388A52F2202E0009CC102 /* WelcomeCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeCard.swift; sourceTree = "<group>"; };
 		33F388B02F2D0001009CC102 /* IntelligenceGlowEffect.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntelligenceGlowEffect.swift; sourceTree = "<group>"; };
+		5A1B10002F80000100000001 /* DeepLinkRouter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeepLinkRouter.swift; sourceTree = "<group>"; };
+		5A1B10022F80000100000001 /* MemoryCalendarService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoryCalendarService.swift; sourceTree = "<group>"; };
+		5A1B10062F80000100000001 /* compose.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = compose.png; sourceTree = SOURCE_ROOT; };
+		5A1B10072F80000100000001 /* share.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = share.png; sourceTree = SOURCE_ROOT; };
+		6A1001112F90000100000001 /* SystemSongSnapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemSongSnapshot.swift; sourceTree = "<group>"; };
+		6A1001122F90000100000001 /* SystemSongSnapshotStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemSongSnapshotStore.swift; sourceTree = "<group>"; };
+		6A1001132F90000100000001 /* SystemSongLibrarySync.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemSongLibrarySync.swift; sourceTree = "<group>"; };
+		6A1001142F90000100000001 /* PlaybackLiveActivityAttributes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaybackLiveActivityAttributes.swift; sourceTree = "<group>"; };
+		6A1001152F90000100000001 /* PlaybackLiveActivityManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaybackLiveActivityManager.swift; sourceTree = "<group>"; };
+		6A1001162F90000100000001 /* SongSystemIntents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SongSystemIntents.swift; sourceTree = "<group>"; };
+		6A1001192F90000100000001 /* MomentaWidgetsBundle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MomentaWidgetsBundle.swift; sourceTree = "<group>"; };
+		6A10011A2F90000100000001 /* SongWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SongWidget.swift; sourceTree = "<group>"; };
+		6A10011B2F90000100000001 /* PlaybackLiveActivityWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaybackLiveActivityWidget.swift; sourceTree = "<group>"; };
+		6A1002212F90000100000001 /* SharedPicksWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedPicksWidget.swift; sourceTree = "<group>"; };
+		6A10011C2F90000100000001 /* MomentaWidgets-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "MomentaWidgets-Info.plist"; sourceTree = "<group>"; };
+		6A10011D2F90000100000001 /* MomentaWidgets.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = MomentaWidgets.entitlements; sourceTree = "<group>"; };
+		6A10011E2F90000100000001 /* MomentaWidgets.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = MomentaWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		A0000021 /* Butterfly V3.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Butterfly V3.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		B1A000112F70000100000001 /* MemoryComposerSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoryComposerSheet.swift; sourceTree = "<group>"; };
+		B1A000122F70000100000001 /* MemoryFilterSheets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoryFilterSheets.swift; sourceTree = "<group>"; };
+		B1A000132F70000100000001 /* MemoryLibraryModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoryLibraryModels.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -322,26 +322,6 @@
 			path = Auth;
 			sourceTree = "<group>";
 		};
-		6A1001172F90000100000001 /* Extensions */ = {
-			isa = PBXGroup;
-			children = (
-				6A1001182F90000100000001 /* MomentaWidgets */,
-			);
-			path = Extensions;
-			sourceTree = "<group>";
-		};
-		6A1001182F90000100000001 /* MomentaWidgets */ = {
-			isa = PBXGroup;
-			children = (
-				6A1001192F90000100000001 /* MomentaWidgetsBundle.swift */,
-				6A10011A2F90000100000001 /* SongWidget.swift */,
-				6A10011B2F90000100000001 /* PlaybackLiveActivityWidget.swift */,
-				6A10011C2F90000100000001 /* MomentaWidgets-Info.plist */,
-				6A10011D2F90000100000001 /* MomentaWidgets.entitlements */,
-			);
-			path = MomentaWidgets;
-			sourceTree = "<group>";
-		};
 		33F388022F20F6EF009CC102 /* App */ = {
 			isa = PBXGroup;
 			children = (
@@ -433,18 +413,6 @@
 			path = Core;
 			sourceTree = "<group>";
 		};
-		6A1001012F90000100000001 /* SystemIntegration */ = {
-			isa = PBXGroup;
-			children = (
-				6A1001112F90000100000001 /* SystemSongSnapshot.swift */,
-				6A1001122F90000100000001 /* SystemSongSnapshotStore.swift */,
-				6A1001132F90000100000001 /* SystemSongLibrarySync.swift */,
-				6A1001142F90000100000001 /* PlaybackLiveActivityAttributes.swift */,
-				6A1001152F90000100000001 /* PlaybackLiveActivityManager.swift */,
-			);
-			path = SystemIntegration;
-			sourceTree = "<group>";
-		};
 		33F3881F2F20F6EF009CC102 /* Light */ = {
 			isa = PBXGroup;
 			children = (
@@ -534,6 +502,39 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
+		6A1001012F90000100000001 /* SystemIntegration */ = {
+			isa = PBXGroup;
+			children = (
+				6A1001112F90000100000001 /* SystemSongSnapshot.swift */,
+				6A1001122F90000100000001 /* SystemSongSnapshotStore.swift */,
+				6A1001132F90000100000001 /* SystemSongLibrarySync.swift */,
+				6A1001142F90000100000001 /* PlaybackLiveActivityAttributes.swift */,
+				6A1001152F90000100000001 /* PlaybackLiveActivityManager.swift */,
+			);
+			path = SystemIntegration;
+			sourceTree = "<group>";
+		};
+		6A1001172F90000100000001 /* Extensions */ = {
+			isa = PBXGroup;
+			children = (
+				6A1001182F90000100000001 /* MomentaWidgets */,
+			);
+			path = Extensions;
+			sourceTree = "<group>";
+		};
+		6A1001182F90000100000001 /* MomentaWidgets */ = {
+			isa = PBXGroup;
+			children = (
+				6A1001192F90000100000001 /* MomentaWidgetsBundle.swift */,
+				6A10011A2F90000100000001 /* SongWidget.swift */,
+				6A10011B2F90000100000001 /* PlaybackLiveActivityWidget.swift */,
+				6A1002212F90000100000001 /* SharedPicksWidget.swift */,
+				6A10011C2F90000100000001 /* MomentaWidgets-Info.plist */,
+				6A10011D2F90000100000001 /* MomentaWidgets.entitlements */,
+			);
+			path = MomentaWidgets;
+			sourceTree = "<group>";
+		};
 		A0000024 = {
 			isa = PBXGroup;
 			children = (
@@ -573,8 +574,6 @@
 			buildRules = (
 			);
 			name = MomentaWidgets;
-			packageProductDependencies = (
-			);
 			productName = MomentaWidgets;
 			productReference = 6A10011E2F90000100000001 /* MomentaWidgets.appex */;
 			productType = "com.apple.product-type.app-extension";
@@ -681,6 +680,7 @@
 				6A1000082F90000100000001 /* MomentaWidgetsBundle.swift in Sources */,
 				6A1000092F90000100000001 /* SongWidget.swift in Sources */,
 				6A10000A2F90000100000001 /* PlaybackLiveActivityWidget.swift in Sources */,
+				6A1002202F90000100000001 /* SharedPicksWidget.swift in Sources */,
 				6A10000B2F90000100000001 /* SystemSongSnapshot.swift in Sources */,
 				6A10000C2F90000100000001 /* SystemSongSnapshotStore.swift in Sources */,
 				6A10000D2F90000100000001 /* SongSystemIntents.swift in Sources */,
@@ -787,7 +787,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = DGALTMW6Q8;
 				GENERATE_INFOPLIST_FILE = NO;
-				INFOPLIST_FILE = Extensions/MomentaWidgets/MomentaWidgets-Info.plist;
+				INFOPLIST_FILE = "Extensions/MomentaWidgets/MomentaWidgets-Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -817,7 +817,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = DGALTMW6Q8;
 				GENERATE_INFOPLIST_FILE = NO;
-				INFOPLIST_FILE = Extensions/MomentaWidgets/MomentaWidgets-Info.plist;
+				INFOPLIST_FILE = "Extensions/MomentaWidgets/MomentaWidgets-Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -970,7 +970,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"Resources/Preview Content\"";
-				DEVELOPMENT_TEAM = DGALTMW6Q8;
+				DEVELOPMENT_TEAM = "";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = App/Info.plist;
@@ -1009,7 +1009,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"Resources/Preview Content\"";
-				DEVELOPMENT_TEAM = DGALTMW6Q8;
+				DEVELOPMENT_TEAM = "";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = App/Info.plist;

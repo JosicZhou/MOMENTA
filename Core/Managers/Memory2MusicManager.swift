@@ -125,24 +125,36 @@ class Memory2MusicManager: ObservableObject {
             source: "memory"
         )
 
-        // 8. 等待完成：Realtime 与 Suno 直接轮询并发竞速
+        // 8. 等待完成：Realtime + direct Suno completion
+        // - Task A：Supabase Realtime，webhook 回填后立刻触发；出错静默返回 nil
+        // - Task B：直接等待 Suno 完成并同步回数据库，不依赖数据库回填先成功
+        // - 兜底：两路都没有结果时，再调用一次 Suno completion wait
         onProgress("Creating in the background...")
 
         return try await withThrowingTaskGroup(of: GeneratedMusic?.self) { group in
+            // Task A：Realtime 监听
             group.addTask {
                 do {
                     let stream = MusicDatabaseService.shared.subscribeToTaskUpdate(taskId: taskId)
                     for try await music in stream { return music }
                 } catch {
-                    print("⚠️ [Memory·Realtime] Stream closed, falling back to direct status polling: \(error.localizedDescription)")
+                    print("⚠️ [Memory·Realtime] Stream closed: \(error.localizedDescription)")
                 }
                 return nil
             }
 
+            // Task B：直接等待 Suno 完成。若任务被取消则正常返回 nil，其他错误也先静默降级。
             group.addTask {
-                let music = try await self.baseManager.waitForCompletion(taskId: taskId)
-                await MusicDatabaseService.shared.syncCompletedMusic(music)
-                return music
+                do {
+                    let music = try await self.baseManager.waitForCompletion(taskId: taskId)
+                    await MusicDatabaseService.shared.syncCompletedMusic(music)
+                    return music
+                } catch is CancellationError {
+                    return nil
+                } catch {
+                    print("⚠️ [Memory·DirectPoll] \(error.localizedDescription)")
+                    return nil
+                }
             }
 
             while let result = try await group.next() {
@@ -154,7 +166,9 @@ class Memory2MusicManager: ObservableObject {
                 }
             }
 
-            throw MusicServiceError.timeout
+            // 兜底：两个 Task 都未返回结果时，直接轮询 Suno API
+            onProgress("Syncing generation status...")
+            return try await baseManager.waitForCompletion(taskId: taskId)
         }
     }
 

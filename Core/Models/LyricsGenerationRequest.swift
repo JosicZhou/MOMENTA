@@ -75,9 +75,10 @@ struct LyricsGenerationRequest {
            - Example: "Indie Pop, whimsical, light acoustic guitar, male vocals, playful"
 
         3. "prompt": 
-           - The FULL lyrics, formatted with section headers like [Chorus], [Verse 1], [Verse 2], [Bridge], [Outro]
+           - The FULL lyrics as plain lyric lines only
+           - Do NOT include any structural labels or bracketed markers such as [Chorus], [Verse 1], [Verse 2], [Bridge], [Outro], [Intro]
            - Write solely in the specified Language
-           - Keep 36-56 lines total (Chorus≈6-8, Verse≈10-16)
+           - Keep 24-40 concise lyric lines total
            - Do NOT output any extra keys, comments, or explanations
            - Do NOT hallucinate or invent narrative details: no new characters, locations, events, brands, backstories, or symbolic objects beyond what is explicitly visible in the Photo or stated in the User Description
            - If Instrumental_only = "yes": set to empty string ""

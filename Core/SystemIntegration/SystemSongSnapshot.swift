@@ -76,11 +76,17 @@ struct SystemSongSnapshot: Identifiable, Codable, Hashable {
         return "\(kind.title) · \(formatter.string(from: createdAt))"
     }
 
+    var sharedByLine: String? {
+        guard kind == .shared else { return nil }
+        let trimmed = subtitle.trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed.isEmpty ? "Shared with you" : "Shared by \(trimmed)"
+    }
+
     static var placeholder: SystemSongSnapshot {
         SystemSongSnapshot(
             id: "placeholder-song",
             title: "Evening Bloom",
-            subtitle: "Shared",
+            subtitle: "Josic",
             prompt: "Placeholder song for widgets",
             style: "Dream Pop",
             audioURLString: nil,
@@ -114,11 +120,11 @@ extension SystemSongSnapshot {
         )
     }
 
-    static func from(_ music: GeneratedMusic, kind: SystemSongKind) -> SystemSongSnapshot {
+    static func from(_ music: GeneratedMusic, kind: SystemSongKind, subtitle: String? = nil) -> SystemSongSnapshot {
         SystemSongSnapshot(
             id: music.id,
             title: music.title.isEmpty ? "Untitled Song" : music.title,
-            subtitle: kind.title,
+            subtitle: subtitle ?? kind.title,
             prompt: music.prompt,
             style: music.style,
             audioURLString: music.audioURL?.absoluteString,

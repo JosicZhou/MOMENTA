@@ -190,7 +190,12 @@ class OpenAILyricsService: LLMServiceProtocol {
         // 解析JSON
         let decoder = JSONDecoder()
         do {
-            let result = try decoder.decode(LLMMusicResponse.self, from: jsonData)
+            let decoded = try decoder.decode(LLMMusicResponse.self, from: jsonData)
+            let result = LLMMusicResponse(
+                title: decoded.title,
+                style: decoded.style,
+                prompt: decoded.prompt.map { LyricSanitizer.sanitizePrompt($0) }
+            )
             print("✅ [LLM] 成功解码LLMMusicResponse")
             print("   - Title: \(result.title)")
             print("   - Style: \(result.style)")

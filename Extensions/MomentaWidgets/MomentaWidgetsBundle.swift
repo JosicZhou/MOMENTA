@@ -4,7 +4,7 @@ import SwiftUI
 @main
 struct MomentaWidgetsBundle: WidgetBundle {
     var body: some Widget {
-        SongWidget()
+        SharedPicksWidget()
         PlaybackLiveActivityWidget()
     }
 }

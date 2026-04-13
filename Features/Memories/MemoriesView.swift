@@ -11,6 +11,7 @@ import UIKit
 struct MemoriesView: View {
     @ObservedObject var viewModel: MemoryViewModel
     @ObservedObject var profileViewModel: ProfileViewModel
+    let onOpenCoCreation: () -> Void
     @Environment(PlayerManager.self) private var playerManager
     @Environment(\.colorScheme) private var colorScheme
 
@@ -55,7 +56,8 @@ struct MemoriesView: View {
                             onToggleExpanded: togglePaletteExpanded,
                             onPlay: handleSongTap(_:),
                             onFavorite: toggleFavorite(_:),
-                            onAdd: presentComposer
+                            onAdd: presentComposer,
+                            onOpenCoCreation: onOpenCoCreation
                         )
 
                         MemoryFilterChipRow(
@@ -603,6 +605,7 @@ private struct MemoryPaletteSection: View {
     let onPlay: (MemoryLibraryItem) -> Void
     let onFavorite: (MemoryLibraryItem) -> Void
     let onAdd: () -> Void
+    let onOpenCoCreation: () -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -622,7 +625,7 @@ private struct MemoryPaletteSection: View {
     private var memoryCardRow: some View {
         HStack(spacing: 16) {
             MemoryComposerLaunchCard(onCreate: onAdd)
-            MemoryFutureCollectionCard()
+            MemoryFutureCollectionCard(action: onOpenCoCreation)
 
             ForEach(items) { item in
                 MemoryCollectionCard(
@@ -1016,15 +1019,17 @@ private struct MemoryFeaturePill: View {
 }
 
 private struct MemoryFutureCollectionCard: View {
+    let action: () -> Void
+
     @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
         MemoryStaticArtworkCard(
-            title: "Share",
-            subtitle: "Let your friends know what your memory is.",
-            artwork: shareArtwork
+            title: "Co-creation",
+            subtitle: "Open the collaboration workspace with your friends.",
+            artwork: shareArtwork,
+            action: action
         )
-        .accessibilityHidden(true)
     }
 
     private var shareArtwork: some View {
@@ -1663,6 +1668,10 @@ private func memoryDisplayLocation(for item: MemoryLibraryItem) -> String? {
 }
 
 #Preview {
-    MemoriesView(viewModel: MemoryViewModel(), profileViewModel: ProfileViewModel())
+    MemoriesView(
+        viewModel: MemoryViewModel(),
+        profileViewModel: ProfileViewModel(),
+        onOpenCoCreation: {}
+    )
         .environment(PlayerManager())
 }

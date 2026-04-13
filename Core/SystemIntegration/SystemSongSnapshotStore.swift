@@ -7,6 +7,9 @@ enum SystemIntegrationConfig {
     static let appGroupIdentifier = "group.com.momenta.ai.music.shared"
     static let songSnapshotKey = "momenta.system.song-snapshots"
     static let featuredSongIDKey = "momenta.system.featured-song-id"
+    static let latestFavoriteSongIDKey = "momenta.system.latest-favorite-song-id"
+    static let currentPlaybackSongIDKey = "momenta.system.current-playback-song-id"
+    static let currentPlaybackIsPlayingKey = "momenta.system.current-playback-is-playing"
 }
 
 struct SystemSongSnapshotStore {
@@ -35,6 +38,9 @@ struct SystemSongSnapshotStore {
         guard let defaults else { return }
         defaults.removeObject(forKey: SystemIntegrationConfig.songSnapshotKey)
         defaults.removeObject(forKey: SystemIntegrationConfig.featuredSongIDKey)
+        defaults.removeObject(forKey: SystemIntegrationConfig.latestFavoriteSongIDKey)
+        defaults.removeObject(forKey: SystemIntegrationConfig.currentPlaybackSongIDKey)
+        defaults.removeObject(forKey: SystemIntegrationConfig.currentPlaybackIsPlayingKey)
         #if canImport(WidgetKit)
         WidgetCenter.shared.reloadAllTimelines()
         #endif
@@ -51,6 +57,52 @@ struct SystemSongSnapshotStore {
     func featuredSnapshot() -> SystemSongSnapshot? {
         guard let featuredSongID = featuredSongID() else { return nil }
         return snapshot(taskId: featuredSongID)
+    }
+
+    func latestSharedSnapshot() -> SystemSongSnapshot? {
+        load().first { $0.kind == .shared }
+    }
+
+    func latestFavoriteSongID() -> String? {
+        defaults?.string(forKey: SystemIntegrationConfig.latestFavoriteSongIDKey)
+    }
+
+    func latestFavoriteSnapshot() -> SystemSongSnapshot? {
+        guard let latestFavoriteSongID = latestFavoriteSongID() else { return nil }
+        return snapshot(taskId: latestFavoriteSongID)
+    }
+
+    func currentPlaybackSongID() -> String? {
+        defaults?.string(forKey: SystemIntegrationConfig.currentPlaybackSongIDKey)
+    }
+
+    func currentPlaybackIsPlaying() -> Bool {
+        defaults?.bool(forKey: SystemIntegrationConfig.currentPlaybackIsPlayingKey) ?? false
+    }
+
+    func updateCurrentPlayback(songID: String?, isPlaying: Bool) {
+        guard let defaults else { return }
+        if let songID, !songID.isEmpty {
+            defaults.set(songID, forKey: SystemIntegrationConfig.currentPlaybackSongIDKey)
+        } else {
+            defaults.removeObject(forKey: SystemIntegrationConfig.currentPlaybackSongIDKey)
+        }
+        defaults.set(isPlaying, forKey: SystemIntegrationConfig.currentPlaybackIsPlayingKey)
+        #if canImport(WidgetKit)
+        WidgetCenter.shared.reloadAllTimelines()
+        #endif
+    }
+
+    func setLatestFavoriteSongID(_ id: String?) {
+        guard let defaults else { return }
+        if let id, !id.isEmpty {
+            defaults.set(id, forKey: SystemIntegrationConfig.latestFavoriteSongIDKey)
+        } else {
+            defaults.removeObject(forKey: SystemIntegrationConfig.latestFavoriteSongIDKey)
+        }
+        #if canImport(WidgetKit)
+        WidgetCenter.shared.reloadAllTimelines()
+        #endif
     }
 
     func pin(_ snapshot: SystemSongSnapshot) {

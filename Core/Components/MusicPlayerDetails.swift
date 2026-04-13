@@ -14,21 +14,23 @@ struct MusicPlayerDetails: View {
 
     @Environment(PlayerManager.self) private var playerManager
 
-    @State private var playerContentOffsetY: CGFloat = 420
     @State private var isCurrentSongFavorite = false
     @State private var isFavoriteMutationInFlight = false
 
     private let hPadding: CGFloat = 24
     private let uiSpring = Animation.spring(response: 0.42, dampingFraction: 0.9)
     private let profileService = ProfileService.shared
+    private let artworkControlsReserve: CGFloat = 234
+    private let lyricControlsReserve: CGFloat = 218
 
     var body: some View {
         GeometryReader { geo in
             let safeArea = geo.safeAreaInsets
             let screenW = geo.size.width
             let screenH = geo.size.height
-            let bottomInset = max(safeArea.bottom, 16)
-            let artSize = min(screenW - 84, max(screenH * 0.37, 220))
+            let bottomInset = max(safeArea.bottom, 18)
+            let surfaceHorizontalInset: CGFloat = 20
+            let artSize = min(screenW - (surfaceHorizontalInset * 2) - 20, max(screenH * 0.32, 208))
 
             ZStack {
                 playerBackground(screenW: screenW, screenH: screenH)
@@ -37,22 +39,19 @@ struct MusicPlayerDetails: View {
                     dragIndicator
                         .frame(maxWidth: .infinity)
                         .frame(height: 20)
-                        .padding(.top, safeArea.top + 16)
-                        .padding(.bottom, 6)
+                        .padding(.top, safeArea.top + 24)
+                        .padding(.bottom, 20)
                         .contentShape(Rectangle())
-                        .highPriorityGesture(playerDismissGesture(screenHeight: screenH))
+                        .simultaneousGesture(playerDismissGesture(screenHeight: screenH))
 
-                    if playerManager.showLyrics {
-                        lyricsExperience(bottomInset: bottomInset, screenHeight: screenH)
-                    } else {
-                        artworkExperience(
-                            artSize: artSize,
-                            bottomInset: bottomInset,
-                            screenHeight: screenH
-                        )
-                    }
+                    contentSurface(
+                        artSize: artSize,
+                        bottomInset: bottomInset,
+                        screenHeight: screenH
+                    )
+                    .padding(.horizontal, surfaceHorizontalInset)
+                    .padding(.bottom, 8)
                 }
-                .offset(y: playerContentOffsetY)
             }
             .offset(y: playerManager.dragOffset)
         }
@@ -60,11 +59,6 @@ struct MusicPlayerDetails: View {
         .environment(\.colorScheme, .dark)
         .task(id: playerManager.currentMusic?.id) {
             await refreshFavoriteState()
-        }
-        .onAppear {
-            withAnimation(.snappy(duration: 0.3, extraBounce: 0.04)) {
-                playerContentOffsetY = .zero
-            }
         }
     }
 
@@ -129,70 +123,103 @@ struct MusicPlayerDetails: View {
     }
 
     private func playerDismissGesture(screenHeight: CGFloat) -> some Gesture {
-        DragGesture(minimumDistance: 1)
+        DragGesture(minimumDistance: 12)
             .onChanged { value in
                 guard playerManager.isExpanded else { return }
-                playerManager.dragOffset = max(0, value.translation.height)
+                let vertical = value.translation.height
+                let horizontal = value.translation.width
+                guard abs(vertical) > abs(horizontal) * 1.15 else { return }
+                playerManager.dragOffset = max(0, vertical)
             }
             .onEnded { value in
                 guard playerManager.isExpanded else { return }
-                let shouldCollapse = value.translation.height > screenHeight / 7
+                let vertical = value.translation.height
+                let horizontal = value.translation.width
+                guard abs(vertical) > abs(horizontal) * 1.15 else {
+                    withAnimation(.snappy(duration: 0.28, extraBounce: 0.02)) {
+                        playerManager.dragOffset = .zero
+                    }
+                    return
+                }
+
+                let projectedTravel = max(vertical, value.predictedEndTranslation.height)
+                let shouldCollapse = projectedTravel > screenHeight / 7
                 withAnimation(.snappy(duration: 0.35, extraBounce: 0.04)) {
                     if shouldCollapse {
-                        playerManager.isExpanded = false
-                        playerContentOffsetY = 420
+                        playerManager.collapseExpandedPlayer()
                     }
                     playerManager.dragOffset = .zero
                 }
             }
     }
 
-    private func lyricsExperience(bottomInset: CGFloat, screenHeight: CGFloat) -> some View {
-        VStack(spacing: 0) {
-            playerHeader
-                    .padding(.horizontal, hPadding)
-                    .padding(.top, 8)
-                .contentShape(Rectangle())
-                .highPriorityGesture(playerDismissGesture(screenHeight: screenHeight))
-
-            ZStack(alignment: .bottom) {
-                lyricStage
-                    .padding(.top, 14)
-
-                playerControlStack(
-                    bottomInset: bottomInset,
-                    includeGradient: true,
-                    includePlaybackBadge: true,
-                    isVisible: playerManager.lyricsControlsVisible,
-                    horizontalPadding: hPadding
+    private func contentSurface(artSize: CGFloat, bottomInset: CGFloat, screenHeight: CGFloat) -> some View {
+        ZStack(alignment: .bottom) {
+            ZStack(alignment: .top) {
+                artworkSurface(
+                    artSize: artSize,
+                    screenHeight: screenHeight,
+                    reservedBottom: bottomInset + artworkControlsReserve
                 )
+                .contentShape(Rectangle())
+                .simultaneousGesture(playerDismissGesture(screenHeight: screenHeight))
+                .opacity(playerManager.showLyrics ? 0 : 1)
+                .offset(y: playerManager.showLyrics ? -14 : 0)
+                .blur(radius: playerManager.showLyrics ? 8 : 0)
+                .allowsHitTesting(!playerManager.showLyrics)
+
+                lyricsSurface(
+                    screenHeight: screenHeight,
+                    lyricBottomInset: bottomInset + lyricControlsReserve
+                )
+                .opacity(playerManager.showLyrics ? 1 : 0)
+                .offset(y: playerManager.showLyrics ? 0 : 18)
+                .blur(radius: playerManager.showLyrics ? 0 : 8)
+                .allowsHitTesting(playerManager.showLyrics)
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+
+            playerControlStack(
+                bottomInset: bottomInset,
+                includeGradient: false,
+                includePlaybackBadge: false,
+                isVisible: playerManager.showLyrics ? playerManager.lyricsControlsVisible : true,
+                horizontalPadding: 0,
+                compact: playerManager.showLyrics
+            )
         }
+        .animation(uiSpring, value: playerManager.showLyrics)
     }
 
-    private func artworkExperience(artSize: CGFloat, bottomInset: CGFloat, screenHeight: CGFloat) -> some View {
+    private func lyricsSurface(screenHeight: CGFloat, lyricBottomInset: CGFloat) -> some View {
         VStack(spacing: 0) {
-            Spacer(minLength: 12)
+            playerHeader
+                .padding(.horizontal, 4)
+                .padding(.top, 20)
+                .contentShape(Rectangle())
+                .simultaneousGesture(playerDismissGesture(screenHeight: screenHeight))
+
+            lyricStage(bottomInset: lyricBottomInset)
+                .padding(.top, 30)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+    }
+
+    private func artworkSurface(artSize: CGFloat, screenHeight: CGFloat, reservedBottom: CGFloat) -> some View {
+        VStack(spacing: 0) {
+            Spacer(minLength: 8)
 
             largeAlbumArt(size: artSize)
-                .padding(.horizontal, hPadding)
-                .contentShape(Rectangle())
-                .highPriorityGesture(playerDismissGesture(screenHeight: screenHeight))
+                .padding(.horizontal, 4)
 
-            Spacer(minLength: 28)
+            Spacer(minLength: 24)
 
-            VStack(spacing: 18) {
-                artworkSongInfo
-                playerControlStack(
-                    bottomInset: bottomInset,
-                    includeGradient: false,
-                    includePlaybackBadge: false,
-                    isVisible: true,
-                    horizontalPadding: 0
-                )
-            }
-            .padding(.horizontal, hPadding)
+            artworkSongInfo
+                .padding(.horizontal, 4)
+
+            Spacer(minLength: reservedBottom)
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
     }
 
     private func largeAlbumArt(size: CGFloat) -> some View {
@@ -219,7 +246,6 @@ struct MusicPlayerDetails: View {
                 .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
                 .shadow(color: .black.opacity(0.34), radius: 28, y: 16)
                 .matchedGeometryEffect(id: "albumArt", in: animation)
-                .transition(.offset(y: 1))
             }
         }
         .frame(width: size, height: size)
@@ -239,17 +265,11 @@ struct MusicPlayerDetails: View {
         HStack(spacing: 16) {
             headerArtwork(size: 58, cornerRadius: 16)
 
-            VStack(alignment: .leading, spacing: 4) {
-                Text(playerManager.currentMusic?.title ?? "Unknown Song")
-                    .font(.system(size: 16, weight: .semibold))
-                    .foregroundStyle(.white)
-                    .lineLimit(1)
-
-                Text(playerManager.currentMusic?.style ?? "MOMENTA")
-                    .font(.system(size: 13, weight: .regular))
-                    .foregroundStyle(.white.opacity(0.62))
-                    .lineLimit(1)
-            }
+            songTextBlock(
+                titleFont: .system(size: 16, weight: .semibold),
+                subtitleFont: .system(size: 13, weight: .regular),
+                usesMatchedGeometry: playerManager.showLyrics
+            )
 
             Spacer(minLength: 0)
 
@@ -262,17 +282,11 @@ struct MusicPlayerDetails: View {
 
     private var artworkSongInfo: some View {
         HStack(alignment: .center, spacing: 14) {
-            VStack(alignment: .leading, spacing: 3) {
-                Text(playerManager.currentMusic?.title ?? "Unknown Song")
-                    .font(.system(size: 17, weight: .semibold))
-                    .foregroundStyle(.white)
-                    .lineLimit(1)
-
-                Text(playerManager.currentMusic?.style ?? "MOMENTA")
-                    .font(.system(size: 14, weight: .regular))
-                    .foregroundStyle(.white.opacity(0.62))
-                    .lineLimit(1)
-            }
+            songTextBlock(
+                titleFont: .system(size: 17, weight: .semibold),
+                subtitleFont: .system(size: 14, weight: .regular),
+                usesMatchedGeometry: !playerManager.showLyrics
+            )
 
             Spacer(minLength: 0)
 
@@ -317,7 +331,40 @@ struct MusicPlayerDetails: View {
     }
 
     @ViewBuilder
-    private var lyricStage: some View {
+    private func songTextBlock(
+        titleFont: Font,
+        subtitleFont: Font,
+        usesMatchedGeometry: Bool
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            if usesMatchedGeometry {
+                Text(playerManager.currentMusic?.title ?? "Unknown Song")
+                    .font(titleFont)
+                    .foregroundStyle(.white)
+                    .lineLimit(1)
+                    .matchedGeometryEffect(id: "playerSongTitle", in: animation)
+
+                Text(playerManager.currentMusic?.style ?? "MOMENTA")
+                    .font(subtitleFont)
+                    .foregroundStyle(.white.opacity(0.62))
+                    .lineLimit(1)
+                    .matchedGeometryEffect(id: "playerSongSubtitle", in: animation)
+            } else {
+                Text(playerManager.currentMusic?.title ?? "Unknown Song")
+                    .font(titleFont)
+                    .foregroundStyle(.white)
+                    .lineLimit(1)
+
+                Text(playerManager.currentMusic?.style ?? "MOMENTA")
+                    .font(subtitleFont)
+                    .foregroundStyle(.white.opacity(0.62))
+                    .lineLimit(1)
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func lyricStage(bottomInset: CGFloat) -> some View {
         if playerManager.isLoadingLyrics {
             VStack(spacing: 12) {
                 Spacer()
@@ -340,7 +387,7 @@ struct MusicPlayerDetails: View {
                 Spacer()
             }
         } else {
-            LyricsScrollView()
+            LyricsScrollView(bottomInset: bottomInset)
         }
     }
 
@@ -349,25 +396,26 @@ struct MusicPlayerDetails: View {
         includeGradient: Bool,
         includePlaybackBadge: Bool,
         isVisible: Bool,
-        horizontalPadding: CGFloat
+        horizontalPadding: CGFloat,
+        compact: Bool
     ) -> some View {
-        VStack(spacing: 18) {
-            progressBarSection(includePlaybackBadge: includePlaybackBadge)
-            transportControls
-            volumeSlider
-            bottomToolbar
+        VStack(spacing: compact ? 12 : 18) {
+            progressBarSection(includePlaybackBadge: includePlaybackBadge, compact: compact)
+            transportControls(compact: compact)
+            volumeSlider(compact: compact)
+            bottomToolbar(compact: compact)
         }
         .padding(.horizontal, horizontalPadding)
-        .padding(.top, 30)
-        .padding(.bottom, bottomInset + 4)
+        .padding(.top, compact ? 18 : 30)
+        .padding(.bottom, compact ? (bottomInset + 2) : (bottomInset + 4))
         .background(alignment: .bottom) {
             if includeGradient {
                 LinearGradient(
                     colors: [
                         .clear,
-                        Color.black.opacity(0.24),
-                        Color.black.opacity(0.46),
-                        Color.black.opacity(0.62)
+                        Color.black.opacity(0.18),
+                        Color.black.opacity(0.34),
+                        Color.black.opacity(0.54)
                     ],
                     startPoint: .top,
                     endPoint: .bottom
@@ -380,20 +428,20 @@ struct MusicPlayerDetails: View {
         .allowsHitTesting(isVisible)
     }
 
-    private func progressBarSection(includePlaybackBadge: Bool) -> some View {
-        VStack(spacing: 8) {
+    private func progressBarSection(includePlaybackBadge: Bool, compact: Bool) -> some View {
+        VStack(spacing: compact ? 6 : 8) {
             CustomProgressBar(
                 progress: playerManager.playbackProgress,
                 onSeek: { progress in
                     playerManager.seek(to: progress)
                 }
             )
-            .frame(height: 12)
+            .frame(height: compact ? 10 : 12)
 
             HStack(alignment: .center) {
                 Text(formatTime(playerManager.currentTime))
                     .monospacedDigit()
-                    .frame(width: 46, alignment: .leading)
+                    .frame(width: compact ? 40 : 46, alignment: .leading)
 
                 Spacer(minLength: 0)
 
@@ -405,9 +453,9 @@ struct MusicPlayerDetails: View {
 
                 Text("-\(formatTime(max(0, playerManager.totalDuration - playerManager.currentTime)))")
                     .monospacedDigit()
-                    .frame(width: 54, alignment: .trailing)
+                    .frame(width: compact ? 48 : 54, alignment: .trailing)
             }
-            .font(.system(size: 14, weight: .medium, design: .rounded))
+            .font(.system(size: compact ? 12 : 14, weight: .medium, design: .rounded))
             .foregroundStyle(.white.opacity(0.72))
         }
     }
@@ -437,24 +485,24 @@ struct MusicPlayerDetails: View {
         }
     }
 
-    private var transportControls: some View {
-        HStack(spacing: 48) {
+    private func transportControls(compact: Bool) -> some View {
+        HStack(spacing: compact ? 40 : 48) {
             Button(action: skipBackward) {
                 Image(systemName: "backward.fill")
-                    .font(.system(size: 34, weight: .semibold))
+                    .font(.system(size: compact ? 28 : 34, weight: .semibold))
             }
 
             Button(action: playerManager.togglePlayback) {
                 Image(systemName: playerManager.isPlaying ? "pause.fill" : "play.fill")
-                    .font(.system(size: 48, weight: .semibold))
-                    .frame(width: 76, height: 64)
+                    .font(.system(size: compact ? 42 : 48, weight: .semibold))
+                    .frame(width: compact ? 66 : 76, height: compact ? 56 : 64)
             }
             .contentTransition(.symbolEffect(.replace))
             .animation(.smooth(duration: 0.28), value: playerManager.isPlaying)
 
             Button(action: skipForward) {
                 Image(systemName: "forward.fill")
-                    .font(.system(size: 34, weight: .semibold))
+                    .font(.system(size: compact ? 28 : 34, weight: .semibold))
             }
         }
         .buttonStyle(.plain)
@@ -462,7 +510,7 @@ struct MusicPlayerDetails: View {
         .shadow(color: .black.opacity(0.18), radius: 6, y: 2)
     }
 
-    private var volumeSlider: some View {
+    private func volumeSlider(compact: Bool) -> some View {
         HStack(spacing: 10) {
             Image(systemName: "speaker.fill")
                 .font(.system(size: 12, weight: .medium))
@@ -485,10 +533,10 @@ struct MusicPlayerDetails: View {
                 .font(.system(size: 12, weight: .medium))
                 .foregroundStyle(.white.opacity(0.72))
         }
-        .frame(height: 20)
+        .frame(height: compact ? 16 : 20)
     }
 
-    private var bottomToolbar: some View {
+    private func bottomToolbar(compact: Bool) -> some View {
         HStack {
             toolbarSelectionButton(
                 symbol: playerManager.showLyrics ? "quote.bubble.fill" : "quote.bubble",
@@ -496,10 +544,10 @@ struct MusicPlayerDetails: View {
             ) {
                 withAnimation(uiSpring) {
                     if playerManager.showLyrics {
-                        playerManager.showLyrics = false
+                        playerManager.playbackSurfaceMode = .expandedArtwork
                     } else {
-                        playerManager.showLyrics = true
-                        playerManager.lyricsControlsVisible = true
+                        playerManager.playbackSurfaceMode = .expandedLyrics
+                        playerManager.resumeLyricsFollowMode()
                         Task { await playerManager.fetchLyrics() }
                     }
                 }
@@ -513,7 +561,7 @@ struct MusicPlayerDetails: View {
 
             toolbarIconButton(symbol: "list.bullet", action: {})
         }
-        .padding(.top, 2)
+        .padding(.top, compact ? 0 : 2)
     }
 
     private func toolbarSelectionButton(
@@ -546,7 +594,7 @@ struct MusicPlayerDetails: View {
 
     private var favoriteButton: some View {
         Button(action: toggleFavorite) {
-            Image(systemName: isCurrentSongFavorite ? "star.fill" : "star")
+            Image(systemName: isCurrentSongFavorite ? "heart.fill" : "heart")
                 .font(.system(size: 20, weight: .medium))
                 .frame(width: 46, height: 46)
                 .background {
@@ -562,6 +610,19 @@ struct MusicPlayerDetails: View {
 
     private var moreActionsMenu: some View {
         Menu {
+            if let currentMusic = playerManager.currentMusic {
+                ShareLink(
+                    item: sharePayload(for: currentMusic),
+                    subject: Text(currentMusic.title)
+                ) {
+                    Label("Share", systemImage: "square.and.arrow.up")
+                }
+            }
+            Button(
+                isCurrentSongFavorite ? "Remove Favorite" : "Favorite",
+                systemImage: isCurrentSongFavorite ? "heart.slash" : "heart",
+                action: toggleFavorite
+            )
             if let currentMusic = playerManager.currentMusic, currentMusic.isWidgetEligible {
                 Button("Set for Widget", systemImage: "apps.iphone") {
                     let kind: SystemSongKind = currentMusic.source == "memory" ? .memory : .mine
@@ -655,5 +716,16 @@ struct MusicPlayerDetails: View {
         let mins = Int(seconds) / 60
         let secs = Int(seconds) % 60
         return "\(mins):\(String(format: "%02d", secs))"
+    }
+
+    private func sharePayload(for song: GeneratedMusic) -> String {
+        var parts = [song.title]
+        if !song.style.isEmpty {
+            parts.append(song.style)
+        }
+        if let audioURL = song.audioURL {
+            parts.append(audioURL.absoluteString)
+        }
+        return parts.joined(separator: "\n")
     }
 }

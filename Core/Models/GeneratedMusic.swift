@@ -62,7 +62,7 @@ struct CocreateProfileSnapshot: Codable, Equatable {
         guard let other else { return self }
         return CocreateProfileSnapshot(
             language: other.language ?? language,
-            instrumental: other.instrumental ?? instrumental,
+            instrumental: instrumental,
             style: other.style ?? style,
             title: other.title ?? title,
             prompt: other.prompt ?? prompt,

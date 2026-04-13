@@ -163,14 +163,29 @@ struct MusicPlayerBar: View {
     /// 歌名与艺术家信息
     private var songInfo: some View {
         VStack(alignment: .leading, spacing: 1) {
-            Text(songTitle)
-                .font(.system(size: 12, weight: .semibold))
-                .foregroundStyle(titleStyle)
-                .lineLimit(1)
-            Text(artistName)
-                .font(.system(size: 11, weight: .regular))
-                .foregroundStyle(subtitleStyle)
-                .lineLimit(1)
+            if let animation {
+                Text(songTitle)
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(titleStyle)
+                    .lineLimit(1)
+                    .matchedGeometryEffect(id: "playerSongTitle", in: animation, isSource: true)
+
+                Text(artistName)
+                    .font(.system(size: 11, weight: .regular))
+                    .foregroundStyle(subtitleStyle)
+                    .lineLimit(1)
+                    .matchedGeometryEffect(id: "playerSongSubtitle", in: animation, isSource: true)
+            } else {
+                Text(songTitle)
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(titleStyle)
+                    .lineLimit(1)
+
+                Text(artistName)
+                    .font(.system(size: 11, weight: .regular))
+                    .foregroundStyle(subtitleStyle)
+                    .lineLimit(1)
+            }
         }
     }
 

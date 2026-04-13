@@ -17,8 +17,104 @@ struct LyricLine: Identifiable {
     let startTime: Double
     /// 结束时间（秒）
     let endTime: Double
-    /// 是否是段落标记，如 [Verse]、[Chorus]
+    /// 是否是段落标记（当前默认会被清洗掉，保留字段兼容旧视图）
     let isSection: Bool
+}
+
+struct WordCue: Hashable {
+    let text: String
+    let startTime: Double
+    let endTime: Double
+}
+
+struct DisplayLine: Identifiable, Hashable {
+    let id = UUID()
+    let text: String
+}
+
+struct PhraseCue: Identifiable, Hashable {
+    let id = UUID()
+    let startTime: Double
+    let endTime: Double
+    let lines: [DisplayLine]
+    let words: [WordCue]
+
+    var text: String {
+        lines.map(\.text).joined(separator: " ")
+    }
+}
+
+struct LyricsPresentationModel: Equatable {
+    let phrases: [PhraseCue]
+    let isTimeSynced: Bool
+
+    static let empty = LyricsPresentationModel(phrases: [], isTimeSynced: false)
+
+    func phraseIndex(at time: TimeInterval, compensation: TimeInterval = 0) -> Int {
+        guard !phrases.isEmpty else { return 0 }
+
+        let adjustedTime = max(0, time + compensation)
+        var low = 0
+        var high = phrases.count - 1
+
+        while low < high {
+            let mid = (low + high + 1) / 2
+            if phrases[mid].startTime <= adjustedTime {
+                low = mid
+            } else {
+                high = mid - 1
+            }
+        }
+
+        return max(0, min(low, phrases.count - 1))
+    }
+
+    static func build(from lines: [LyricLine], isTimeSynced: Bool) -> LyricsPresentationModel {
+        guard !lines.isEmpty else { return .empty }
+
+        var phrases: [PhraseCue] = []
+
+        for line in lines where !line.isSection {
+            let displaySegments = [LyricSanitizer.sanitizeLine(line.text)].filter { !$0.isEmpty }
+            guard !displaySegments.isEmpty else { continue }
+
+            phrases.append(
+                PhraseCue(
+                    startTime: line.startTime,
+                    endTime: line.endTime,
+                    lines: displaySegments.map(DisplayLine.init(text:)),
+                    words: buildWordCues(from: line.text, startTime: line.startTime, endTime: line.endTime)
+                )
+            )
+        }
+
+        return LyricsPresentationModel(phrases: phrases, isTimeSynced: isTimeSynced)
+    }
+
+    private static func buildWordCues(from text: String, startTime: Double, endTime: Double) -> [WordCue] {
+        let cleanedWords = text
+            .split(whereSeparator: \.isWhitespace)
+            .map(String.init)
+            .map(LyricSanitizer.sanitizeToken(_:))
+            .filter { !$0.isEmpty }
+
+        guard !cleanedWords.isEmpty else { return [] }
+
+        let totalWeight = Double(cleanedWords.reduce(0) { $0 + max(1, $1.count) })
+        let duration = max(0.2, endTime - startTime)
+        var consumedWeight = 0.0
+
+        return cleanedWords.enumerated().map { index, word in
+            let weight = Double(max(1, word.count))
+            let wordStart = startTime + duration * (consumedWeight / totalWeight)
+            consumedWeight += weight
+            let wordEnd = index == cleanedWords.count - 1
+                ? endTime
+                : startTime + duration * (consumedWeight / totalWeight)
+
+            return WordCue(text: word, startTime: wordStart, endTime: wordEnd)
+        }
+    }
 }
 
 // MARK: - Suno 时间戳歌词 API 响应
@@ -40,9 +136,89 @@ struct TimestampedLyricsResponse: Codable {
     }
 }
 
+// MARK: - 歌词清洗与重组
+
+enum LyricSanitizer {
+    private static let structuralPattern = #"\[(?:verse|chorus|bridge|intro|outro|pre-chorus|post-chorus|hook|refrain|interlude|instrumental)[^\]]*\]"#
+    private static let genericBracketPatterns = [
+        #"\[[^\]]*\]"#,
+        #"\([^\)]*\)"#,
+        #"（[^）]*）"#,
+        #"【[^】]*】"#,
+        #"「[^」]*」"#,
+        #"『[^』]*』"#
+    ]
+
+    static func sanitizePrompt(_ raw: String) -> String {
+        let normalized = raw
+            .replacingOccurrences(of: "\\ n", with: "\n")
+            .replacingOccurrences(of: "\\n", with: "\n")
+            .replacingOccurrences(of: "\\r", with: "")
+            .replacingOccurrences(of: "\r\n", with: "\n")
+            .replacingOccurrences(of: "\r", with: "\n")
+
+        let lines = normalized
+            .components(separatedBy: "\n")
+            .map(sanitizeLine(_:))
+            .filter { !$0.isEmpty }
+
+        return lines.joined(separator: "\n")
+    }
+
+    static func sanitizeLine(_ raw: String) -> String {
+        sanitizeBracketedContent(in: sanitizeStructuralMarkers(in: raw))
+            .replacingOccurrences(of: #"[\t ]+"#, with: " ", options: .regularExpression)
+            .replacingOccurrences(of: #" ?([,.;:!?])"#, with: "$1", options: .regularExpression)
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    static func sanitizeToken(_ raw: String) -> String {
+        sanitizeLine(raw)
+    }
+
+    static func isStructuralMarker(_ raw: String) -> Bool {
+        let trimmed = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return false }
+        return trimmed.range(of: structuralPattern, options: [.regularExpression, .caseInsensitive]) != nil
+            && sanitizeLine(trimmed).isEmpty
+    }
+
+    private static func sanitizeStructuralMarkers(in text: String) -> String {
+        text.replacingOccurrences(
+            of: structuralPattern,
+            with: "",
+            options: [.regularExpression, .caseInsensitive]
+        )
+    }
+
+    private static func sanitizeBracketedContent(in text: String) -> String {
+        genericBracketPatterns.reduce(text) { partial, pattern in
+            partial.replacingOccurrences(
+                of: pattern,
+                with: "",
+                options: [.regularExpression, .caseInsensitive]
+            )
+        }
+    }
+}
+
 // MARK: - 解析 alignedWords → [LyricLine]
 
 extension LyricLine {
+    private struct ParsedToken {
+        let text: String
+        let startS: Double
+        let endS: Double
+        let forcesLineBreakBefore: Bool
+    }
+
+    private static let hardPauseSplitThreshold = 0.5
+    private static let softPauseSplitThreshold = 0.35
+    private static let punctuationPauseThreshold = 0.24
+    private static let longLineWordThreshold = 8
+    private static let longLineCharacterThreshold = 42
+    private static let displayLineCharacterThreshold = 56
+    private static let displayLineWordThreshold = 11
     
     /// 将 Suno API 返回的 alignedWords 解析为按行分组的歌词数组
     static func parse(from words: [TimestampedLyricsResponse.AlignedWord]) -> [LyricLine] {
@@ -82,58 +258,84 @@ extension LyricLine {
             i += 1
         }
         
-        // ===== 第二步：按换行符分行，构建 LyricLine 数组 =====
-        var lines: [LyricLine] = []
-        var currentLineWords: [String] = []
-        var lineStartTime: Double = mergedWords[0].startS
-        var lineEndTime: Double = mergedWords[0].endS
-        
+        // ===== 第二步：按换行符拆成 token，并保留显式换行边界 =====
+        var tokens: [ParsedToken] = []
         for word in mergedWords {
             let parts = word.text.split(separator: "\n", omittingEmptySubsequences: false)
-            
             for (partIndex, part) in parts.enumerated() {
-                if partIndex > 0 {
-                    // 遇到换行：把当前积累的行输出
-                    if !currentLineWords.isEmpty {
-                        let lineText = currentLineWords.joined(separator: " ").trimmingCharacters(in: .whitespaces)
-                        if !lineText.isEmpty {
-                            lines.append(LyricLine(
-                                text: lineText,
-                                startTime: lineStartTime,
-                                endTime: lineEndTime,
-                                isSection: isSectionHeader(lineText)
-                            ))
-                        }
-                    }
-                    // 重置，开始新行
-                    currentLineWords = []
-                    lineStartTime = word.startS
-                }
-                
-                let trimmed = part.trimmingCharacters(in: .whitespaces)
-                if !trimmed.isEmpty {
-                    if currentLineWords.isEmpty {
-                        lineStartTime = word.startS
-                    }
-                    currentLineWords.append(trimmed)
-                    lineEndTime = word.endS
-                }
+                let trimmed = LyricSanitizer.sanitizeToken(part.trimmingCharacters(in: .whitespaces))
+                guard !trimmed.isEmpty else { continue }
+                tokens.append(
+                    ParsedToken(
+                        text: trimmed,
+                        startS: word.startS,
+                        endS: word.endS,
+                        forcesLineBreakBefore: partIndex > 0
+                    )
+                )
             }
         }
-        
-        // 输出最后一行
-        if !currentLineWords.isEmpty {
+
+        guard !tokens.isEmpty else { return [] }
+
+        // ===== 第三步：显式换行 + 停顿/标点启发式分行，构建 LyricLine 数组 =====
+        var lines: [LyricLine] = []
+        var currentLineWords: [String] = []
+        var lineStartTime: Double = tokens[0].startS
+        var lineEndTime: Double = tokens[0].endS
+        var previousToken: ParsedToken?
+
+        func flushCurrentLine() {
             let lineText = currentLineWords.joined(separator: " ").trimmingCharacters(in: .whitespaces)
-            if !lineText.isEmpty {
-                lines.append(LyricLine(
+            guard !lineText.isEmpty else { return }
+            lines.append(
+                LyricLine(
                     text: lineText,
                     startTime: lineStartTime,
                     endTime: lineEndTime,
                     isSection: isSectionHeader(lineText)
-                ))
-            }
+                )
+            )
         }
-        
+
+        for token in tokens {
+            if LyricSanitizer.isStructuralMarker(token.text) || isSectionHeader(token.text) {
+                if !currentLineWords.isEmpty {
+                    flushCurrentLine()
+                    currentLineWords = []
+                }
+
+                previousToken = nil
+                continue
+            }
+
+            if token.forcesLineBreakBefore && !currentLineWords.isEmpty {
+                flushCurrentLine()
+                currentLineWords = []
+            }
+
+            if let previousToken,
+               shouldSplitLine(
+                previousToken: previousToken,
+                nextToken: token,
+                currentLineWords: currentLineWords
+               ) {
+                flushCurrentLine()
+                currentLineWords = []
+            }
+
+            if currentLineWords.isEmpty {
+                lineStartTime = token.startS
+            }
+            currentLineWords.append(token.text)
+            lineEndTime = token.endS
+            previousToken = token
+        }
+
+        if !currentLineWords.isEmpty {
+            flushCurrentLine()
+        }
+
         return lines
     }
     
@@ -143,25 +345,67 @@ extension LyricLine {
         let pattern = #"^\[.+\]$"#
         return trimmed.range(of: pattern, options: .regularExpression) != nil
     }
+
+    private static func shouldSplitLine(
+        previousToken: ParsedToken,
+        nextToken: ParsedToken,
+        currentLineWords: [String]
+    ) -> Bool {
+        guard !currentLineWords.isEmpty else { return false }
+
+        let gap = max(0, nextToken.startS - previousToken.endS)
+        let currentCharacterCount = currentLineWords.joined(separator: " ").count
+        let previousText = previousToken.text.trimmingCharacters(in: .whitespaces)
+        let endsWithStrongPunctuation = previousText.last.map { ".!?。！？".contains($0) } ?? false
+        let endsWithSoftPunctuation = previousText.last.map { ",;:，；：".contains($0) } ?? false
+        let nextStartsCapitalized = nextToken.text.first?.isUppercase ?? false
+
+        if gap >= hardPauseSplitThreshold {
+            return true
+        }
+
+        if currentCharacterCount >= 24,
+           (endsWithStrongPunctuation || endsWithSoftPunctuation) {
+            return true
+        }
+
+        if gap >= softPauseSplitThreshold,
+           endsWithStrongPunctuation || currentLineWords.count >= longLineWordThreshold || currentCharacterCount >= longLineCharacterThreshold {
+            return true
+        }
+
+        if gap >= punctuationPauseThreshold,
+           (endsWithStrongPunctuation || endsWithSoftPunctuation),
+           currentLineWords.count >= 3 {
+            return true
+        }
+
+        if currentCharacterCount >= 38,
+           currentLineWords.count >= 6,
+           nextStartsCapitalized {
+            return true
+        }
+
+        if currentCharacterCount >= 52 || currentLineWords.count >= 10 {
+            return true
+        }
+
+        return false
+    }
     
     /// 从纯文本歌词（GeneratedMusic.prompt）解析为无时间戳的歌词行
     /// 作为时间戳 API 失败时的降级方案，按总时长均匀分配时间
     static func parseFromPlainText(_ text: String, totalDuration: Double) -> [LyricLine] {
-        // 先将字面 "\n"（反斜杠+n 两个字符）替换为真正的换行符
-        // 数据库中的 prompt 字段可能存储的是转义后的字面字符串
-        let normalized = text
-            .replacingOccurrences(of: "\\ n", with: "\n")  // 反斜杠+空格+n
-            .replacingOccurrences(of: "\\n", with: "\n")    // 反斜杠+n
-            .replacingOccurrences(of: "\\r", with: "")
-        
+        let normalized = LyricSanitizer.sanitizePrompt(text)
+
         let rawLines = normalized.components(separatedBy: "\n")
-            .map { $0.trimmingCharacters(in: .whitespaces) }
+            .map { LyricSanitizer.sanitizeLine($0) }
             .filter { !$0.isEmpty }
-        
+
         guard !rawLines.isEmpty, totalDuration > 0 else { return [] }
-        
+
         let interval = totalDuration / Double(rawLines.count)
-        
+
         return rawLines.enumerated().map { index, line in
             LyricLine(
                 text: line,
@@ -170,5 +414,11 @@ extension LyricLine {
                 isSection: isSectionHeader(line)
             )
         }
+    }
+
+    static func rebalanceDisplayText(_ line: String) -> [String] {
+        let cleaned = LyricSanitizer.sanitizeLine(line)
+        guard !cleaned.isEmpty else { return [] }
+        return [cleaned]
     }
 }

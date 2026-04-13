@@ -10,6 +10,17 @@ import SwiftUI
 import AVFoundation
 import MediaPlayer
 
+enum LyricsFollowMode: Equatable {
+    case follow
+    case browse
+}
+
+enum PlaybackSurfaceMode: Equatable {
+    case collapsed
+    case expandedArtwork
+    case expandedLyrics
+}
+
 @Observable
 @MainActor
 final class PlayerManager {
@@ -45,17 +56,24 @@ final class PlayerManager {
     var showLyrics: Bool = false
     /// 解析后的时间戳歌词
     var lyrics: [LyricLine] = []
+    /// 播放器使用的歌词展示模型
+    var lyricsPresentation: LyricsPresentationModel = .empty
     /// 当前高亮的歌词行索引
     var currentLineIndex: Int = 0
     /// 是否正在加载歌词
     var isLoadingLyrics: Bool = false
+    /// 是否拿到了真实时间戳歌词；否则仅展示全文，不做动态逐行同步。
+    var lyricsAreTimeSynced: Bool = false
     /// 歌词模式下底部控件是否可见（滚动方向控制：向下隐藏，向上/停止显示）
     var lyricsControlsVisible: Bool = true
+    /// 自动跟随当前歌词，或用户正在手动浏览
+    var lyricsFollowMode: LyricsFollowMode = .follow
     
     // MARK: - 私有
     
     private var audioPlayer: AVPlayer?
     private var timeObserver: Any?
+    private var lyricsBoundaryObserver: Any?
     private let sunoService = SunoDirectService()
     nonisolated(unsafe) private var endObserver: NSObjectProtocol?
     nonisolated(unsafe) private var interruptionObserver: NSObjectProtocol?
@@ -66,9 +84,31 @@ final class PlayerManager {
     private var lastLiveActivitySyncDate: Date = .distantPast
     private var lastLiveActivityProgress: Double = -1
     private var lyricsFetchTask: Task<Void, Never>?
+    private let systemSongSnapshotStore = SystemSongSnapshotStore()
+    private let lyricTrackingInterval = CMTime(seconds: 0.05, preferredTimescale: 600)
+    private let lyricLeadCompensation: TimeInterval = 0
     #if canImport(ActivityKit)
     private let liveActivityManager = PlaybackLiveActivityManager()
     #endif
+
+    var playbackSurfaceMode: PlaybackSurfaceMode {
+        get {
+            guard isExpanded else { return .collapsed }
+            return showLyrics ? .expandedLyrics : .expandedArtwork
+        }
+        set {
+            switch newValue {
+            case .collapsed:
+                isExpanded = false
+            case .expandedArtwork:
+                isExpanded = true
+                showLyrics = false
+            case .expandedLyrics:
+                isExpanded = true
+                showLyrics = true
+            }
+        }
+    }
 
     init() {
         configureRemoteCommands()
@@ -92,6 +132,7 @@ final class PlayerManager {
         let currentURL = (audioPlayer?.currentItem?.asset as? AVURLAsset)?.url
         if audioPlayer == nil || currentURL != audioURL {
             removeProgressTracking()
+            removeLyricsBoundaryObserver()
             audioPlayer = AVPlayer(url: audioURL)
             observePlayerItemEnd()
         }
@@ -100,6 +141,7 @@ final class PlayerManager {
         isPlaying = true
         startProgressTracking()
         updateNowPlayingInfo()
+        syncWidgetPlaybackState()
         updateLiveActivity(force: true)
     }
     
@@ -107,6 +149,7 @@ final class PlayerManager {
         audioPlayer?.pause()
         isPlaying = false
         updateNowPlayingInfo()
+        syncWidgetPlaybackState()
         updateLiveActivity(force: true)
     }
     
@@ -144,22 +187,19 @@ final class PlayerManager {
         removeProgressTracking()
         guard let player = audioPlayer else { return }
         
-        let interval = CMTime(seconds: 0.2, preferredTimescale: 600)
         timeObserver = player.addPeriodicTimeObserver(
-            forInterval: interval,
+            forInterval: lyricTrackingInterval,
             queue: .main
         ) { [weak self] time in
-            Task { @MainActor in
+            MainActor.assumeIsolated {
                 guard let self = self,
                       let duration = self.audioPlayer?.currentItem?.duration,
                       duration.seconds.isFinite, duration.seconds > 0 else { return }
-                
+
                 self.currentTime = time.seconds
                 self.totalDuration = duration.seconds
                 self.playbackProgress = time.seconds / duration.seconds
-
                 self.updateCurrentLyricIndex(for: time.seconds)
-
                 self.updateNowPlayingInfo()
                 self.updateLiveActivity()
             }
@@ -172,6 +212,40 @@ final class PlayerManager {
             timeObserver = nil
         }
     }
+
+    private func installLyricBoundaryObserver() {
+        removeLyricsBoundaryObserver()
+        guard lyricsAreTimeSynced,
+              let player = audioPlayer,
+              lyricsPresentation.phrases.count > 1 else { return }
+
+        let boundaryTimes = lyricsPresentation.phrases
+            .dropFirst()
+            .map(\.startTime)
+            .filter { $0.isFinite && $0 >= 0 }
+            .map { NSValue(time: CMTime(seconds: $0, preferredTimescale: 600)) }
+
+        guard !boundaryTimes.isEmpty else { return }
+
+        lyricsBoundaryObserver = player.addBoundaryTimeObserver(
+            forTimes: boundaryTimes,
+            queue: .main
+        ) { [weak self] in
+            MainActor.assumeIsolated {
+                guard let self else { return }
+                let playbackTime = self.audioPlayer?.currentTime().seconds ?? self.currentTime
+                self.currentTime = playbackTime
+                self.updateCurrentLyricIndex(for: playbackTime)
+            }
+        }
+    }
+
+    private func removeLyricsBoundaryObserver() {
+        if let observer = lyricsBoundaryObserver {
+            audioPlayer?.removeTimeObserver(observer)
+            lyricsBoundaryObserver = nil
+        }
+    }
     
     // MARK: - 歌词加载
     
@@ -180,8 +254,8 @@ final class PlayerManager {
     func fetchLyrics() async {
         guard let music = currentMusic else { return }
         let musicID = music.id
-        // 如果已经加载过，不重复请求
-        if !lyrics.isEmpty { return }
+        // 已拿到真实时间戳歌词时，不重复请求；纯文本降级允许后续重试。
+        if !lyrics.isEmpty && lyricsAreTimeSynced { return }
         
         isLoadingLyrics = true
         
@@ -214,6 +288,10 @@ final class PlayerManager {
                 if !lines.isEmpty {
                     guard currentMusic?.id == musicID else { return }
                     lyrics = lines
+                    lyricsAreTimeSynced = true
+                    lyricsPresentation = LyricsPresentationModel.build(from: lines, isTimeSynced: true)
+                    lyricsFollowMode = .follow
+                    installLyricBoundaryObserver()
                     updateCurrentLyricIndex(for: currentTime)
                     isLoadingLyrics = false
                     return
@@ -227,6 +305,10 @@ final class PlayerManager {
         print("📝 [PlayerManager] 降级为纯文本歌词")
         guard currentMusic?.id == musicID else { return }
         lyrics = LyricLine.parseFromPlainText(music.prompt, totalDuration: totalDuration)
+        lyricsAreTimeSynced = false
+        lyricsPresentation = LyricsPresentationModel.build(from: lyrics, isTimeSynced: false)
+        lyricsFollowMode = .follow
+        removeLyricsBoundaryObserver()
         updateCurrentLyricIndex(for: currentTime)
         isLoadingLyrics = false
     }
@@ -246,14 +328,19 @@ final class PlayerManager {
         dragOffset = .zero
         showLyrics = false
         lyrics = []
+        lyricsPresentation = .empty
         currentLineIndex = 0
+        lyricsAreTimeSynced = false
         lyricsControlsVisible = true
+        lyricsFollowMode = .follow
         currentArtworkImage = nil
         cachedArtworkURL = nil
         lastLiveActivitySyncDate = .distantPast
         lastLiveActivityProgress = -1
         lyricsFetchTask?.cancel()
+        removeLyricsBoundaryObserver()
         artworkLoadTask?.cancel()
+        systemSongSnapshotStore.updateCurrentPlayback(songID: nil, isPlaying: false)
         MPNowPlayingInfoCenter.default().nowPlayingInfo = nil
         if #available(iOS 13.0, *) {
             MPNowPlayingInfoCenter.default().playbackState = .stopped
@@ -287,19 +374,25 @@ final class PlayerManager {
         playbackProgress = 0
         totalDuration = currentMusic?.duration ?? 0
         lyrics = []
+        lyricsPresentation = .empty
         currentLineIndex = 0
+        lyricsAreTimeSynced = false
         isLoadingLyrics = false
         lyricsControlsVisible = true
+        lyricsFollowMode = .follow
         currentArtworkImage = nil
         cachedArtworkURL = nil
         artworkLoadTask?.cancel()
         lyricsFetchTask?.cancel()
+        removeLyricsBoundaryObserver()
         guard currentMusic != nil else {
             updateNowPlayingInfo()
+            syncWidgetPlaybackState()
             updateLiveActivity(force: true)
             return
         }
         updateNowPlayingInfo()
+        syncWidgetPlaybackState()
         loadArtworkIfNeeded()
         updateLiveActivity(force: true)
         if showLyrics {
@@ -310,21 +403,39 @@ final class PlayerManager {
     }
 
     private func updateCurrentLyricIndex(for time: TimeInterval) {
-        guard !lyrics.isEmpty else {
+        guard !lyricsPresentation.phrases.isEmpty else {
             currentLineIndex = 0
             return
         }
 
-        let adjustedTime = max(0, time + 0.04)
-
-        if let exactMatch = lyrics.lastIndex(where: { line in
-            adjustedTime >= line.startTime && adjustedTime < max(line.endTime, line.startTime + 0.01)
-        }) {
-            currentLineIndex = exactMatch
+        guard lyricsAreTimeSynced else {
+            currentLineIndex = 0
             return
         }
 
-        currentLineIndex = lyrics.lastIndex(where: { $0.startTime <= adjustedTime }) ?? 0
+        currentLineIndex = lyricsPresentation.phraseIndex(at: time, compensation: lyricLeadCompensation)
+    }
+
+    func beginLyricsBrowseMode() {
+        lyricsFollowMode = .browse
+        lyricsControlsVisible = true
+    }
+
+    func resumeLyricsFollowMode() {
+        lyricsFollowMode = .follow
+        lyricsControlsVisible = true
+    }
+
+    func revealLyricsControls() {
+        lyricsControlsVisible = true
+    }
+
+    func collapseExpandedPlayer() {
+        dragOffset = .zero
+        isExpanded = false
+        showLyrics = false
+        lyricsControlsVisible = true
+        lyricsFollowMode = .follow
     }
 
     private func observePlayerItemEnd() {
@@ -340,6 +451,7 @@ final class PlayerManager {
                 self.isPlaying = false
                 self.playbackProgress = 1
                 self.updateNowPlayingInfo()
+                self.syncWidgetPlaybackState()
                 self.updateLiveActivity(force: true)
             }
         }
@@ -513,5 +625,9 @@ final class PlayerManager {
             )
             #endif
         }
+    }
+
+    private func syncWidgetPlaybackState() {
+        systemSongSnapshotStore.updateCurrentPlayback(songID: currentMusic?.id, isPlaying: isPlaying)
     }
 }

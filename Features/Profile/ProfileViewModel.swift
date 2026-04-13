@@ -130,6 +130,7 @@ class ProfileViewModel: ObservableObject {
     @Published private(set) var mineSongs: [GeneratedMusic] = []
     @Published private(set) var cocreateSongs: [GeneratedMusic] = []
     @Published private(set) var sharedSongs: [GeneratedMusic] = []
+    @Published private(set) var sentSharedMusicIds: Set<String> = []
     @Published private(set) var favoriteSongs: [GeneratedMusic] = []
     @Published private(set) var favoriteIds: Set<String> = []
     @Published private(set) var isLoading = false
@@ -176,10 +177,11 @@ class ProfileViewModel: ObservableObject {
             async let mine = musicDb.fetchMineSongs(userId: userId)
             async let cocreate = musicDb.fetchCocreateSongs(userId: userId)
             async let shared = musicDb.fetchSharedSongs(userId: userId)
+            async let sentSharedIds = profileService.fetchSharedMusicIdsSentByUser(userId: userId)
             async let favorites = profileService.fetchFavoriteSongs(userId: userId)
             async let ids = profileService.fetchFavoriteMusicIds(userId: userId)
-            (mineSongs, cocreateSongs, sharedSongs, favoriteSongs, favoriteIds) = try await (
-                mine, cocreate, shared, favorites, ids
+            (mineSongs, cocreateSongs, sharedSongs, sentSharedMusicIds, favoriteSongs, favoriteIds) = try await (
+                mine, cocreate, shared, sentSharedIds, favorites, ids
             )
         } catch {
             errorMessage = error.localizedDescription
@@ -216,7 +218,7 @@ class ProfileViewModel: ObservableObject {
         case .all: list = allSongs
         case .mine: list = mineSongs
         case .cocreate: list = cocreateSongs
-        case .shared: list = sharedSongs
+        case .shared: list = sharedCategorySongs
         case .favorites: list = favoriteSongs
         }
         let sorted = applySort(list, for: type)
@@ -229,7 +231,7 @@ class ProfileViewModel: ObservableObject {
         case .all: return allSongs.count
         case .mine: return mineSongs.count
         case .cocreate: return cocreateSongs.count
-        case .shared: return sharedSongs.count
+        case .shared: return sharedCategorySongs.count
         case .favorites: return favoriteSongs.count
         }
     }
@@ -306,6 +308,14 @@ class ProfileViewModel: ObservableObject {
     private var allSongs: [GeneratedMusic] {
         var seen = Set<String>()
         return (mineSongs + cocreateSongs + sharedSongs).filter { seen.insert($0.id).inserted }
+    }
+
+    private var sharedCategorySongs: [GeneratedMusic] {
+        let sharedIDs = Set(sharedSongs.map(\.id)).union(sentSharedMusicIds)
+        var seen = Set<String>()
+        return (sharedSongs + mineSongs + cocreateSongs)
+            .filter { sharedIDs.contains($0.id) }
+            .filter { seen.insert($0.id).inserted }
     }
 
     private func applySort(_ list: [GeneratedMusic], for type: PlaylistType) -> [GeneratedMusic] {

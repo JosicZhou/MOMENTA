@@ -22,29 +22,21 @@ struct ExpandablePlayerContainer: View {
     @Namespace private var animation
     
     var body: some View {
-        ZStack(alignment: .bottom) {
-            // 占位层：展开时撑满全屏，确保 overlay 有正确的参考尺寸
-            Color.clear
-                .frame(
-                    maxWidth: .infinity,
-                    maxHeight: playerManager.isExpanded ? .infinity : 0
-                )
-                .allowsHitTesting(false)
-            
-            // 迷你播放条（不展开时显示）
-            if !playerManager.isExpanded {
-                miniPlayerBar
-                    .padding(.bottom, 56) // TabBar 高度
+        Color.clear
+            .allowsHitTesting(false)
+            .overlay(alignment: .bottom) {
+                if !playerManager.isExpanded {
+                    miniPlayerBar
+                        .padding(.bottom, 56) // TabBar 高度
+                }
             }
-        }
-        .overlay {
-            // 全屏播放器（展开时覆盖全屏）
+            .overlay {
             if playerManager.isExpanded {
                 MusicPlayerDetails(animation: animation)
-                    .transition(.move(edge: .bottom).combined(with: .opacity))
+                    .zIndex(10)
             }
-        }
-        .animation(.snappy(duration: 0.35, extraBounce: 0.04), value: playerManager.isExpanded)
+            }
+            .animation(.snappy(duration: 0.35, extraBounce: 0.04), value: playerManager.isExpanded)
     }
     
     // MARK: - 迷你播放条

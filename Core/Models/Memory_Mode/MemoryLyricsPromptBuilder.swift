@@ -102,9 +102,10 @@ enum MemoryLyricsPromptBuilder {
            - Example: \(ctx.hasBPM ? "\"\(ctx.suggestedBPM!) BPM, Indie Pop, whimsical, light acoustic guitar, male vocals, playful\"" : "\"Indie Pop, whimsical, light acoustic guitar, male vocals, playful\"")
 
         3. "prompt":
-           - The FULL lyrics, formatted with section headers like [Chorus], [Verse 1], [Verse 2], [Bridge], [Outro]
+           - The FULL lyrics as plain lyric lines only
+           - Do NOT include any structural labels or bracketed markers such as [Chorus], [Verse 1], [Verse 2], [Bridge], [Outro], [Intro]
            - Write solely in the specified Language (\(ctx.language))
-           - Keep 36-56 lines total (Chorus ≈ 6-8, Verse ≈ 10-16)
+           - Keep 24-40 concise lyric lines total
            - Do NOT output any extra keys, comments, or explanations
            - Do NOT hallucinate or invent narrative details beyond what is visible in the Photo or stated in the User Description
 

@@ -2,206 +2,239 @@
 //  LyricsScrollView.swift
 //  MOMENTA
 //
-//  Apple Music 风格同步滚动歌词视图。
-//  当前行白色粗体清晰，其他行灰色模糊，自动跟随播放进度滚动。
-//  用户手动滚动时暂停自动滚动，3 秒后恢复。
-//  向下滚动隐藏底部控件，向上滚动或停止滚动后重新显示。
-//  参考：https://github.com/HuangRunHua/Apple-Music-Lyric-Animation
+//  Apple Music-style lyric stage built on stable phrase cues rather than
+//  line-by-line layout mutation.
 //
 
 import SwiftUI
 
 struct LyricsScrollView: View {
-    
+
     @Environment(PlayerManager.self) private var playerManager
-    
-    /// 用户是否正在手动滚动（暂停自动滚动）
-    @State private var isUserScrolling = false
-    /// 上一次自动滚动触发的时间，用于区分用户滚动和程序滚动
-    @State private var lastAutoScrollTime: Date = .distantPast
-    /// 用户滚动恢复计时器
-    @State private var scrollResetTask: Task<Void, Never>?
-    /// 上一次检测到的滚动偏移，用于计算滚动方向
-    @State private var lastScrollOffset: CGFloat = 0
-    
-    private let lyricAnimation = Animation.spring(response: 0.34, dampingFraction: 0.92)
-    
+
+    let bottomInset: CGFloat
+
+    @State private var controlsAutoHideTask: Task<Void, Never>?
+    @State private var browseResumeTask: Task<Void, Never>?
+
+    private let focusAnchor = UnitPoint(x: 0.5, y: 0.34)
+    private let rowAnimation = Animation.spring(response: 0.3, dampingFraction: 0.88)
+
+    private var phrases: [PhraseCue] {
+        playerManager.lyricsPresentation.phrases
+    }
+
     var body: some View {
         ScrollViewReader { proxy in
-            ScrollView(showsIndicators: false) {
-                LazyVStack(alignment: .leading, spacing: 20) {
-                    // 顶部留白，让第一句歌词不贴顶
-                    Spacer().frame(height: 34)
-                    
-                    ForEach(Array(playerManager.lyrics.enumerated()), id: \.element.id) { index, line in
-                        lyricLineView(line: line, index: index)
-                            .id(line.id)
+            ZStack(alignment: .trailing) {
+                ScrollView(showsIndicators: false) {
+                    LazyVStack(alignment: .leading, spacing: 28) {
+                        Spacer()
+                            .frame(height: 34)
+
+                        ForEach(Array(phrases.enumerated()), id: \.element.id) { index, phrase in
+                            phraseRow(phrase: phrase, index: index)
+                                .id(phrase.id)
+                        }
+
+                        Spacer()
+                            .frame(height: bottomInset)
                     }
-                    
-                    // 底部留白：需要足够空间让歌词滚到浮动控件上方
-                    Spacer().frame(height: 300)
+                    .padding(.horizontal, 6)
+                    .padding(.top, 8)
                 }
-                .padding(.top, 8)
-                .background(scrollDetector)
-            }
-            .coordinateSpace(name: "lyricsScroll")
-            // 当 currentLineIndex 变化时自动滚动
-            .onChange(of: playerManager.currentLineIndex) { _, newIndex in
-                guard !isUserScrolling,
-                      newIndex >= 0,
-                      newIndex < playerManager.lyrics.count else { return }
-                
-                lastAutoScrollTime = Date()
-                withAnimation(.snappy(duration: 0.26, extraBounce: 0.01)) {
-                    // anchor 约 1/3 处，让当前行显示在上方，下方留出预览空间（Apple Music 风格）
-                    proxy.scrollTo(playerManager.lyrics[newIndex].id, anchor: UnitPoint(x: 0.5, y: 0.37))
+                .scrollBounceBehavior(.basedOnSize)
+                .contentShape(Rectangle())
+                .mask(lyricMask)
+                .simultaneousGesture(userBrowseGesture)
+                .onTapGesture {
+                    guard playerManager.showLyrics else { return }
+                    withAnimation(.easeInOut(duration: 0.22)) {
+                        playerManager.lyricsControlsVisible.toggle()
+                    }
+                    if playerManager.lyricsControlsVisible {
+                        scheduleControlsAutoHide()
+                    } else {
+                        controlsAutoHideTask?.cancel()
+                    }
                 }
-            }
-            .onChange(of: isUserScrolling) { _, isScrolling in
-                guard !isScrolling,
-                      playerManager.currentLineIndex >= 0,
-                      playerManager.currentLineIndex < playerManager.lyrics.count else { return }
-
-                lastAutoScrollTime = Date()
-                withAnimation(.snappy(duration: 0.28, extraBounce: 0.01)) {
-                    proxy.scrollTo(
-                        playerManager.lyrics[playerManager.currentLineIndex].id,
-                        anchor: UnitPoint(x: 0.5, y: 0.37)
-                    )
+                .onAppear {
+                    focusCurrentPhrase(with: proxy, animated: false)
+                    scheduleControlsAutoHide()
+                }
+                .onDisappear {
+                    controlsAutoHideTask?.cancel()
+                    browseResumeTask?.cancel()
+                }
+                .onChange(of: playerManager.currentLineIndex) { _, _ in
+                    guard playerManager.lyricsFollowMode == .follow else { return }
+                    focusCurrentPhrase(with: proxy, animated: true)
+                    scheduleControlsAutoHide()
+                }
+                .onChange(of: phrases.count) { _, _ in
+                    focusCurrentPhrase(with: proxy, animated: false)
+                }
+                .onChange(of: playerManager.lyricsFollowMode) { _, mode in
+                    if mode == .follow {
+                        browseResumeTask?.cancel()
+                        focusCurrentPhrase(with: proxy, animated: true)
+                        scheduleControlsAutoHide()
+                    } else {
+                        controlsAutoHideTask?.cancel()
+                    }
                 }
             }
         }
     }
-    
-    // MARK: - 单行歌词视图
-    
-    @ViewBuilder
-    private func lyricLineView(line: LyricLine, index: Int) -> some View {
-        let isCurrent = index == playerManager.currentLineIndex
+
+    private func phraseRow(phrase: PhraseCue, index: Int) -> some View {
+        let isCurrent = playerManager.lyricsAreTimeSynced && index == playerManager.currentLineIndex
         let distance = abs(index - playerManager.currentLineIndex)
-        
-        if line.isSection {
-            // 段落标记：小号、半透明、不模糊
-            Text(line.text.replacingOccurrences(of: "[", with: "").replacingOccurrences(of: "]", with: ""))
-                .font(.caption.weight(.semibold))
-                .foregroundStyle(.white.opacity(0.3))
-                .textCase(.uppercase)
-                .fixedSize(horizontal: false, vertical: true)
-                .padding(.horizontal, 24)
-                .padding(.top, 8)
+
+        return VStack(alignment: .leading, spacing: 8) {
+            ForEach(phrase.lines) { line in
+                Text(line.text)
+                    .font(.system(size: 34, weight: .bold))
+                    .multilineTextAlignment(.leading)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+        .lineSpacing(0)
+        .scaleEffect(phraseScale(isCurrent: isCurrent, distance: distance), anchor: .leading)
+        .foregroundStyle(.white.opacity(phraseOpacity(isCurrent: isCurrent, distance: distance)))
+        .blur(radius: phraseBlur(isCurrent: isCurrent, distance: distance))
+        .contentShape(Rectangle())
+        .onTapGesture {
+            seekToPhrase(phrase)
+        }
+        .animation(rowAnimation, value: playerManager.currentLineIndex)
+    }
+
+    private var userBrowseGesture: some Gesture {
+        DragGesture(minimumDistance: 4)
+            .onChanged { _ in
+                controlsAutoHideTask?.cancel()
+                browseResumeTask?.cancel()
+                playerManager.revealLyricsControls()
+                if playerManager.lyricsFollowMode == .follow {
+                    playerManager.beginLyricsBrowseMode()
+                }
+            }
+            .onEnded { _ in
+                scheduleBrowseResume()
+            }
+    }
+
+    private func focusCurrentPhrase(with proxy: ScrollViewProxy, animated: Bool) {
+        guard !phrases.isEmpty,
+              playerManager.currentLineIndex >= 0,
+              playerManager.currentLineIndex < phrases.count else { return }
+
+        let targetID = phrases[playerManager.currentLineIndex].id
+        let performScroll = {
+            proxy.scrollTo(targetID, anchor: focusAnchor)
+        }
+
+        if animated {
+            withAnimation(.snappy(duration: 0.22, extraBounce: 0.01)) {
+                performScroll()
+            }
         } else {
-            Text(line.text)
-                .font(
-                    .system(
-                        size: lyricFontSize(isCurrent: isCurrent, distance: distance),
-                        weight: isCurrent ? .bold : .semibold
-                    )
-                )
-                .foregroundStyle(.white.opacity(lyricOpacity(isCurrent: isCurrent, distance: distance)))
-                .blur(radius: lyricBlur(distance: distance))
-                .scaleEffect(isCurrent ? 1.0 : 0.98, anchor: .leading)
-                .offset(y: isCurrent ? 0 : -2)
-                .fixedSize(horizontal: false, vertical: true)
-                .padding(.horizontal, 24)
-                .animation(lyricAnimation, value: playerManager.currentLineIndex)
+            performScroll()
         }
     }
-    
-    // MARK: - 滚动检测
-    
-    /// 通过 GeometryReader + PreferenceKey 检测用户手动滚动及方向
-    private var scrollDetector: some View {
-        GeometryReader { geo in
-            Color.clear
-                .preference(
-                    key: ScrollOffsetPreferenceKey.self,
-                    value: geo.frame(in: .named("lyricsScroll")).minY
-                )
-        }
-        .onPreferenceChange(ScrollOffsetPreferenceKey.self) { newOffset in
-            handleScrollChange(newOffset: newOffset)
-        }
-    }
-    
-    /// 当检测到滚动偏移变化时调用
-    private func handleScrollChange(newOffset: CGFloat) {
-        // 如果是程序触发的自动滚动（0.45 秒内），仅更新 offset 但不处理
-        if Date().timeIntervalSince(lastAutoScrollTime) < 0.45 {
-            lastScrollOffset = newOffset
-            return
-        }
-        
-        // 计算滚动方向
-        let delta = newOffset - lastScrollOffset
-        lastScrollOffset = newOffset
-        
-        // delta > 5 → 用户向上滚动（内容向下移动）→ 显示控件
-        // delta < -5 → 用户向下滚动（内容向上移动）→ 隐藏控件
-        if delta > 5 {
-            if !playerManager.lyricsControlsVisible {
-                withAnimation(.easeInOut(duration: 0.25)) {
-                    playerManager.lyricsControlsVisible = true
-                }
-            }
-        } else if delta < -5 {
-            if playerManager.lyricsControlsVisible {
-                withAnimation(.easeInOut(duration: 0.25)) {
-                    playerManager.lyricsControlsVisible = false
-                }
-            }
-        }
-        
-        // 标记为用户滚动
-        isUserScrolling = true
-        
-        // 取消之前的恢复计时
-        scrollResetTask?.cancel()
-        
-        // 1.5 秒后恢复自动滚动 + 重新显示控件
-        scrollResetTask = Task {
-            try? await Task.sleep(for: .seconds(1.5))
+
+    private func scheduleControlsAutoHide() {
+        guard playerManager.showLyrics,
+              playerManager.lyricsAreTimeSynced,
+              playerManager.isPlaying,
+              playerManager.lyricsFollowMode == .follow else { return }
+
+        controlsAutoHideTask?.cancel()
+        controlsAutoHideTask = Task {
+            try? await Task.sleep(for: .seconds(4.5))
             if !Task.isCancelled {
-                isUserScrolling = false
-                withAnimation(.easeInOut(duration: 0.3)) {
-                    playerManager.lyricsControlsVisible = true
+                await MainActor.run {
+                    withAnimation(.easeInOut(duration: 0.28)) {
+                        playerManager.lyricsControlsVisible = false
+                    }
                 }
             }
         }
     }
 
-    private func lyricFontSize(isCurrent: Bool, distance: Int) -> CGFloat {
-        if isCurrent { return 34 }
-        switch distance {
-        case 1: return 29
-        case 2: return 25
-        default: return 22
+    private func scheduleBrowseResume() {
+        guard playerManager.showLyrics,
+              playerManager.lyricsAreTimeSynced,
+              playerManager.lyricsFollowMode == .browse else { return }
+
+        browseResumeTask?.cancel()
+        browseResumeTask = Task {
+            try? await Task.sleep(for: .seconds(5.0))
+            guard !Task.isCancelled else { return }
+            await MainActor.run {
+                withAnimation(.snappy(duration: 0.24, extraBounce: 0.01)) {
+                    playerManager.resumeLyricsFollowMode()
+                }
+            }
         }
     }
 
-    private func lyricOpacity(isCurrent: Bool, distance: Int) -> Double {
+    private func phraseOpacity(isCurrent: Bool, distance: Int) -> Double {
+        guard playerManager.lyricsAreTimeSynced else { return 0.92 }
         if isCurrent { return 0.98 }
         switch distance {
-        case 1: return 0.56
+        case 1: return 0.52
         case 2: return 0.3
-        default: return 0.12
+        default: return 0.14
         }
     }
 
-    private func lyricBlur(distance: Int) -> CGFloat {
+    private func phraseBlur(isCurrent: Bool, distance: Int) -> CGFloat {
+        guard playerManager.lyricsAreTimeSynced else { return 0 }
+        if isCurrent { return 0 }
         switch distance {
-        case 0: return 0
-        case 1: return 0.25
-        case 2: return 1.1
-        default: return 3.2
+        case 1: return 0.4
+        case 2: return 0.95
+        default: return 1.45
         }
     }
-}
 
-// MARK: - ScrollOffset PreferenceKey
+    private func phraseScale(isCurrent: Bool, distance: Int) -> CGFloat {
+        guard playerManager.lyricsAreTimeSynced else { return 0.94 }
+        if isCurrent { return 1.0 }
+        switch distance {
+        case 1: return 0.9
+        case 2: return 0.84
+        default: return 0.78
+        }
+    }
 
-private struct ScrollOffsetPreferenceKey: PreferenceKey {
-    static var defaultValue: CGFloat = 0
-    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
-        value = nextValue()
+    private var lyricMask: some View {
+        LinearGradient(
+            stops: [
+                .init(color: .clear, location: 0),
+                .init(color: .black.opacity(0.55), location: 0.07),
+                .init(color: .black, location: 0.16),
+                .init(color: .black, location: 0.78),
+                .init(color: .black.opacity(0.58), location: 0.88),
+                .init(color: .clear, location: 1)
+            ],
+            startPoint: .top,
+            endPoint: .bottom
+        )
+    }
+
+    private func seekToPhrase(_ phrase: PhraseCue) {
+        guard playerManager.lyricsAreTimeSynced,
+              playerManager.totalDuration > 0 else { return }
+
+        let progress = min(max(phrase.startTime / playerManager.totalDuration, 0), 1)
+        playerManager.seek(to: progress)
+        playerManager.revealLyricsControls()
+        browseResumeTask?.cancel()
+        playerManager.resumeLyricsFollowMode()
+        scheduleControlsAutoHide()
     }
 }

@@ -10,6 +10,22 @@ import SwiftUI
 import UIKit
 
 struct ProfileView: View {
+    fileprivate enum ShareDirectionFilter: String, CaseIterable, Identifiable {
+        case received
+        case sent
+
+        var id: String { rawValue }
+
+        var title: String {
+            switch self {
+            case .received:
+                return "Sent to you"
+            case .sent:
+                return "Sent by you"
+            }
+        }
+    }
+
     @ObservedObject var deepLinkRouter: DeepLinkRouter
     @ObservedObject var viewModel: LightViewModel
     @ObservedObject var authViewModel: AuthViewModel
@@ -26,7 +42,8 @@ struct ProfileView: View {
     @State private var pendingAvatarImage: UIImage?
     @State private var presentedFilterSheet: ProfileFilterSheet?
     @State private var archiveLayoutMode: ProfileArchiveLayoutMode = .list
-    @State private var selectedPipeline: ProfilePipelineFilter?
+    @State private var selectedPipeline: ProfilePipelineFilter? = .all
+    @State private var selectedShareDirection: ShareDirectionFilter = .received
     @State private var selectedGenre: String?
     @State private var pendingDeletionTarget: ProfileDeleteTarget?
     @State private var collapsedTimelineSections: Set<String> = []
@@ -58,7 +75,7 @@ struct ProfileView: View {
                         .padding(.bottom, -8)
 
                         profileIdentityCard(viewportWidth: geometry.size.width)
-                        filterRow
+                        filterControls
                         archiveSectionsView(viewportWidth: geometry.size.width)
                     }
                     .padding(.horizontal, 20)
@@ -211,19 +228,26 @@ struct ProfileView: View {
         .frame(height: cardHeight)
     }
 
-    private var filterRow: some View {
-        HStack(spacing: 12) {
-            ProfileArchiveLayoutButton(layoutMode: $archiveLayoutMode)
+    private var filterControls: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(spacing: 12) {
+                ProfileArchiveLayoutButton(layoutMode: $archiveLayoutMode)
 
-            ProfileArchiveFilterChip(
-                title: selectedGenre ?? "Style",
-                action: { presentedFilterSheet = .genre }
-            )
+                ProfileArchiveFilterChip(
+                    title: selectedGenre ?? "Style",
+                    action: { presentedFilterSheet = .genre }
+                )
 
-            ProfileArchiveFilterChip(
-                title: selectedPipeline?.title ?? "Pipeline",
-                action: { presentedFilterSheet = .pipeline }
-            )
+                ProfileArchiveFilterChip(
+                    title: selectedPipeline?.title ?? "All",
+                    action: { presentedFilterSheet = .pipeline }
+                )
+            }
+
+            if selectedPipeline == .share {
+                ProfileShareDirectionControl(selection: $selectedShareDirection)
+                    .transition(.opacity.combined(with: .move(edge: .top)))
+            }
         }
     }
 
@@ -302,7 +326,7 @@ struct ProfileView: View {
     }
 
     private var availableGenres: [String] {
-        Array(Set(timelineEligibleSongs.map(genreTag(for:))))
+        Array(Set(timelineEligibleSongs.filter(matchesPipeline(_:)).map(genreTag(for:))))
             .sorted()
     }
 
@@ -350,11 +374,27 @@ struct ProfileView: View {
     private func matchesPipeline(_ song: GeneratedMusic) -> Bool {
         guard let selectedPipeline else { return true }
 
+        let sharedIds = Set(profileViewModel.sharedSongs.map(\.id))
+        let sentSharedIds = profileViewModel.sentSharedMusicIds
+        let cocreateIds = Set(profileViewModel.cocreateSongs.map(\.id))
+        let favoriteIds = profileViewModel.favoriteIds
+
         switch selectedPipeline {
-        case .memory:
-            return song.source == "memory"
-        case .light:
-            return song.source == nil || song.source == "mine"
+        case .all:
+            return true
+        case .mine:
+            return !sharedIds.contains(song.id) && !cocreateIds.contains(song.id)
+        case .cocreate:
+            return cocreateIds.contains(song.id)
+        case .share:
+            switch selectedShareDirection {
+            case .received:
+                return sharedIds.contains(song.id)
+            case .sent:
+                return sentSharedIds.contains(song.id)
+            }
+        case .favorites:
+            return favoriteIds.contains(song.id)
         }
     }
 
@@ -362,10 +402,9 @@ struct ProfileView: View {
         let sharedIds = Set(profileViewModel.sharedSongs.map(\.id))
         let cocreateIds = Set(profileViewModel.cocreateSongs.map(\.id))
 
-        if sharedIds.contains(song.id) { return "Shared" }
+        if sharedIds.contains(song.id) { return "Share" }
         if cocreateIds.contains(song.id) { return "Co-Create" }
-        if song.source == "memory" { return "Memory" }
-        return "Light"
+        return "Mine"
     }
 
     private func genreTag(for song: GeneratedMusic) -> String {
@@ -747,6 +786,45 @@ private struct ProfileArchiveFilterChip: View {
     }
 }
 
+private struct ProfileShareDirectionControl: View {
+    @Binding var selection: ProfileView.ShareDirectionFilter
+
+    @Environment(\.colorScheme) private var colorScheme
+    private var theme: ProfileArchiveTheme { ProfileArchiveTheme(colorScheme: colorScheme) }
+
+    var body: some View {
+        HStack(spacing: 8) {
+            ForEach(ProfileView.ShareDirectionFilter.allCases) { option in
+                Button {
+                    withAnimation(.easeOut(duration: 0.18)) {
+                        selection = option
+                    }
+                } label: {
+                    Text(option.title)
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundStyle(selection == option ? theme.primaryText : theme.secondaryText)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 36)
+                        .background(
+                            Capsule(style: .continuous)
+                                .fill(selection == option ? theme.groupSurface : .clear)
+                        )
+                        .overlay {
+                            if selection == option {
+                                Capsule(style: .continuous)
+                                    .stroke(theme.groupBorder, lineWidth: 0.8)
+                            }
+                        }
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(4)
+        .background(theme.chipFill, in: Capsule(style: .continuous))
+        .modifier(ProfileGlassChrome(cornerRadius: 22))
+    }
+}
+
 private struct ProfileSectionHeader: View {
     let title: String
     let isExpanded: Bool
@@ -952,7 +1030,13 @@ private struct ProfileGroupedSongRow: View {
     }
 
     private var pipelineSymbolName: String {
-        song.source == "memory" ? "photo.on.rectangle.angled" : "rays"
+        if song.isCocreate {
+            return "person.2.fill"
+        }
+        if song.source == "memory" {
+            return "photo.on.rectangle.angled"
+        }
+        return "rays"
     }
 }
 
@@ -1224,15 +1308,21 @@ private enum ProfileFilterSheet: Identifiable {
 }
 
 private enum ProfilePipelineFilter: String, CaseIterable, Identifiable {
-    case memory
-    case light
+    case all
+    case mine
+    case cocreate
+    case share
+    case favorites
 
     var id: String { rawValue }
 
     var title: String {
         switch self {
-        case .memory: return "Memory"
-        case .light: return "Light"
+        case .all: return "All"
+        case .mine: return "Mine"
+        case .cocreate: return "Co-create"
+        case .share: return "Share"
+        case .favorites: return "Favorites"
         }
     }
 }
