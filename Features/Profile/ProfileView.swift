@@ -47,6 +47,9 @@ struct ProfileView: View {
     @State private var selectedGenre: String?
     @State private var pendingDeletionTarget: ProfileDeleteTarget?
     @State private var collapsedTimelineSections: Set<String> = []
+    @State private var profileShareDraft: GeneratedMusic?
+    @State private var shareConfirmation: ProfileShareConfirmation?
+    @State private var widgetPinConfirmation: ProfileWidgetPinConfirmation?
 
     private let calendar = Calendar.current
     private let profilePrototypeSize = CGSize(width: 402, height: 874)
@@ -140,6 +143,18 @@ struct ProfileView: View {
                     )
                 }
             }
+            .sheet(item: $profileShareDraft) { song in
+                ProfileInternalShareSheet(
+                    song: song,
+                    onSent: { friend in
+                        shareConfirmation = ProfileShareConfirmation(
+                            songTitle: song.title.isEmpty ? "Untitled Song" : song.title,
+                            recipientName: friend.resolvedName
+                        )
+                        Task { await profileViewModel.load() }
+                    }
+                )
+            }
             .alert(
                 "Are you sure you want to delete?",
                 isPresented: Binding(
@@ -165,6 +180,20 @@ struct ProfileView: View {
                 Button("Cancel", role: .cancel) {
                     pendingDeletionTarget = nil
                 }
+            }
+            .alert(item: $widgetPinConfirmation) { confirmation in
+                Alert(
+                    title: Text("Set for Widget"),
+                    message: Text("“\(confirmation.songTitle)” is now pinned for MOMENTA widgets."),
+                    dismissButton: .default(Text("OK"))
+                )
+            }
+            .alert(item: $shareConfirmation) { confirmation in
+                Alert(
+                    title: Text("Song Shared"),
+                    message: Text("“\(confirmation.songTitle)” was sent to \(confirmation.recipientName)."),
+                    dismissButton: .default(Text("OK"))
+                )
             }
         }
         .task {
@@ -288,6 +317,7 @@ struct ProfileView: View {
                                         onFavorite: { toggleFavorite($0) },
                                         onDelete: { promptDelete($0) },
                                         onShare: { shareSong($0) },
+                                        onSetForWidget: { setSongForWidget($0) },
                                         locationText: { locationText(for: $0) }
                                     )
                                     .frame(width: archiveBlockWidth)
@@ -454,7 +484,13 @@ struct ProfileView: View {
     }
 
     private func shareSong(_ song: GeneratedMusic) {
-        // Placeholder: UI only for now.
+        profileShareDraft = song
+    }
+
+    private func setSongForWidget(_ song: GeneratedMusic) {
+        let kind: SystemSongKind = song.source == "memory" ? .memory : .mine
+        SystemSongSnapshotStore().pin(SystemSongSnapshot.from(song, kind: kind))
+        widgetPinConfirmation = ProfileWidgetPinConfirmation(songTitle: song.title.isEmpty ? "Untitled Song" : song.title)
     }
 
     private func toggleTimelineSection(_ sectionID: String) {
@@ -906,6 +942,7 @@ private struct ProfileSectionSongBlock: View {
     let onFavorite: (GeneratedMusic) -> Void
     let onDelete: (GeneratedMusic) -> Void
     let onShare: (GeneratedMusic) -> Void
+    let onSetForWidget: (GeneratedMusic) -> Void
     let locationText: (GeneratedMusic) -> String
 
     @Environment(\.colorScheme) private var colorScheme
@@ -924,7 +961,8 @@ private struct ProfileSectionSongBlock: View {
                     onPlay: { onPlay(song) },
                     onFavorite: { onFavorite(song) },
                     onDelete: { onDelete(song) },
-                    onShare: { onShare(song) }
+                    onShare: { onShare(song) },
+                    onSetForWidget: { onSetForWidget(song) }
                 )
 
                 if index != songs.count - 1 {
@@ -950,6 +988,7 @@ private struct ProfileGroupedSongRow: View {
     let onFavorite: () -> Void
     let onDelete: () -> Void
     let onShare: () -> Void
+    let onSetForWidget: () -> Void
 
     @Environment(\.colorScheme) private var colorScheme
 
@@ -997,7 +1036,8 @@ private struct ProfileGroupedSongRow: View {
                     isFavorite: isFavorite,
                     onFavorite: onFavorite,
                     onDelete: onDelete,
-                    onShare: onShare
+                    onShare: onShare,
+                    onSetForWidget: onSetForWidget
                 )
 
                 Spacer(minLength: 0)
@@ -1241,6 +1281,7 @@ private struct ProfileGroupedSongMenu: View {
     let onFavorite: () -> Void
     let onDelete: () -> Void
     let onShare: () -> Void
+    let onSetForWidget: () -> Void
 
     @Environment(\.colorScheme) private var colorScheme
 
@@ -1250,11 +1291,7 @@ private struct ProfileGroupedSongMenu: View {
         Menu {
             Button("Share", systemImage: "square.and.arrow.up", action: onShare)
             if song.isWidgetEligible {
-                Button("Set for Widget", systemImage: "apps.iphone") {
-                    SystemSongSnapshotStore().pin(
-                        SystemSongSnapshot.from(song, kind: song.source == "memory" ? .memory : .mine)
-                    )
-                }
+                Button("Set for Widget", systemImage: "apps.iphone", action: onSetForWidget)
             }
             Button(
                 isFavorite ? "Remove Favorite" : "Favorite",
@@ -1270,6 +1307,489 @@ private struct ProfileGroupedSongMenu: View {
         }
         .menuIndicator(.hidden)
         .buttonStyle(.plain)
+    }
+}
+
+private struct ProfileWidgetPinConfirmation: Identifiable {
+    let songTitle: String
+    var id: String { songTitle }
+}
+
+private struct ProfileShareConfirmation: Identifiable {
+    let songTitle: String
+    let recipientName: String
+    var id: String { "\(songTitle)-\(recipientName)" }
+}
+
+private struct ProfileInternalShareSheet: View {
+    let song: GeneratedMusic
+    let onSent: (FriendProfile) -> Void
+
+    @Environment(\.dismiss) private var dismiss
+    @Environment(\.colorScheme) private var colorScheme
+
+    @State private var friends: [FriendProfile] = []
+    @State private var selectedFriendID: UUID?
+    @State private var selectedWidgetPreviewIndex = 0
+    @State private var isLoadingFriends = true
+    @State private var isSending = false
+    @State private var errorMessage: String?
+
+    private var theme: ProfileArchiveTheme { ProfileArchiveTheme(colorScheme: colorScheme) }
+
+    var body: some View {
+        NavigationStack {
+            VStack(alignment: .leading, spacing: 18) {
+                songPreviewCard
+                widgetPreviewGallery
+
+                Text("Send to")
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundStyle(theme.primaryText)
+
+                content
+
+                Spacer(minLength: 0)
+
+                sendButton
+            }
+            .padding(.horizontal, 20)
+            .padding(.top, 20)
+            .padding(.bottom, 28)
+            .background(theme.pageBackground)
+            .navigationTitle("Share")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("Close") { dismiss() }
+                }
+            }
+        }
+        .task { await loadFriends() }
+        .alert(
+            "Share Failed",
+            isPresented: Binding(
+                get: { errorMessage != nil },
+                set: { if !$0 { errorMessage = nil } }
+            )
+        ) {
+            Button("OK", role: .cancel) { errorMessage = nil }
+        } message: {
+            Text(errorMessage ?? "")
+        }
+    }
+
+    private var songPreviewCard: some View {
+        HStack(spacing: 14) {
+            ProfileGroupedSongArtwork(song: song)
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text(song.title.isEmpty ? "Untitled Song" : song.title)
+                    .font(.system(size: 19, weight: .semibold))
+                    .foregroundStyle(theme.primaryText)
+                    .lineLimit(2)
+
+                Text(song.style.isEmpty ? "Ready to share" : song.style)
+                    .font(.system(size: 14, weight: .regular))
+                    .foregroundStyle(theme.secondaryText)
+                    .lineLimit(2)
+            }
+
+            Spacer(minLength: 0)
+        }
+        .padding(16)
+        .modifier(ProfileArchiveBlockChrome(cornerRadius: 24))
+    }
+
+    private var widgetPreviewGallery: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Text("Widget Preview")
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundStyle(theme.primaryText)
+                Spacer()
+                Text("Preview only")
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundStyle(theme.secondaryText)
+            }
+
+            TabView(selection: $selectedWidgetPreviewIndex) {
+                ProfileWidgetPreviewPage(
+                    title: "Small",
+                    subtitle: "Compact cover-only card",
+                    preview: AnyView(
+                        ProfileSharedWidgetSmallPreview(
+                            song: song,
+                            accentColor: widgetAccentColor
+                        )
+                    )
+                )
+                .tag(0)
+
+                ProfileWidgetPreviewPage(
+                    title: "Medium",
+                    subtitle: "Shared Picks card",
+                    preview: AnyView(
+                        ProfileSharedWidgetMediumPreview(
+                            song: song,
+                            senderLabel: "Shared by You",
+                            accentColor: widgetAccentColor
+                        )
+                    )
+                )
+                .tag(1)
+            }
+            .tabViewStyle(.page(indexDisplayMode: .automatic))
+            .frame(height: 248)
+            .clipShape(RoundedRectangle(cornerRadius: 26, style: .continuous))
+
+            Text("If the receiver already placed the Shared Picks widget, the shared song can appear there after their app sync refreshes snapshots.")
+                .font(.system(size: 12.5, weight: .regular))
+                .foregroundStyle(theme.secondaryText)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+    }
+
+    @ViewBuilder
+    private var content: some View {
+        if isLoadingFriends {
+            VStack(spacing: 12) {
+                ProgressView()
+                Text("Loading friends...")
+                    .font(.system(size: 14, weight: .regular))
+                    .foregroundStyle(theme.secondaryText)
+            }
+            .frame(maxWidth: .infinity, minHeight: 180)
+        } else if friends.isEmpty {
+            VStack(alignment: .leading, spacing: 8) {
+                Text("No friends yet")
+                    .font(.system(size: 18, weight: .semibold))
+                    .foregroundStyle(theme.primaryText)
+                Text("Add friends first, then share songs so their configured widget can update automatically.")
+                    .font(.system(size: 14, weight: .regular))
+                    .foregroundStyle(theme.secondaryText)
+            }
+            .frame(maxWidth: .infinity, minHeight: 180, alignment: .leading)
+            .padding(16)
+            .modifier(ProfileArchiveBlockChrome(cornerRadius: 24))
+        } else {
+            ScrollView {
+                VStack(spacing: 10) {
+                    ForEach(friends) { friend in
+                        Button {
+                            selectedFriendID = friend.id
+                        } label: {
+                            HStack(spacing: 14) {
+                                Circle()
+                                    .fill(theme.groupBorder.opacity(0.9))
+                                    .frame(width: 44, height: 44)
+                                    .overlay {
+                                        Image(systemName: "person.fill")
+                                            .font(.system(size: 17, weight: .medium))
+                                            .foregroundStyle(theme.secondaryText)
+                                    }
+
+                                Text(friend.resolvedName)
+                                    .font(.system(size: 16, weight: .semibold))
+                                    .foregroundStyle(theme.primaryText)
+
+                                Spacer(minLength: 0)
+
+                                Image(systemName: selectedFriendID == friend.id ? "checkmark.circle.fill" : "circle")
+                                    .font(.system(size: 20, weight: .medium))
+                                    .foregroundStyle(
+                                        selectedFriendID == friend.id
+                                        ? Color.accentColor
+                                        : theme.secondaryText.opacity(0.6)
+                                    )
+                            }
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 14)
+                            .modifier(ProfileArchiveBlockChrome(cornerRadius: 20))
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+            }
+            .scrollIndicators(.hidden)
+        }
+    }
+
+    private var sendButton: some View {
+        let selectedFriend = friends.first(where: { $0.id == selectedFriendID })
+
+        return Button {
+            guard let selectedFriend else { return }
+            Task { await send(to: selectedFriend) }
+        } label: {
+            HStack {
+                Spacer()
+                if isSending {
+                    ProgressView()
+                        .progressViewStyle(.circular)
+                        .tint(.white)
+                } else {
+                    Text(selectedFriend.map { "Send to \($0.resolvedName)" } ?? "Choose a friend")
+                        .font(.system(size: 16, weight: .semibold))
+                }
+                Spacer()
+            }
+            .padding(.vertical, 16)
+            .background(selectedFriend == nil || isSending ? theme.groupBorder.opacity(0.55) : Color.accentColor)
+            .foregroundStyle(.white)
+            .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+        }
+        .buttonStyle(.plain)
+        .disabled(selectedFriend == nil || isSending)
+    }
+
+    private var widgetAccentColor: Color {
+        Color(red: 1.0, green: 0.33, blue: 0.46)
+    }
+
+    private func loadFriends() async {
+        isLoadingFriends = true
+        defer { isLoadingFriends = false }
+        do {
+            let loadedFriends = try await FriendService.shared.loadFriends()
+            await MainActor.run {
+                friends = loadedFriends.sorted { $0.resolvedName.localizedCaseInsensitiveCompare($1.resolvedName) == .orderedAscending }
+                selectedFriendID = friends.first?.id
+            }
+        } catch {
+            await MainActor.run {
+                errorMessage = error.localizedDescription
+                friends = []
+                selectedFriendID = nil
+            }
+        }
+    }
+
+    private func send(to friend: FriendProfile) async {
+        guard !isSending else { return }
+        guard let userId = await SupabaseService.shared.getCurrentUserId() else {
+            await MainActor.run { errorMessage = "You need to be signed in to share songs." }
+            return
+        }
+
+        isSending = true
+        defer { isSending = false }
+
+        do {
+            try await ProfileService.shared.shareMusic(fromUserId: userId, toUserId: friend.id, musicId: song.id)
+            await MainActor.run {
+                onSent(friend)
+                dismiss()
+            }
+        } catch {
+            await MainActor.run {
+                errorMessage = error.localizedDescription
+            }
+        }
+    }
+}
+
+private struct ProfileWidgetPreviewPage: View {
+    let title: String
+    let subtitle: String
+    let preview: AnyView
+
+    @Environment(\.colorScheme) private var colorScheme
+    private var theme: ProfileArchiveTheme { ProfileArchiveTheme(colorScheme: colorScheme) }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(theme.primaryText)
+                Text(subtitle)
+                    .font(.system(size: 12, weight: .regular))
+                    .foregroundStyle(theme.secondaryText)
+            }
+            .padding(.horizontal, 4)
+
+            Spacer(minLength: 0)
+
+            preview
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+        }
+        .padding(18)
+        .modifier(ProfileArchiveBlockChrome(cornerRadius: 26))
+    }
+}
+
+private struct ProfileSharedWidgetSmallPreview: View {
+    let song: GeneratedMusic
+    let accentColor: Color
+
+    var body: some View {
+        ZStack(alignment: .topTrailing) {
+            previewBackground
+
+            VStack(alignment: .leading, spacing: 0) {
+                artwork(size: 78, cornerRadius: 20)
+
+                Spacer(minLength: 10)
+
+                Text(song.title.isEmpty ? "Untitled Song" : song.title)
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(.white)
+                    .lineLimit(2)
+
+                Text("Shared by You")
+                    .font(.system(size: 10.5, weight: .medium))
+                    .foregroundStyle(.white.opacity(0.7))
+                    .lineLimit(2)
+            }
+            .padding(12)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
+
+            badgeBubble
+                .padding(.top, 10)
+                .padding(.trailing, 10)
+        }
+        .frame(width: 168, height: 168)
+        .clipShape(RoundedRectangle(cornerRadius: 28, style: .continuous))
+        .overlay {
+            RoundedRectangle(cornerRadius: 28, style: .continuous)
+                .stroke(.white.opacity(0.08), lineWidth: 0.8)
+        }
+    }
+
+    private var previewBackground: some View {
+        RoundedRectangle(cornerRadius: 28, style: .continuous)
+            .fill(Color.black.opacity(0.96))
+            .overlay {
+                RoundedRectangle(cornerRadius: 28, style: .continuous)
+                    .fill(Color.white.opacity(0.03))
+            }
+    }
+
+    private func artwork(size: CGFloat, cornerRadius: CGFloat) -> some View {
+        ProfileWidgetPreviewArtwork(song: song)
+            .frame(width: size, height: size)
+            .clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
+    }
+
+    private var badgeBubble: some View {
+        ZStack {
+            Circle()
+                .fill(.white.opacity(0.13))
+            Image(systemName: "person.2.fill")
+                .font(.system(size: 11, weight: .semibold))
+                .foregroundStyle(accentColor)
+        }
+        .frame(width: 28, height: 28)
+    }
+}
+
+private struct ProfileSharedWidgetMediumPreview: View {
+    let song: GeneratedMusic
+    let senderLabel: String
+    let accentColor: Color
+
+    var body: some View {
+        ZStack(alignment: .topTrailing) {
+            RoundedRectangle(cornerRadius: 30, style: .continuous)
+                .fill(Color.black.opacity(0.96))
+                .overlay {
+                    RoundedRectangle(cornerRadius: 30, style: .continuous)
+                        .fill(Color.white.opacity(0.03))
+                }
+
+            HStack(alignment: .top, spacing: 16) {
+                ProfileWidgetPreviewArtwork(song: song)
+                    .frame(width: 112, height: 112)
+                    .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+
+                VStack(alignment: .leading, spacing: 0) {
+                    Text(song.title.isEmpty ? "Untitled Song" : song.title)
+                        .font(.system(size: 19, weight: .semibold))
+                        .foregroundStyle(.white)
+                        .lineLimit(2)
+
+                    Text(senderLabel)
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundStyle(.white.opacity(0.74))
+                        .padding(.top, 6)
+
+                    Spacer(minLength: 0)
+
+                    HStack(spacing: 8) {
+                        Image(systemName: "play.fill")
+                            .font(.system(size: 12, weight: .semibold))
+                        Text("Play")
+                            .font(.system(size: 15, weight: .semibold))
+                    }
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 9)
+                    .background(.white.opacity(0.14), in: Capsule())
+                }
+                .frame(maxWidth: .infinity, minHeight: 112, maxHeight: 112, alignment: .topLeading)
+            }
+            .padding(.horizontal, 14)
+            .padding(.vertical, 14)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
+
+            ZStack {
+                Circle()
+                    .fill(.white.opacity(0.13))
+                Image(systemName: "person.2.fill")
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundStyle(accentColor)
+            }
+            .frame(width: 30, height: 30)
+            .padding(.top, 10)
+            .padding(.trailing, 10)
+        }
+        .frame(width: 320, height: 168)
+        .clipShape(RoundedRectangle(cornerRadius: 30, style: .continuous))
+        .overlay {
+            RoundedRectangle(cornerRadius: 30, style: .continuous)
+                .stroke(.white.opacity(0.08), lineWidth: 0.8)
+        }
+    }
+}
+
+private struct ProfileWidgetPreviewArtwork: View {
+    let song: GeneratedMusic
+
+    var body: some View {
+        ZStack {
+            if let imageURL = song.imageURL {
+                AsyncImage(url: imageURL) { phase in
+                    switch phase {
+                    case .empty:
+                        fallback
+                    case .success(let image):
+                        image
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                    case .failure:
+                        fallback
+                    @unknown default:
+                        fallback
+                    }
+                }
+            } else {
+                fallback
+            }
+        }
+    }
+
+    private var fallback: some View {
+        LinearGradient(
+            colors: [Color.white.opacity(0.18), Color.white.opacity(0.08)],
+            startPoint: .topLeading,
+            endPoint: .bottomTrailing
+        )
+        .overlay {
+            Image(systemName: "person.2.fill")
+                .font(.system(size: 18, weight: .medium))
+                .foregroundStyle(.white.opacity(0.76))
+        }
     }
 }
 

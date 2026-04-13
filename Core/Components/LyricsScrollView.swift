@@ -16,9 +16,10 @@ struct LyricsScrollView: View {
 
     @State private var controlsAutoHideTask: Task<Void, Never>?
     @State private var browseResumeTask: Task<Void, Never>?
+    @State private var suppressSurfaceTapUntil: Date = .distantPast
 
-    private let focusAnchor = UnitPoint(x: 0.5, y: 0.34)
-    private let rowAnimation = Animation.spring(response: 0.3, dampingFraction: 0.88)
+    private let focusAnchor = UnitPoint(x: 0.5, y: 0.31)
+    private let rowAnimation = Animation.spring(response: 0.22, dampingFraction: 0.9)
 
     private var phrases: [PhraseCue] {
         playerManager.lyricsPresentation.phrases
@@ -49,6 +50,7 @@ struct LyricsScrollView: View {
                 .simultaneousGesture(userBrowseGesture)
                 .onTapGesture {
                     guard playerManager.showLyrics else { return }
+                    guard Date() >= suppressSurfaceTapUntil else { return }
                     withAnimation(.easeInOut(duration: 0.22)) {
                         playerManager.lyricsControlsVisible.toggle()
                     }
@@ -106,7 +108,7 @@ struct LyricsScrollView: View {
         .blur(radius: phraseBlur(isCurrent: isCurrent, distance: distance))
         .contentShape(Rectangle())
         .onTapGesture {
-            seekToPhrase(phrase)
+            seekToPhrase(phrase, index: index)
         }
         .animation(rowAnimation, value: playerManager.currentLineIndex)
     }
@@ -137,7 +139,7 @@ struct LyricsScrollView: View {
         }
 
         if animated {
-            withAnimation(.snappy(duration: 0.22, extraBounce: 0.01)) {
+            withAnimation(.snappy(duration: 0.16, extraBounce: 0.01)) {
                 performScroll()
             }
         } else {
@@ -226,12 +228,14 @@ struct LyricsScrollView: View {
         )
     }
 
-    private func seekToPhrase(_ phrase: PhraseCue) {
+    private func seekToPhrase(_ phrase: PhraseCue, index: Int) {
         guard playerManager.lyricsAreTimeSynced,
               playerManager.totalDuration > 0 else { return }
 
+        suppressSurfaceTapUntil = Date().addingTimeInterval(0.3)
+        UIImpactFeedbackGenerator(style: .light).impactOccurred()
         let progress = min(max(phrase.startTime / playerManager.totalDuration, 0), 1)
-        playerManager.seek(to: progress)
+        playerManager.seek(to: progress, preferredLyricIndex: index)
         playerManager.revealLyricsControls()
         browseResumeTask?.cancel()
         playerManager.resumeLyricsFollowMode()

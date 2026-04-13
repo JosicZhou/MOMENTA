@@ -87,6 +87,8 @@ final class PlayerManager {
     private let systemSongSnapshotStore = SystemSongSnapshotStore()
     private let lyricTrackingInterval = CMTime(seconds: 0.05, preferredTimescale: 600)
     private let lyricLeadCompensation: TimeInterval = 0
+    private var pendingLyricSeekIndex: Int?
+    private var pendingLyricSeekEffectiveTime: TimeInterval?
     #if canImport(ActivityKit)
     private let liveActivityManager = PlaybackLiveActivityManager()
     #endif
@@ -162,7 +164,7 @@ final class PlayerManager {
     }
     
     /// 跳转到指定进度 (0.0 ~ 1.0)
-    func seek(to progress: Double) {
+    func seek(to progress: Double, preferredLyricIndex: Int? = nil) {
         guard let player = audioPlayer,
               let duration = player.currentItem?.duration,
               duration.seconds.isFinite, duration.seconds > 0 else { return }
@@ -174,8 +176,21 @@ final class PlayerManager {
         let newTime = duration.seconds * progress
         currentTime = newTime
         playbackProgress = progress
-        
-        updateCurrentLyricIndex(for: newTime)
+
+        if let preferredLyricIndex,
+           lyricsAreTimeSynced,
+           lyricsPresentation.phrases.indices.contains(preferredLyricIndex) {
+            currentLineIndex = preferredLyricIndex
+            pendingLyricSeekIndex = preferredLyricIndex
+            pendingLyricSeekEffectiveTime = lyricsPresentation.effectivePhraseStartTime(
+                at: preferredLyricIndex,
+                compensation: lyricLeadCompensation
+            )
+        } else {
+            pendingLyricSeekIndex = nil
+            pendingLyricSeekEffectiveTime = nil
+            updateCurrentLyricIndex(for: newTime)
+        }
 
         updateNowPlayingInfo()
         updateLiveActivity(force: true)
@@ -219,9 +234,9 @@ final class PlayerManager {
               let player = audioPlayer,
               lyricsPresentation.phrases.count > 1 else { return }
 
-        let boundaryTimes = lyricsPresentation.phrases
+        let boundaryTimes = lyricsPresentation.phrases.indices
             .dropFirst()
-            .map(\.startTime)
+            .map { lyricsPresentation.effectivePhraseStartTime(at: $0, compensation: lyricLeadCompensation) }
             .filter { $0.isFinite && $0 >= 0 }
             .map { NSValue(time: CMTime(seconds: $0, preferredTimescale: 600)) }
 
@@ -333,6 +348,8 @@ final class PlayerManager {
         lyricsAreTimeSynced = false
         lyricsControlsVisible = true
         lyricsFollowMode = .follow
+        pendingLyricSeekIndex = nil
+        pendingLyricSeekEffectiveTime = nil
         currentArtworkImage = nil
         cachedArtworkURL = nil
         lastLiveActivitySyncDate = .distantPast
@@ -380,6 +397,8 @@ final class PlayerManager {
         isLoadingLyrics = false
         lyricsControlsVisible = true
         lyricsFollowMode = .follow
+        pendingLyricSeekIndex = nil
+        pendingLyricSeekEffectiveTime = nil
         currentArtworkImage = nil
         cachedArtworkURL = nil
         artworkLoadTask?.cancel()
@@ -409,8 +428,21 @@ final class PlayerManager {
         }
 
         guard lyricsAreTimeSynced else {
+            pendingLyricSeekIndex = nil
+            pendingLyricSeekEffectiveTime = nil
             currentLineIndex = 0
             return
+        }
+
+        if let pendingIndex = pendingLyricSeekIndex,
+           let effectiveTime = pendingLyricSeekEffectiveTime {
+            if time < effectiveTime {
+                currentLineIndex = pendingIndex
+                return
+            }
+
+            pendingLyricSeekIndex = nil
+            pendingLyricSeekEffectiveTime = nil
         }
 
         currentLineIndex = lyricsPresentation.phraseIndex(at: time, compensation: lyricLeadCompensation)

@@ -49,17 +49,19 @@ struct LyricsPresentationModel: Equatable {
     let isTimeSynced: Bool
 
     static let empty = LyricsPresentationModel(phrases: [], isTimeSynced: false)
+    private static let phraseEntryDelayMinimum: TimeInterval = 0.06
+    private static let phraseEntryDelayMaximum: TimeInterval = 0.18
+    private static let phraseEntryDelayFraction: Double = 0.05
 
     func phraseIndex(at time: TimeInterval, compensation: TimeInterval = 0) -> Int {
         guard !phrases.isEmpty else { return 0 }
 
-        let adjustedTime = max(0, time + compensation)
         var low = 0
         var high = phrases.count - 1
 
         while low < high {
             let mid = (low + high + 1) / 2
-            if phrases[mid].startTime <= adjustedTime {
+            if effectivePhraseStartTime(at: mid, compensation: compensation) <= time {
                 low = mid
             } else {
                 high = mid - 1
@@ -67,6 +69,23 @@ struct LyricsPresentationModel: Equatable {
         }
 
         return max(0, min(low, phrases.count - 1))
+    }
+
+    func effectivePhraseStartTime(at index: Int, compensation: TimeInterval = 0) -> TimeInterval {
+        guard phrases.indices.contains(index) else { return 0 }
+
+        let phrase = phrases[index]
+        if index == 0 {
+            return max(0, phrase.startTime - compensation)
+        }
+
+        let duration = max(0, phrase.endTime - phrase.startTime)
+        let perceptualDelay = min(
+            Self.phraseEntryDelayMaximum,
+            max(Self.phraseEntryDelayMinimum, duration * Self.phraseEntryDelayFraction)
+        )
+
+        return max(0, phrase.startTime + perceptualDelay - compensation)
     }
 
     static func build(from lines: [LyricLine], isTimeSynced: Bool) -> LyricsPresentationModel {

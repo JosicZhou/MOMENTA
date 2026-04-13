@@ -22,20 +22,20 @@ struct ExpandablePlayerContainer: View {
     @Namespace private var animation
     
     var body: some View {
-        Color.clear
-            .allowsHitTesting(false)
-            .overlay(alignment: .bottom) {
-                if !playerManager.isExpanded {
-                    miniPlayerBar
-                        .padding(.bottom, 56) // TabBar 高度
-                }
-            }
-            .overlay {
+        Group {
             if playerManager.isExpanded {
                 MusicPlayerDetails(animation: animation)
                     .zIndex(10)
+            } else {
+                miniPlayerBar
+                    .padding(.bottom, 56) // TabBar 高度
             }
-            }
+        }
+        .frame(
+            maxWidth: .infinity,
+            maxHeight: playerManager.isExpanded ? .infinity : nil,
+            alignment: .bottom
+        )
             .animation(.snappy(duration: 0.35, extraBounce: 0.04), value: playerManager.isExpanded)
     }
     
