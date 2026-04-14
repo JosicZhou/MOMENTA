@@ -151,3 +151,41 @@ struct SendFriendRequestSheet: View {
         .onTapGesture { hideKeyboard() }
     }
 }
+
+// MARK: - Shared friend avatar component
+struct FriendAvatarView: View {
+    let name: String?
+    let avatarUrl: String?
+    let size: CGFloat
+
+    var body: some View {
+        Group {
+            if let urlString = avatarUrl,
+               !urlString.isEmpty,
+               let url = URL(string: urlString) {
+                AsyncImage(url: url) { phase in
+                    switch phase {
+                    case .success(let image):
+                        image.resizable().aspectRatio(contentMode: .fill)
+                    default:
+                        placeholderCircle
+                    }
+                }
+            } else {
+                placeholderCircle
+            }
+        }
+        .frame(width: size, height: size)
+        .clipShape(Circle())
+    }
+
+    private var placeholderCircle: some View {
+        Circle()
+            .fill(Color(uiColor: .systemGray5))
+            .overlay {
+                Image(systemName: "person.fill")
+                    .font(.system(size: size * 0.45, weight: .regular))
+                    .foregroundStyle(Color(uiColor: .systemGray2))
+            }
+    }
+}
