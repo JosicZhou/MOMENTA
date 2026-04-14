@@ -2884,7 +2884,7 @@ private struct ShareSendSheet: View {
                                             selectedFriendId = friend.id
                                         } label: {
                                             HStack(spacing: 12) {
-                                                FriendAvatarView(friend: friend)
+                                                FriendAvatarView(name: friend.displayName, avatarUrl: friend.avatarUrl, size: 44)
                                                     .frame(width: 44, height: 44)
 
                                                 VStack(alignment: .leading, spacing: 4) {
@@ -3091,7 +3091,7 @@ struct FriendsSheet: View {
 
             if let profile = viewModel.searchResult {
                 HStack(spacing: 12) {
-                    FriendAvatarView(friend: profile)
+                    FriendAvatarView(name: profile.displayName, avatarUrl: profile.avatarUrl, size: 48)
                         .frame(width: 48, height: 48)
 
                     VStack(alignment: .leading, spacing: 4) {
@@ -3203,7 +3203,7 @@ struct FriendsSheet: View {
         ) {
             ForEach(viewModel.friends) { friend in
                 HStack(spacing: 12) {
-                    FriendAvatarView(friend: friend)
+                    FriendAvatarView(name: friend.displayName, avatarUrl: friend.avatarUrl, size: 50)
                         .frame(width: 50, height: 50)
 
                     VStack(alignment: .leading, spacing: 4) {
