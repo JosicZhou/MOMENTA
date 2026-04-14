@@ -329,7 +329,7 @@ final class PlayerManager {
     }
     
     // MARK: - 清理
-    
+
     func reset() {
         pause()
         removeProgressTracking()
@@ -451,6 +451,15 @@ final class PlayerManager {
     func beginLyricsBrowseMode() {
         lyricsFollowMode = .browse
         lyricsControlsVisible = true
+        effectiveLyricDuration = nil
+    }
+
+    // MARK: - 歌词工具
+
+    /// 若 effectiveLyricDuration 已设置，过滤掉超出该时长的歌词行
+    private func filterLyrics(_ lines: [LyricLine]) -> [LyricLine] {
+        guard let maxSec = effectiveLyricDuration else { return lines }
+        return lines.filter { $0.startTime < maxSec }
     }
 
     func resumeLyricsFollowMode() {

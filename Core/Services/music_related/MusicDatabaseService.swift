@@ -145,6 +145,17 @@ class MusicDatabaseService {
         }
     }
     
+    /// 批量按 task_id 查询多条音乐记录（共创完成后 A 端拉取 B 的续写结果）
+    func fetchMusicRecords(taskIds: [String]) async throws -> [GeneratedMusic] {
+        guard !taskIds.isEmpty else { return [] }
+        let response = try await client
+            .from("music_generations")
+            .select()
+            .in("task_id", values: taskIds)
+            .execute()
+        return decodeMusicList(from: response.data)
+    }
+
     /// 主动从数据库查询特定任务的状态
     func fetchMusicRecord(taskId: String) async throws -> GeneratedMusic? {
         let response = try await client

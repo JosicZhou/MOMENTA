@@ -27,6 +27,7 @@ struct SettingsView: View {
             .listStyle(.insetGrouped)
             .navigationTitle("Settings")
             .navigationBarTitleDisplayMode(.inline)
+            .scrollDismissesKeyboard(.immediately)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button { dismiss() } label: {

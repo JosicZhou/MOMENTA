@@ -32,6 +32,18 @@
 		33B3A1452F39000000AA82F7 /* ExpandablePlayerContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33B3A1442F39000000AA82F7 /* ExpandablePlayerContainer.swift */; };
 		33B3A1472F3A000000AA82F7 /* LyricLine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33B3A1462F3A000000AA82F7 /* LyricLine.swift */; };
 		33B3A1492F3A000000AA82F7 /* LyricsScrollView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33B3A1482F3A000000AA82F7 /* LyricsScrollView.swift */; };
+		33C914792F814BB0005D1173 /* CocreateSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33C914762F814BAF005D1173 /* CocreateSession.swift */; };
+		33C9147A2F814BB0005D1173 /* CocreateProfileSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33C914752F814BAF005D1173 /* CocreateProfileSnapshot.swift */; };
+		33C9147B2F814BB0005D1173 /* MusicExtendRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33C914772F814BAF005D1173 /* MusicExtendRequest.swift */; };
+		33C9147D2F814C7E005D1173 /* ShareViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33C9147C2F814C7E005D1173 /* ShareViewModel.swift */; };
+		33C9147F2F814EC8005D1173 /* CocreateExtendManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33C9147E2F814EC8005D1173 /* CocreateExtendManager.swift */; };
+		33C914812F814EE3005D1173 /* FriendService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33C914802F814EE3005D1173 /* FriendService.swift */; };
+		33C914832F814F07005D1173 /* CocreateService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33C914822F814F07005D1173 /* CocreateService.swift */; };
+		33C914872F8156C8005D1173 /* ScanQRView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33C914862F8156C8005D1173 /* ScanQRView.swift */; };
+		33C914882F8156C8005D1173 /* FriendQRCodeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33C914842F8156C8005D1173 /* FriendQRCodeView.swift */; };
+		33C914892F8156C8005D1173 /* FriendsListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33C914852F8156C8005D1173 /* FriendsListView.swift */; };
+		33C9148A2F8156C9005D1173 /* FriendsAddByCodeRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33C9148B2F8156C9005D1173 /* FriendsAddByCodeRow.swift */; };
+		33C9148F2F826324005D1173 /* FriendProfileSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33C9148E2F826324005D1173 /* FriendProfileSheet.swift */; };
 		33E4309A2F2CA13B00643877 /* Secrets.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = 33E430982F2CA13B00643877 /* Secrets.xcconfig */; };
 		33E4309D2F2CA50A00643877 /* Auth in Frameworks */ = {isa = PBXBuildFile; productRef = 33E4309C2F2CA50A00643877 /* Auth */; };
 		33E4309F2F2CA50A00643877 /* Functions in Frameworks */ = {isa = PBXBuildFile; productRef = 33E4309E2F2CA50A00643877 /* Functions */; };
@@ -153,6 +165,18 @@
 		33B3A1442F39000000AA82F7 /* ExpandablePlayerContainer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExpandablePlayerContainer.swift; sourceTree = "<group>"; };
 		33B3A1462F3A000000AA82F7 /* LyricLine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LyricLine.swift; sourceTree = "<group>"; };
 		33B3A1482F3A000000AA82F7 /* LyricsScrollView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LyricsScrollView.swift; sourceTree = "<group>"; };
+		33C914752F814BAF005D1173 /* CocreateProfileSnapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CocreateProfileSnapshot.swift; sourceTree = "<group>"; };
+		33C914762F814BAF005D1173 /* CocreateSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CocreateSession.swift; sourceTree = "<group>"; };
+		33C914772F814BAF005D1173 /* MusicExtendRequest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusicExtendRequest.swift; sourceTree = "<group>"; };
+		33C9147C2F814C7E005D1173 /* ShareViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareViewModel.swift; sourceTree = "<group>"; };
+		33C9147E2F814EC8005D1173 /* CocreateExtendManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CocreateExtendManager.swift; sourceTree = "<group>"; };
+		33C914802F814EE3005D1173 /* FriendService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FriendService.swift; sourceTree = "<group>"; };
+		33C914822F814F07005D1173 /* CocreateService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CocreateService.swift; sourceTree = "<group>"; };
+		33C914842F8156C8005D1173 /* FriendQRCodeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FriendQRCodeView.swift; sourceTree = "<group>"; };
+		33C914852F8156C8005D1173 /* FriendsListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FriendsListView.swift; sourceTree = "<group>"; };
+		33C914862F8156C8005D1173 /* ScanQRView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScanQRView.swift; sourceTree = "<group>"; };
+		33C9148B2F8156C9005D1173 /* FriendsAddByCodeRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FriendsAddByCodeRow.swift; sourceTree = "<group>"; };
+		33C9148E2F826324005D1173 /* FriendProfileSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FriendProfileSheet.swift; sourceTree = "<group>"; };
 		33E430982F2CA13B00643877 /* Secrets.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Secrets.xcconfig; sourceTree = "<group>"; };
 		33E430A82F2CAFD000643877 /* SupabaseConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseConfig.swift; sourceTree = "<group>"; };
 		33E430A92F2CAFD000643877 /* SupabaseService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseService.swift; sourceTree = "<group>"; };
@@ -258,6 +282,11 @@
 		33B3A1262F3629F000AA82F7 /* Components */ = {
 			isa = PBXGroup;
 			children = (
+				33C9148E2F826324005D1173 /* FriendProfileSheet.swift */,
+				33C914842F8156C8005D1173 /* FriendQRCodeView.swift */,
+				33C9148B2F8156C9005D1173 /* FriendsAddByCodeRow.swift */,
+				33C914852F8156C8005D1173 /* FriendsListView.swift */,
+				33C914862F8156C8005D1173 /* ScanQRView.swift */,
 				33B3A1232F3629F000AA82F7 /* PlaylistCard.swift */,
 				33B3A1242F3629F000AA82F7 /* PlaylistDetailView.swift */,
 				33B3A1252F3629F000AA82F7 /* SongRow.swift */,
@@ -272,6 +301,16 @@
 				33B3A1392F378CEA00AA82F7 /* SettingsViewModel.swift */,
 			);
 			path = Setting;
+			sourceTree = "<group>";
+		};
+		33C914782F814BAF005D1173 /* Cocreate */ = {
+			isa = PBXGroup;
+			children = (
+				33C914752F814BAF005D1173 /* CocreateProfileSnapshot.swift */,
+				33C914762F814BAF005D1173 /* CocreateSession.swift */,
+				33C914772F814BAF005D1173 /* MusicExtendRequest.swift */,
+			);
+			path = Cocreate;
 			sourceTree = "<group>";
 		};
 		33E430992F2CA13B00643877 /* Configs */ = {
@@ -294,6 +333,7 @@
 		33E430B32F2CBD7E00643877 /* music_related */ = {
 			isa = PBXGroup;
 			children = (
+				33C914822F814F07005D1173 /* CocreateService.swift */,
 				33E430BC2F2CC87E00643877 /* suno-webhook.ts */,
 				33E430AD2F2CBD7E00643877 /* APIConfiguration.swift */,
 				33E430AE2F2CBD7E00643877 /* LLMServiceProtocol.swift */,
@@ -308,6 +348,7 @@
 		33E430B42F2CBD7E00643877 /* User_related */ = {
 			isa = PBXGroup;
 			children = (
+				33C914802F814EE3005D1173 /* FriendService.swift */,
 				33E430C72F2CE98C00643877 /* AuthService.swift */,
 			);
 			path = User_related;
@@ -355,6 +396,7 @@
 		33F3880C2F20F6EF009CC102 /* Managers */ = {
 			isa = PBXGroup;
 			children = (
+				33C9147E2F814EC8005D1173 /* CocreateExtendManager.swift */,
 				3338A2432F6EA93A0018FC58 /* Memory2MusicManager.swift */,
 				33F3880A2F20F6EF009CC102 /* MusicBaseManager.swift */,
 				33F3880B2F20F6EF009CC102 /* Photo2MusicManager.swift */,
@@ -366,6 +408,7 @@
 		33F388132F20F6EF009CC102 /* Models */ = {
 			isa = PBXGroup;
 			children = (
+				33C914782F814BAF005D1173 /* Cocreate */,
 				3338A2332F6EA3A20018FC58 /* Memory_Mode */,
 				33F3880D2F20F6EF009CC102 /* GeneratedMusic.swift */,
 				33B3A1462F3A000000AA82F7 /* LyricLine.swift */,
@@ -450,6 +493,7 @@
 		33F388252F20F6EF009CC102 /* Share */ = {
 			isa = PBXGroup;
 			children = (
+				33C9147C2F814C7E005D1173 /* ShareViewModel.swift */,
 				33F388242F20F6EF009CC102 /* ShareView.swift */,
 			);
 			path = Share;
@@ -703,6 +747,10 @@
 				33B3A1292F3629F000AA82F7 /* ProfileViewModel.swift in Sources */,
 				33B3A12A2F3629F000AA82F7 /* PlaylistDetailView.swift in Sources */,
 				33B3A12B2F3629F000AA82F7 /* SongRow.swift in Sources */,
+				33C914792F814BB0005D1173 /* CocreateSession.swift in Sources */,
+				33C9147A2F814BB0005D1173 /* CocreateProfileSnapshot.swift in Sources */,
+				33C9147F2F814EC8005D1173 /* CocreateExtendManager.swift in Sources */,
+				33C9147B2F814BB0005D1173 /* MusicExtendRequest.swift in Sources */,
 				33F3882F2F20F6F0009CC102 /* LyricsGenerationRequest.swift in Sources */,
 				33F388302F20F6F0009CC102 /* Photo2MusicManager.swift in Sources */,
 				33B3A13B2F378CEA00AA82F7 /* SettingsView.swift in Sources */,
@@ -711,9 +759,16 @@
 				3338A2372F6EA3A20018FC58 /* MemoryLyricsPromptBuilder.swift in Sources */,
 				3338A2382F6EA3A20018FC58 /* HealthMusicHints.swift in Sources */,
 				3338A2392F6EA3A20018FC58 /* model_arousal.mlmodel in Sources */,
+				33C9147D2F814C7E005D1173 /* ShareViewModel.swift in Sources */,
+				33C914872F8156C8005D1173 /* ScanQRView.swift in Sources */,
+				33C9148F2F826324005D1173 /* FriendProfileSheet.swift in Sources */,
+				33C914882F8156C8005D1173 /* FriendQRCodeView.swift in Sources */,
+				33C914892F8156C8005D1173 /* FriendsListView.swift in Sources */,
+				33C9148A2F8156C9005D1173 /* FriendsAddByCodeRow.swift in Sources */,
 				3338A23A2F6EA3A20018FC58 /* MemoryInstrumentalPromptBuilder.swift in Sources */,
 				33B3A13C2F378CEA00AA82F7 /* SettingsViewModel.swift in Sources */,
 				33F388312F20F6F0009CC102 /* MusicGenerationRequest.swift in Sources */,
+				33C914812F814EE3005D1173 /* FriendService.swift in Sources */,
 				33F388322F20F6F0009CC102 /* ContentView.swift in Sources */,
 				33F388332F20F6F0009CC102 /* Backgrounds.swift in Sources */,
 				33F388342F20F6F0009CC102 /* AppTheme.swift in Sources */,
@@ -760,6 +815,7 @@
 				33E430C82F2CE98C00643877 /* AuthService.swift in Sources */,
 				3338A2442F6EA93A0018FC58 /* Memory2MusicManager.swift in Sources */,
 				33E430C42F2CE94400643877 /* LoginView.swift in Sources */,
+				33C914832F814F07005D1173 /* CocreateService.swift in Sources */,
 				33F388442F20F6F0009CC102 /* GeneratedMusic.swift in Sources */,
 				33E430C92F2CE98D00643877 /* ProfileService.swift in Sources */,
 			);

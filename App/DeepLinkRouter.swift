@@ -42,6 +42,11 @@ final class DeepLinkRouter: ObservableObject {
             return true
         }
 
+        if let code = friendCode(from: url) {
+            pendingFriendCode = code
+            return true
+        }
+
         return false
     }
 

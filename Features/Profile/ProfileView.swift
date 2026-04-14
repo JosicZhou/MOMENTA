@@ -124,6 +124,24 @@ struct ProfileView: View {
             .sheet(isPresented: $showAvatarPicker) {
                 ImagePicker(sourceType: avatarPickerSource, selectedImage: $pendingAvatarImage)
             }
+            .sheet(isPresented: $showQRSheet) {
+                FriendQRCodeView(
+                    friendCode: profileViewModel.myFriendCode,
+                    displayName: profileViewModel.displayName,
+                    avatarImage: profileViewModel.profileAvatarImage
+                )
+            }
+            .fullScreenCover(isPresented: $showScanSheet) {
+                ScanQRView { code, note in
+                    showScanSheet = false
+                    Task { await profileViewModel.addFriendByCode(code, note: note) }
+                }
+            }
+            .alert("Friend Request Sent", isPresented: $profileViewModel.showFriendAddedAlert) {
+                Button("OK", role: .cancel) {}
+            } message: {
+                Text("Request sent to \(profileViewModel.friendAddedName ?? "user")!")
+            }
             .sheet(item: $presentedFilterSheet) { sheet in
                 switch sheet {
                 case .pipeline:
@@ -678,6 +696,42 @@ struct ProfileView: View {
         .frame(width: 92, height: 38)
         .background(theme.chipFill, in: Capsule(style: .continuous))
         .modifier(ProfileGlassChrome(cornerRadius: 19))
+    }
+
+    private var scanButton: some View {
+        Button { showScanSheet = true } label: {
+            Image(systemName: "qrcode.viewfinder")
+                .font(.system(size: 16, weight: .semibold))
+                .foregroundStyle(.black.opacity(0.58))
+                .frame(width: 48, height: 48)
+                .background(Color.black.opacity(0.05), in: Circle())
+        }
+        .buttonStyle(ProfilePressStyle())
+    }
+
+    private var friendsListIconButton: some View {
+        NavigationLink {
+            FriendsListView(profileViewModel: profileViewModel)
+        } label: {
+            ZStack(alignment: .topTrailing) {
+                Image(systemName: "person.2.fill")
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundStyle(.black.opacity(0.58))
+                    .frame(width: 48, height: 48)
+                    .background(Color.black.opacity(0.05), in: Circle())
+
+                if profileViewModel.friendNotificationCount > 0 {
+                    Text("\(profileViewModel.friendNotificationCount)")
+                        .font(.system(size: 10, weight: .bold))
+                        .foregroundStyle(.white)
+                        .frame(minWidth: 16, minHeight: 16)
+                        .padding(.horizontal, 4)
+                        .background(Color.red, in: Capsule())
+                        .offset(x: 6, y: -4)
+                }
+            }
+        }
+        .buttonStyle(ProfilePressStyle())
     }
 }
 
