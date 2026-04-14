@@ -106,11 +106,11 @@
 		6A1000082F90000100000001 /* MomentaWidgetsBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A1001192F90000100000001 /* MomentaWidgetsBundle.swift */; };
 		6A1000092F90000100000001 /* SongWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A10011A2F90000100000001 /* SongWidget.swift */; };
 		6A10000A2F90000100000001 /* PlaybackLiveActivityWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A10011B2F90000100000001 /* PlaybackLiveActivityWidget.swift */; };
-		6A1002202F90000100000001 /* SharedPicksWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A1002212F90000100000001 /* SharedPicksWidget.swift */; };
 		6A10000B2F90000100000001 /* SystemSongSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A1001112F90000100000001 /* SystemSongSnapshot.swift */; };
 		6A10000C2F90000100000001 /* SystemSongSnapshotStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A1001122F90000100000001 /* SystemSongSnapshotStore.swift */; };
 		6A10000D2F90000100000001 /* SongSystemIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A1001162F90000100000001 /* SongSystemIntents.swift */; };
 		6A10000E2F90000100000001 /* PlaybackLiveActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A1001142F90000100000001 /* PlaybackLiveActivityAttributes.swift */; };
+		6A1002202F90000100000001 /* SharedPicksWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A1002212F90000100000001 /* SharedPicksWidget.swift */; };
 		B1A000012F70000100000001 /* MemoryComposerSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1A000112F70000100000001 /* MemoryComposerSheet.swift */; };
 		B1A000022F70000100000001 /* MemoryFilterSheets.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1A000122F70000100000001 /* MemoryFilterSheets.swift */; };
 		B1A000032F70000100000001 /* MemoryLibraryModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1A000132F70000100000001 /* MemoryLibraryModels.swift */; };
@@ -234,10 +234,10 @@
 		6A1001192F90000100000001 /* MomentaWidgetsBundle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MomentaWidgetsBundle.swift; sourceTree = "<group>"; };
 		6A10011A2F90000100000001 /* SongWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SongWidget.swift; sourceTree = "<group>"; };
 		6A10011B2F90000100000001 /* PlaybackLiveActivityWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaybackLiveActivityWidget.swift; sourceTree = "<group>"; };
-		6A1002212F90000100000001 /* SharedPicksWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedPicksWidget.swift; sourceTree = "<group>"; };
 		6A10011C2F90000100000001 /* MomentaWidgets-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "MomentaWidgets-Info.plist"; sourceTree = "<group>"; };
 		6A10011D2F90000100000001 /* MomentaWidgets.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = MomentaWidgets.entitlements; sourceTree = "<group>"; };
 		6A10011E2F90000100000001 /* MomentaWidgets.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = MomentaWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		6A1002212F90000100000001 /* SharedPicksWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedPicksWidget.swift; sourceTree = "<group>"; };
 		A0000021 /* Butterfly V3.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Butterfly V3.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		B1A000112F70000100000001 /* MemoryComposerSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoryComposerSheet.swift; sourceTree = "<group>"; };
 		B1A000122F70000100000001 /* MemoryFilterSheets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoryFilterSheets.swift; sourceTree = "<group>"; };
@@ -1026,7 +1026,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"Resources/Preview Content\"";
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = DGALTMW6Q8;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = App/Info.plist;
@@ -1065,7 +1065,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"Resources/Preview Content\"";
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = DGALTMW6Q8;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = App/Info.plist;
