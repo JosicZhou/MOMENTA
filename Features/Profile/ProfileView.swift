@@ -50,6 +50,8 @@ struct ProfileView: View {
     @State private var profileShareDraft: GeneratedMusic?
     @State private var shareConfirmation: ProfileShareConfirmation?
     @State private var widgetPinConfirmation: ProfileWidgetPinConfirmation?
+    @State private var showQRSheet = false
+    @State private var showScanSheet = false
 
     private let calendar = Calendar.current
     private let profilePrototypeSize = CGSize(width: 402, height: 874)
