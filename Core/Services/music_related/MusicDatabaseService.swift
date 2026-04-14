@@ -171,16 +171,6 @@ class MusicDatabaseService {
         return parseGeneratedMusic(from: record, taskId: taskId)
     }
 
-    func fetchMusicRecords(taskIds: [String]) async throws -> [GeneratedMusic] {
-        guard !taskIds.isEmpty else { return [] }
-        let response = try await client
-            .from("music_generations")
-            .select()
-            .in("task_id", values: taskIds)
-            .execute()
-        return decodeMusicList(from: response.data)
-    }
-    
     /// 从数据库记录解析 GeneratedMusic（record 需包含 task_id）
     /// 供列表接口使用；支持 created_at、source 解析
     func parseGeneratedMusic(from record: [String: AnyJSON]) -> GeneratedMusic? {

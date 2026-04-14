@@ -68,6 +68,8 @@ final class PlayerManager {
     var lyricsControlsVisible: Bool = true
     /// 自动跟随当前歌词，或用户正在手动浏览
     var lyricsFollowMode: LyricsFollowMode = .follow
+    /// 共创 handoff 点：超出此时长的歌词行将被过滤（nil = 不限制）
+    var effectiveLyricDuration: Double? = nil
     
     // MARK: - 私有
     
