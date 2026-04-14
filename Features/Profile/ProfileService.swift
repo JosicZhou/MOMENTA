@@ -285,6 +285,36 @@ final class FriendService {
             .execute()
     }
 
+    // MARK: - Avatar
+
+    func getMyAvatarUrl() async throws -> String? {
+        guard let userId = try? await client.auth.session.user.id else { return nil }
+        let response = try await client
+            .from("profiles")
+            .select("avatar_url")
+            .eq("id", value: userId.uuidString.lowercased())
+            .single()
+            .execute()
+        let row = try JSONDecoder().decode([String: String?].self, from: response.data)
+        return row["avatar_url"] ?? nil
+    }
+
+    func updateAvatarUrl(_ url: String, userId: UUID) async throws {
+        try await client
+            .from("profiles")
+            .update(["avatar_url": url] as [String: String])
+            .eq("id", value: userId.uuidString.lowercased())
+            .execute()
+    }
+
+    func clearAvatarUrl(userId: UUID) async throws {
+        try await client
+            .from("profiles")
+            .update(["avatar_url": ""] as [String: String])
+            .eq("id", value: userId.uuidString.lowercased())
+            .execute()
+    }
+
     func getMyFriendCode(displayName: String? = nil) async throws -> String {
         guard let userId = try? await client.auth.session.user.id else {
             throw FriendServiceError.notAuthenticated
