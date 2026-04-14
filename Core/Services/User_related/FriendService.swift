@@ -9,68 +9,6 @@
 import Foundation
 import Supabase
 
-// MARK: - 辅助模型
-
-struct FriendProfile: Identifiable, Codable, Hashable {
-    let id: UUID
-    let displayName: String?
-    let avatarUrl: String?
-    let friendCode: String?
-
-    var resolvedName: String { displayName ?? "User" }
-
-    enum CodingKeys: String, CodingKey {
-        case id = "user_id"
-        case displayName = "display_name"
-        case avatarUrl = "avatar_url"
-        case friendCode = "friend_code"
-    }
-}
-
-struct FriendRequest: Identifiable, Codable {
-    let id: UUID
-    let userId: UUID
-    let friendId: UUID
-    let status: String
-    let note: String?
-    let createdAt: String?
-    var senderName: String?
-    var senderAvatarUrl: String?
-
-    enum CodingKeys: String, CodingKey {
-        case id, status, note
-        case userId = "user_id"
-        case friendId = "friend_id"
-        case createdAt = "created_at"
-        case senderName = "sender_name"
-    }
-}
-
-/// 我发出的待处理申请（含对方 profile 信息）
-struct SentRequest: Identifiable, Codable {
-    let id: UUID
-    let userId: UUID
-    let friendId: UUID
-    let status: String
-    let note: String?
-    let createdAt: String?
-    let displayName: String?
-    let avatarUrl: String?
-    let friendCode: String?
-
-    var resolvedName: String { displayName ?? "User" }
-
-    enum CodingKeys: String, CodingKey {
-        case id, status, note
-        case userId = "user_id"
-        case friendId = "friend_id"
-        case createdAt = "created_at"
-        case displayName = "display_name"
-        case avatarUrl = "avatar_url"
-        case friendCode = "friend_code"
-    }
-}
-
 // MARK: - Send Request Result
 
 enum SendRequestResult {

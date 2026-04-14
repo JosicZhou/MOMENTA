@@ -8,7 +8,7 @@
 
 import Foundation
 
-struct CocreateProfileSnapshot: Codable {
+struct CocreateProfileSnapshot: Codable, Equatable {
     var language: String?
     var instrumental: Bool?
     var style: String?

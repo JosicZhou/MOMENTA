@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct CocreateSession: Identifiable, Codable {
+struct CocreateSession: Identifiable, Codable, Equatable {
     let id: UUID
     let creatorId: UUID
     var inviteeId: UUID?
