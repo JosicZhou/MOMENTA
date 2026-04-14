@@ -516,7 +516,7 @@ class ProfileViewModel: ObservableObject {
                 friendSearchError = "No user found with this code"
                 return
             }
-            let result = try await friendService.sendFriendRequest(to: profile.id, note: note)
+            let result = try await friendService.sendFriendRequest(to: profile, note: note)
             switch result {
             case .sent:
                 friendAddedName = profile.displayName
